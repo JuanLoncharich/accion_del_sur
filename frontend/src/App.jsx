@@ -12,6 +12,9 @@ import AdminCategorias from './pages/AdminCategorias';
 import AdminUsuarios from './pages/AdminUsuarios';
 import RecepcionesDonaciones from './pages/RecepcionesDonaciones';
 import ConfirmacionDonacionQR from './pages/ConfirmacionDonacionQR';
+import BlockchainTrazabilidad from './pages/BlockchainTrazabilidad';
+import HistorialTransacciones from './pages/HistorialTransacciones';
+import AuditoriaIntegridad from './pages/AuditoriaIntegridad';
 
 const PrivateRoute = ({ children, adminOnly = false }) => {
   const { user } = useAuth();
@@ -38,6 +41,9 @@ function AppRoutes() {
       <Route path="/inventario" element={<PrivateRoute><Inventario /></PrivateRoute>} />
       <Route path="/distribuciones/nueva" element={<PrivateRoute><NuevaDistribucion /></PrivateRoute>} />
       <Route path="/distribuciones" element={<PrivateRoute><Distribuciones /></PrivateRoute>} />
+      <Route path="/blockchain/trazabilidad" element={<BlockchainTrazabilidad />} />
+      <Route path="/analytics/historial" element={<PrivateRoute><HistorialTransacciones /></PrivateRoute>} />
+      <Route path="/auditoria/integridad" element={<PrivateRoute><AuditoriaIntegridad /></PrivateRoute>} />
 
       <Route path="/admin/categorias" element={<PrivateRoute adminOnly><AdminCategorias /></PrivateRoute>} />
       <Route path="/admin/usuarios" element={<PrivateRoute adminOnly><AdminUsuarios /></PrivateRoute>} />

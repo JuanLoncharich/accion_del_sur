@@ -56,7 +56,7 @@ export default function NuevaDistribucion() {
     const ctx = canvas.getContext('2d');
     ctx.lineWidth = 2.5;
     ctx.lineCap = 'round';
-    ctx.strokeStyle = '#0f172a';
+    ctx.strokeStyle = '#1B2631';
     return ctx;
   };
 
