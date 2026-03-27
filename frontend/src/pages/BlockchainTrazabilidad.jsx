@@ -6,12 +6,17 @@ import {
   ArrowRight, ChevronLeft, ChevronRight, Link2, Users, Package,
   TrendingUp, Send, Activity, ChevronDown,
 } from 'lucide-react';
+import {
+  getLandingSummary,
+  getLandingCentersRanking,
+  getLandingRecentMovements,
+} from '../services/landingService';
 
 /* ── DATA ─────────────────────────────────────────────────────────── */
 
-const HERO_SLIDES = [
+const HERO_TEMPLATES = [
   {
-    tag: 'Transparencia que se puede ver',
+    tag: () => 'Transparencia que se puede ver',
     title: 'Acción del Sur',
     subtitle: 'Trazabilidad Solidaria',
     body: 'Cada donación deja un rastro claro desde el origen hasta quien la recibe. Nada se pierde, nada se borra.',
@@ -19,7 +24,7 @@ const HERO_SLIDES = [
     image: '/assets/images/image1.png',
   },
   {
-    tag: 'Más de 12.000 donaciones registradas',
+    tag: (summary) => summary ? `Más de ${Number(summary.totalDonations || 0).toLocaleString('es-AR')} donaciones registradas` : 'Donaciones registradas en tiempo real',
     title: 'La ayuda que \nllega de verdad',
     subtitle: 'Verificada y visible',
     body: 'Seguí cada movimiento en tiempo real. El sistema registra de forma permanente cada paso, sin intermediarios ocultos.',
@@ -27,7 +32,7 @@ const HERO_SLIDES = [
     image: '/assets/images/image2.png',
   },
   {
-    tag: '94 centros activos en todo el país',
+    tag: (summary) => summary ? `${Number(summary.activeCenters || 0).toLocaleString('es-AR')} centros activos en la red` : 'Centros activos en la red',
     title: 'Una red que \ncrece junta',
     subtitle: 'De norte a sur',
     body: 'Centros de donación, comunidades y familias conectados en un mismo sistema que garantiza que la ayuda llegue a destino.',
@@ -37,20 +42,6 @@ const HERO_SLIDES = [
   },
 ];
 
-const SUMMARY_STATS = [
-  { label: 'Donaciones registradas', value: '12.480', icon: Link2 },
-  { label: 'Beneficiarios alcanzados', value: '38.200', icon: Users },
-  { label: 'Centros activos', value: '94', icon: Building2 },
-  { label: 'Volumen total entregado', value: '524.000 kg', icon: Package },
-];
-
-const CATEGORY_BREAKDOWN = [
-  { name: 'Alimentos', value: 42, color: '#E34E26' },
-  { name: 'Ropa', value: 24, color: '#2E4053' },
-  { name: 'Medicamentos', value: 18, color: '#1B2631' },
-  { name: 'Útiles escolares', value: 16, color: '#B9A48E' },
-];
-
 const FLOW_STEPS = [
   { title: 'Una persona dona', description: 'La donación se carga con datos simples: qué es, cuánta cantidad y desde dónde sale.', icon: HandHeart },
   { title: 'Se prepara y clasifica', description: 'El centro revisa y ordena la ayuda para que llegue en buen estado al lugar correcto.', icon: PackageOpen },
@@ -58,47 +49,10 @@ const FLOW_STEPS = [
   { title: 'Llega y se confirma', description: 'La entrega se marca como completada y queda guardada para siempre como una huella digital.', icon: Home },
 ];
 
-const IN_PROGRESS_DONATIONS = [
-  { id: 'D-1208', type: 'Alimentos secos', quantity: '1.200 kg', route: 'Córdoba → Villa María', status: 'En tránsito', progress: 68 },
-  { id: 'D-1212', type: 'Ropa de abrigo', quantity: '850 prendas', route: 'Tucumán → Tafí Viejo', status: 'En verificación', progress: 36 },
-  { id: 'D-1215', type: 'Kits escolares', quantity: '420 kits', route: 'Rosario → Santa Fe Capital', status: 'Entregada', progress: 100 },
-  { id: 'D-1219', type: 'Medicamentos esenciales', quantity: '260 cajas', route: 'Mendoza → San Rafael', status: 'En tránsito', progress: 74 },
-];
-
-const TOP_CENTERS = [
-  { name: 'Centro Solidario Norte', city: 'Salta', processed: 1420, categories: ['Alimentos', 'Medicamentos'] },
-  { name: 'Red Comunitaria Oeste', city: 'Mendoza', processed: 1160, categories: ['Ropa', 'Útiles escolares'] },
-  { name: 'Nodo Esperanza Litoral', city: 'Corrientes', processed: 980, categories: ['Alimentos', 'Ropa'] },
-  { name: 'Puente Solidario Sur', city: 'Bahía Blanca', processed: 860, categories: ['Medicamentos', 'Alimentos'] },
-];
-
-const CITY_EXPLORER_DATA = {
-  'Córdoba Capital': {
-    received: 318, sent: 274, activeCenters: 9,
-    frequentCategories: ['Alimentos', 'Útiles escolares', 'Ropa'],
-    recent: ['98 kg de harina hacia Alta Gracia', '140 kits escolares recibidos', '52 cajas de medicamentos enviadas'],
-  },
-  'Rosario': {
-    received: 286, sent: 241, activeCenters: 7,
-    frequentCategories: ['Ropa', 'Alimentos', 'Medicamentos'],
-    recent: ['220 prendas hacia Villa Gobernador Gálvez', '80 cajas de leche en polvo recibidas', '31 botiquines entregados'],
-  },
-  'San Miguel de Tucumán': {
-    received: 248, sent: 203, activeCenters: 6,
-    frequentCategories: ['Alimentos', 'Medicamentos', 'Ropa'],
-    recent: ['95 cajas de medicamentos hacia Tafí Viejo', '160 kg de arroz recibidos', '73 frazadas enviadas'],
-  },
-  'Mar del Plata': {
-    received: 193, sent: 177, activeCenters: 5,
-    frequentCategories: ['Ropa', 'Útiles escolares', 'Alimentos'],
-    recent: ['180 kits escolares enviados', '67 kg de alimentos recibidos', '210 prendas clasificadas'],
-  },
-  'Neuquén Capital': {
-    received: 164, sent: 149, activeCenters: 4,
-    frequentCategories: ['Medicamentos', 'Alimentos', 'Ropa'],
-    recent: ['24 cajas de insumos médicos entregadas', '120 kg de alimentos enviados', '45 camperas recibidas'],
-  },
-};
+const buildHeroSlides = (summary) => HERO_TEMPLATES.map((slide) => ({
+  ...slide,
+  tag: slide.tag(summary),
+}));
 
 const TRUST_POINTS = [
   { title: 'Registro inamovible', text: 'Cada movimiento queda guardado de forma permanente, como una huella digital que nadie puede borrar.', icon: Fingerprint },
@@ -109,18 +63,22 @@ const TRUST_POINTS = [
 
 /* ── HERO SLIDER ──────────────────────────────────────────────────── */
 
-function HeroSlider() {
+function HeroSlider({ slides }) {
   const accentColor = '#E34E26';
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [brokenImages, setBrokenImages] = useState({});
   const timerRef = useRef(null);
 
+  useEffect(() => {
+    if (current >= slides.length) setCurrent(0);
+  }, [slides.length, current]);
+
   const go = (idx) => {
     if (animating) return;
     setAnimating(true);
     setTimeout(() => {
-      setCurrent((idx + HERO_SLIDES.length) % HERO_SLIDES.length);
+      setCurrent((idx + slides.length) % slides.length);
       setAnimating(false);
     }, 320);
   };
@@ -130,7 +88,7 @@ function HeroSlider() {
     return () => clearInterval(timerRef.current);
   }, [current, animating]);
 
-  const slide = HERO_SLIDES[current];
+  const slide = slides[current];
   const canShowSlideImage = slide.image && !brokenImages[slide.image];
 
   useEffect(() => {
@@ -165,9 +123,9 @@ function HeroSlider() {
           <span className="text-white font-semibold tracking-wide text-lg">Acción del Sur</span>
         </div>
         <div className="hidden md:flex items-center gap-7 text-lg text-white">
-          {['#impacto', '#localidad', '#como-funciona'].map((href, i) => (
+          {['#impacto', '#como-funciona'].map((href, i) => (
             <a key={href} href={href} className="hover:text-white transition-colors">
-              {['Impacto', 'Tu ciudad', 'Cómo funciona'][i]}
+              {['Impacto', 'Cómo funciona'][i]}
             </a>
           ))}
           <Link
@@ -208,7 +166,7 @@ function HeroSlider() {
 
             <div className="flex flex-wrap gap-3 mt-9">
               <a
-                href="#progreso"
+                href="#impacto"
                 className="inline-flex items-center gap-2 text-white font-extrabold px-6 py-3.5 rounded-xl text-lg border-2 border-white/40 transition-all hover:brightness-90"
                 style={{ background: accentColor }}
               >
@@ -240,7 +198,7 @@ function HeroSlider() {
           <ChevronLeft size={16} />
         </button>
         <div className="flex gap-2">
-          {HERO_SLIDES.map((_, i) => (
+          {slides.map((_, i) => (
             <button
               key={i}
               onClick={() => go(i)}
@@ -261,7 +219,7 @@ function HeroSlider() {
 
         {/* Slide counter */}
         <span className="ml-auto text-white/40 text-base tabular-nums">
-          {String(current + 1).padStart(2, '0')} / {String(HERO_SLIDES.length).padStart(2, '0')}
+          {String(current + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}
         </span>
       </div>
     </section>
@@ -355,10 +313,10 @@ function DonationJourney() {
 
       <div className="relative z-10">
         <SectionLabel>El proceso</SectionLabel>
-        <h2 className="text-4xl sm:text-5xl font-bold text-[#1B2631] max-w-xl leading-tight">
+        <h2 className="text-4xl sm:text-5xl font-bold text-[#E34E26] max-w-xl leading-tight">
           ¿Cómo funciona una donación?
         </h2>
-        <p className="text-xl text-[#2E4053]/60 mt-3 max-w-xl">
+        <p className="text-xl text-[#2E4053]/60 mt-3 max-w-xl font-bold">
           Un recorrido simple, de principio a fin, visible para cualquier persona.
         </p>
 
@@ -430,7 +388,7 @@ function DonationJourney() {
                     {/* Giant background numeral */}
                     <span
                       className={`absolute -top-5 ${align === 'right' ? 'right-3' : 'left-3'} text-[100px] font-black leading-none select-none pointer-events-none`}
-                      style={{ color: 'rgba(227,78,38,0.05)' }}
+                      style={{ color: 'rgba(227,78,38,0.16)' }}
                     >
                       {stepNums[i]}
                     </span>
@@ -445,7 +403,7 @@ function DonationJourney() {
                       <h3 className="text-2xl font-bold text-[#1B2631] group-hover:text-[#E34E26] transition-colors duration-300">
                         {step.title}
                       </h3>
-                      <p className="text-[#2E4053]/60 mt-2 leading-relaxed text-base">
+                      <p className="text-[#2E4053]/60 mt-2 leading-relaxed text-lg font-bold">
                         {step.description}
                       </p>
                     </div>
@@ -527,7 +485,7 @@ function DonationJourney() {
                   <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-[#D5DBDB]/60 shadow-sm relative overflow-hidden">
                     <span
                       className="absolute -top-3 right-2 text-[80px] font-black leading-none select-none pointer-events-none"
-                      style={{ color: 'rgba(227,78,38,0.04)' }}
+                      style={{ color: 'rgba(227,78,38,0.16)' }}
                     >
                       {stepNums[i]}
                     </span>
@@ -535,7 +493,7 @@ function DonationJourney() {
                       Paso {i + 1}
                     </span>
                     <h3 className="text-xl font-bold text-[#1B2631] relative z-10">{step.title}</h3>
-                    <p className="text-[#2E4053]/60 mt-2 text-base leading-relaxed relative z-10">{step.description}</p>
+                    <p className="text-[#2E4053]/60 mt-2 text-lg leading-relaxed relative z-10 font-bold">{step.description}</p>
                   </div>
                 </div>
               );
@@ -591,13 +549,14 @@ const CATEGORY_ICONS = {
   ),
 };
 
-function ImpactStory() {
+function ImpactStory({ categoryBreakdown, topCenters, loading }) {
   const sectionRef = useRef(null);
   const [isVisible, setIsVisible] = useState(false);
-  const maxProcessed = TOP_CENTERS[0].processed;
-  const totalDonations = TOP_CENTERS.reduce((s, c) => s + c.processed, 0);
+  const maxProcessed = topCenters.length > 0 ? topCenters[0].processed || 1 : 1;
+  const totalMovements = topCenters.reduce((s, c) => s + (c.processed || 0), 0);
+  const totalCategoryQuantity = categoryBreakdown.reduce((s, c) => s + (c.quantity || 0), 0);
 
-  const animatedTotal = useCountUp(totalDonations, isVisible, 2200);
+  const animatedTotal = useCountUp(totalMovements, isVisible, 2200);
 
   useEffect(() => {
     const node = sectionRef.current;
@@ -647,12 +606,12 @@ function ImpactStory() {
               <p className="text-6xl sm:text-7xl lg:text-8xl font-black tabular-nums text-white leading-none tracking-tight">
                 {animatedTotal.toLocaleString()}
               </p>
-              <p className="mt-2 text-lg sm:text-xl text-white/50 font-medium">donaciones trazadas en 4 centros principales</p>
+              <p className="mt-2 text-lg sm:text-xl text-white/50 font-medium">movimientos registrados en {topCenters.length} centros activos</p>
             </div>
             <div className="h-14 w-px bg-white/15 hidden sm:block" />
             <div className="hidden sm:block">
-              <p className="text-2xl font-black text-[#E34E26]">4</p>
-              <p className="text-base text-white/50 font-medium">categorías de ayuda</p>
+              <p className="text-2xl font-black text-[#E34E26]">{categoryBreakdown.length}</p>
+              <p className="text-lg text-white/50 font-medium">categorías de ayuda</p>
             </div>
           </div>
         </div>
@@ -668,26 +627,39 @@ function ImpactStory() {
             Distribución por tipo de ayuda
           </p>
         </div>
-        <div className="relative h-14 sm:h-16 flex overflow-hidden">
-          {CATEGORY_BREAKDOWN.map((cat, idx) => {
-            const prevPercent = CATEGORY_BREAKDOWN.slice(0, idx).reduce((s, c) => s + c.value, 0);
+        <div className="relative h-20 sm:h-24 flex overflow-hidden">
+          {categoryBreakdown.map((cat, idx) => {
+            // Calculate font sizes based on percentage width
+            const percentageFontSize = cat.value < 12 ? 'text-sm' : cat.value < 15 ? 'text-base' : 'text-lg sm:text-xl';
+            const categoryFontSize = cat.value < 12 ? 'text-[8px]' : cat.value < 15 ? 'text-[9px]' : 'text-[10px] sm:text-xs';
+            const gapSize = cat.value < 12 ? 'gap-0.5' : 'gap-1';
+
             return (
               <div
                 key={cat.name}
-                className="relative h-full flex items-center justify-center group cursor-default transition-all duration-1000 ease-out overflow-hidden"
+                className="relative h-full flex flex-col items-center justify-center group cursor-default transition-all duration-1000 ease-out overflow-hidden px-0.5"
                 style={{
                   width: isVisible ? `${cat.value}%` : '0%',
                   background: cat.color,
                   transitionDelay: `${400 + idx * 150}ms`,
                 }}
               >
-                {/* Floating label */}
+                {/* Floating label - stack vertically */}
                 <div
-                  className="flex items-center gap-1.5 sm:gap-2 text-white/90 select-none transition-all duration-700"
+                  className={`flex flex-col items-center justify-center text-white/90 select-none transition-all duration-700 ${gapSize}`}
                   style={{ opacity: isVisible ? 1 : 0, transitionDelay: `${800 + idx * 150}ms` }}
                 >
-                  <span className="text-lg sm:text-xl font-black tabular-nums">{cat.value}%</span>
-                  <span className="text-xs sm:text-sm font-bold uppercase tracking-wider hidden sm:inline">{cat.name}</span>
+                  <span className={`font-black tabular-nums leading-tight ${percentageFontSize}`}>{cat.value}%</span>
+                  <span className={`font-bold uppercase tracking-tight leading-tight text-center w-full ${categoryFontSize}`}>
+                    {cat.name}
+                  </span>
+                </div>
+
+                {/* Tooltip on hover - always show category name on hover */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-10 hidden sm:block">
+                  <div className="bg-[#1B2631] text-white text-xs font-semibold px-2 py-1 rounded whitespace-nowrap">
+                    {cat.name}: {cat.value}%
+                  </div>
                 </div>
               </div>
             );
@@ -695,7 +667,7 @@ function ImpactStory() {
         </div>
         {/* Mobile category labels below the bar */}
         <div className="sm:hidden flex px-2 py-2 gap-1 bg-[#1B2631]">
-          {CATEGORY_BREAKDOWN.map((cat) => (
+          {categoryBreakdown.map((cat) => (
             <div key={cat.name} className="flex items-center gap-1 flex-1 justify-center">
               <span className="w-2 h-2 rounded-full shrink-0" style={{ background: cat.color }} />
               <span className="text-xs text-white/60 font-medium truncate">{cat.name}</span>
@@ -713,14 +685,14 @@ function ImpactStory() {
           {/* ─── Centers ranked list ─── */}
           <div className="mb-14 lg:mb-16">
             <p
-              className="text-sm font-extrabold uppercase tracking-[0.25em] text-[#1B2631]/45 mb-6"
+              className="text-base font-extrabold uppercase tracking-[0.25em] text-[#1B2631]/45 mb-6"
               style={{ opacity: isVisible ? 1 : 0, transform: isVisible ? 'translateY(0)' : 'translateY(8px)', transition: 'all 0.5s 0.5s' }}
             >
-              Centros más activos – según donaciones procesadas
+              Centros más activos - según movimientos registrados
             </p>
 
             <div className="space-y-4">
-              {TOP_CENTERS.map((center, i) => {
+              {topCenters.map((center, i) => {
                 const fill = (center.processed / maxProcessed) * 100;
                 const delay = 600 + i * 140;
                 return (
@@ -734,36 +706,36 @@ function ImpactStory() {
                   />
                 );
               })}
+              {!loading && topCenters.length === 0 && (
+                <p className="text-lg text-[#1B2631]/60">Sin datos de actividad de centros.</p>
+              )}
             </div>
           </div>
 
           {/* ─── Category detail cards ─── */}
           <div>
             <p
-              className="text-sm font-extrabold uppercase tracking-[0.25em] text-[#1B2631]/45 mb-6"
+              className="text-base font-extrabold uppercase tracking-[0.25em] text-[#1B2631]/45 mb-6"
               style={{ opacity: isVisible ? 1 : 0, transform: isVisible ? 'translateY(0)' : 'translateY(8px)', transition: 'all 0.5s 0.9s' }}
             >
               ¿Qué se dona?
             </p>
 
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              {CATEGORY_BREAKDOWN.map((cat, i) => (
+              {categoryBreakdown.map((cat, i) => (
                 <CategoryDetailCard
                   key={cat.name}
                   category={cat}
                   isVisible={isVisible}
                   delay={1000 + i * 130}
-                  totalDonations={totalDonations}
+                  totalQuantity={totalCategoryQuantity}
                 />
               ))}
             </div>
+            {!loading && categoryBreakdown.length === 0 && (
+              <p className="text-lg text-[#1B2631]/60">Sin categorias con datos reales disponibles.</p>
+            )}
 
-            <p
-              className="mt-8 text-base leading-relaxed text-[#1B2631]/55 max-w-2xl"
-              style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.6s 1.6s' }}
-            >
-              Alimentos y abrigo sostienen la mayor parte de la red, mientras medicamentos y útiles escolares responden a necesidades críticas en momentos puntuales.
-            </p>
           </div>
         </div>
       </div>
@@ -808,8 +780,8 @@ function CenterRankCard({ center, rank, fill, isVisible, delay }) {
           <h3 className="text-lg sm:text-xl font-extrabold text-[#1B2631] leading-snug group-hover:text-[#E34E26] transition-colors duration-300 truncate">
             {center.name}
           </h3>
-          <p className="mt-0.5 flex items-center gap-1.5 text-base font-medium text-[#1B2631]/50">
-            <MapPin size={13} className="shrink-0 text-[#E34E26]/60" /> {center.city}
+          <p className="mt-0.5 flex items-center gap-1.5 text-lg font-medium text-[#1B2631]/50">
+            <MapPin size={13} className="shrink-0 text-[#E34E26]/60" /> {center.locationLabel || 'Ubicacion no disponible'}
           </p>
         </div>
 
@@ -818,7 +790,7 @@ function CenterRankCard({ center, rank, fill, isVisible, delay }) {
           <p className="text-3xl sm:text-4xl lg:text-5xl font-black tabular-nums text-[#E34E26] leading-none tracking-tight">
             {animatedCount.toLocaleString()}
           </p>
-          <p className="mt-1 text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-[#1B2631]/40">
+          <p className="mt-1 text-sm sm:text-base font-bold uppercase tracking-[0.2em] text-[#1B2631]/40">
             donaciones
           </p>
         </div>
@@ -828,10 +800,10 @@ function CenterRankCard({ center, rank, fill, isVisible, delay }) {
 }
 
 /* ── Category Detail Card ──────────────────────────────────────── */
-function CategoryDetailCard({ category, isVisible, delay, totalDonations }) {
-  const estimatedCount = Math.round((category.value / 100) * totalDonations);
+function CategoryDetailCard({ category, isVisible, delay, totalQuantity }) {
+  const estimatedCount = Math.round((category.value / 100) * totalQuantity);
   const animatedPercent = useCountUp(category.value, isVisible, 1400);
-  const Icon = CATEGORY_ICONS[category.name];
+  const Icon = CATEGORY_ICONS[category.name] || <Package size={16} />;
 
   return (
     <div
@@ -846,7 +818,7 @@ function CategoryDetailCard({ category, isVisible, delay, totalDonations }) {
       <div className="absolute top-0 left-0 right-0 h-1 transition-all duration-1000" style={{ background: category.color, opacity: isVisible ? 1 : 0, transitionDelay: `${delay + 200}ms` }} />
       
       {/* Background percentage watermark */}
-      <span className="pointer-events-none absolute -bottom-3 -right-1 select-none text-7xl sm:text-8xl font-black leading-none" style={{ color: category.color, opacity: 0.06 }}>
+      <span className="pointer-events-none absolute -bottom-3 -right-1 select-none text-7xl sm:text-8xl font-black leading-none" style={{ color: category.color, opacity: 0.2 }}>
         {category.value}
       </span>
 
@@ -856,7 +828,7 @@ function CategoryDetailCard({ category, isVisible, delay, totalDonations }) {
           <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${category.color}18` }}>
             <span style={{ color: category.color }}>{Icon}</span>
           </div>
-          <p className="text-base font-bold uppercase tracking-wider text-[#1B2631]/60">{category.name}</p>
+          <p className="text-lg font-bold uppercase tracking-wider text-[#1B2631]/60">{category.name}</p>
         </div>
 
         {/* Big percentage */}
@@ -866,8 +838,8 @@ function CategoryDetailCard({ category, isVisible, delay, totalDonations }) {
         </p>
 
         {/* Estimated count */}
-        <p className="mt-2 text-sm font-semibold text-[#1B2631]/40">
-          ~{estimatedCount.toLocaleString()} donaciones
+        <p className="mt-2 text-base font-semibold text-[#1B2631]/40">
+          ~{estimatedCount.toLocaleString()} unidades
         </p>
 
         {/* Mini fill bar */}
@@ -889,9 +861,49 @@ function CategoryDetailCard({ category, isVisible, delay, totalDonations }) {
 /* ── MAIN ─────────────────────────────────────────────────────────── */
 
 export default function AccionDelSur() {
-  const cities = Object.keys(CITY_EXPLORER_DATA);
-  const [selectedCity, setSelectedCity] = useState(cities[0]);
-  const cityData = CITY_EXPLORER_DATA[selectedCity];
+  const [loadingLanding, setLoadingLanding] = useState(true);
+  const [landingError, setLandingError] = useState('');
+  const [landingSummary, setLandingSummary] = useState(null);
+  const [categoryBreakdown, setCategoryBreakdown] = useState([]);
+  const [topCenters, setTopCenters] = useState([]);
+  const [tickerFacts, setTickerFacts] = useState(['Datos publicos conectando con la base de datos']);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadLandingData = async () => {
+      try {
+        const [summaryPayload, centersPayload] = await Promise.all([
+          getLandingSummary(),
+          getLandingCentersRanking(),
+          getLandingRecentMovements(),
+        ]);
+
+        if (!mounted) return;
+
+        setLandingSummary(summaryPayload.summary || null);
+        setCategoryBreakdown(
+          (summaryPayload.categoryBreakdown || []).filter(
+            (cat) => String(cat?.name || '').toLowerCase() !== 'medicamentos'
+          )
+        );
+        setTickerFacts((summaryPayload.tickerFacts && summaryPayload.tickerFacts.length > 0)
+          ? summaryPayload.tickerFacts
+          : ['Datos publicos conectando con la base de datos']);
+        setTopCenters(centersPayload.data || []);
+      } catch (error) {
+        if (!mounted) return;
+        setLandingError('No se pudieron cargar los datos publicos del sistema.');
+      } finally {
+        if (mounted) setLoadingLanding(false);
+      }
+    };
+
+    loadLandingData();
+    return () => { mounted = false; };
+  }, []);
+
+  const slides = buildHeroSlides(landingSummary);
 
   return (
     <div className="bg-stone-50 text-stone-800">
@@ -909,16 +921,24 @@ export default function AccionDelSur() {
 
       `}</style>
 
-      <HeroSlider />
+      <HeroSlider slides={slides} />
+
+      {landingError && (
+        <div className="px-4 sm:px-6 lg:px-8 py-4">
+          <div className="max-w-7xl mx-auto rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-amber-800 text-sm sm:text-base">
+            {landingError}
+          </div>
+        </div>
+      )}
 
 
       {/* ── Live ticker strip ──────────────────────────────────────── */}
       <div className="bg-[#1B2631] border-y border-white/5 overflow-hidden py-3">
         <div className="flex gap-12 animate-[marquee_18s_linear_infinite] whitespace-nowrap w-max">
           {[...Array(3)].flatMap(() =>
-            ['12.480 donaciones registradas', '94 centros activos', '38.200 beneficiarios', '524.000 kg entregados', 'Transparencia total garantizada']
+            tickerFacts
               .map((t, i) => (
-                <span key={`${t}-${i}`} className="text-base text-white/50 font-medium tracking-wider uppercase flex items-center gap-3">
+                <span key={`${t}-${i}`} className="text-base text-white font-bold tracking-wider uppercase flex items-center gap-3">
                   <span className="w-1 h-1 rounded-full bg-[#E34E26] inline-block" />
                   {t}
                 </span>
@@ -932,137 +952,11 @@ export default function AccionDelSur() {
 
       {/* ── Impacto (full-width) ─────────────────────────────────── */}
       <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-20 py-20">
-        <ImpactStory />
-      </div>
-
-      {/* ── Explorador por ciudad (full-width) ─────────────────── */}
-      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-20 py-20">
-        <section id="localidad" className="relative rounded-3xl overflow-hidden">
-          {/* Dark editorial background */}
-          <div className="relative bg-[#1B2631] rounded-t-3xl px-6 py-12 sm:px-10 sm:py-16 lg:px-14 lg:py-20 overflow-hidden">
-            {/* Decorative elements */}
-            <div className="pointer-events-none absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #E34E26, transparent 70%)', transform: 'translate(20%, -40%)' }} />
-            <div className="pointer-events-none absolute bottom-0 left-0 w-[350px] h-[350px] rounded-full opacity-[0.04]" style={{ background: 'radial-gradient(circle, #B9A48E, transparent 70%)', transform: 'translate(-20%, 30%)' }} />
-            <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
-
-            <div className="relative z-10">
-              <p className="text-base font-bold tracking-[0.25em] uppercase text-[#E34E26] mb-5">Explorador</p>
-              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.08] max-w-3xl">
-                ¿Qué pasa en{' '}
-                <span className="text-[#E34E26]">tu ciudad?</span>
-              </h2>
-              <p className="text-xl text-white/50 mt-4 max-w-xl font-medium">
-                Elegí una localidad y mirá el movimiento de donaciones en esa zona.
-              </p>
-
-              {/* City selector — pill tabs */}
-              <div className="mt-10 flex flex-wrap gap-2">
-                {cities.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => setSelectedCity(c)}
-                    className={`px-5 py-2.5 rounded-full text-base font-bold tracking-wide transition-all duration-300 border-2 ${
-                      selectedCity === c
-                        ? 'bg-[#E34E26] border-[#E34E26] text-white shadow-lg shadow-[#E34E26]/20'
-                        : 'border-white/15 text-white/60 hover:border-white/30 hover:text-white/90 hover:bg-white/5'
-                    }`}
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Stats ribbon */}
-          <div className="bg-[#1B2631] border-t border-white/5">
-            <div className="grid grid-cols-3">
-              {[
-                { label: 'Recibidas', value: cityData.received, icon: TrendingUp },
-                { label: 'Enviadas', value: cityData.sent, icon: Send },
-                { label: 'Centros activos', value: cityData.activeCenters, icon: Activity },
-              ].map((m, i) => {
-                const Icon = m.icon;
-                return (
-                  <div
-                    key={m.label}
-                    className={`relative py-8 px-6 sm:px-8 text-center group ${
-                      i < 2 ? 'border-r border-white/5' : ''
-                    }`}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-b from-[#E34E26]/0 to-[#E34E26]/0 group-hover:from-[#E34E26]/5 group-hover:to-transparent transition-all duration-500" />
-                    <div className="relative z-10">
-                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mx-auto mb-3">
-                        <Icon size={18} className="text-[#E34E26]" />
-                      </div>
-                      <p className="text-3xl sm:text-4xl lg:text-5xl font-black tabular-nums text-white leading-none tracking-tight">
-                        {m.value}
-                      </p>
-                      <p className="mt-2 text-sm sm:text-base font-bold uppercase tracking-[0.2em] text-white/40">
-                        {m.label}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Bottom content area */}
-          <div className="rounded-b-3xl border border-t-0 border-[#1B2631]/8 bg-[#F7F1EA] relative overflow-hidden">
-            <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse at 20% 0%, rgba(227,78,38,0.06), transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(27,38,49,0.04), transparent 50%)' }} />
-            
-            <div className="relative z-10 px-6 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-16">
-              <div className="grid lg:grid-cols-2 gap-6">
-                {/* Frequent categories */}
-                <div className="group relative overflow-hidden rounded-2xl border border-[#1B2631]/8 bg-white/80 backdrop-blur-sm p-6 sm:p-8 hover:shadow-lg transition-all duration-500">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#E34E26] to-[#E34E26]/30" />
-                  <span className="pointer-events-none absolute -bottom-4 -right-2 select-none text-8xl font-black leading-none text-[#1B2631]/[0.03]">
-                    ✦
-                  </span>
-                  <p className="text-sm font-extrabold uppercase tracking-[0.25em] text-[#1B2631]/45 mb-5">Categorías frecuentes</p>
-                  <div className="flex flex-wrap gap-3">
-                    {cityData.frequentCategories.map((c, i) => (
-                      <span
-                        key={c}
-                        className="relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-base font-bold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
-                        style={{
-                          background: i === 0 ? '#1B2631' : i === 1 ? '#2E4053' : '#E34E26',
-                          color: 'white',
-                        }}
-                      >
-                        <span className="w-2 h-2 rounded-full bg-white/30" />
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Recent donations */}
-                <div className="group relative overflow-hidden rounded-2xl border border-[#1B2631]/8 bg-white/80 backdrop-blur-sm p-6 sm:p-8 hover:shadow-lg transition-all duration-500">
-                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#2E4053] to-[#1B2631]/30" />
-                  <span className="pointer-events-none absolute -bottom-4 -right-2 select-none text-8xl font-black leading-none text-[#E34E26]/[0.04]">
-                    ↗
-                  </span>
-                  <p className="text-sm font-extrabold uppercase tracking-[0.25em] text-[#1B2631]/45 mb-5">Donaciones recientes</p>
-                  <div className="space-y-3">
-                    {cityData.recent.map((item, i) => (
-                      <div
-                        key={item}
-                        className="flex items-start gap-3 p-3 rounded-xl bg-[#1B2631]/[0.02] border border-[#1B2631]/5 hover:bg-[#1B2631]/[0.05] hover:border-[#1B2631]/10 transition-all duration-300"
-                      >
-                        <div className="shrink-0 mt-0.5 w-7 h-7 rounded-lg bg-[#1B2631] flex items-center justify-center">
-                          <span className="text-sm font-black text-[#E34E26]">{i + 1}</span>
-                        </div>
-                        <p className="text-base font-medium text-[#1B2631]/70 leading-relaxed">{item}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <ImpactStory
+          categoryBreakdown={categoryBreakdown}
+          topCenters={topCenters}
+          loading={loadingLanding}
+        />
       </div>
 
       {/* ── Trust / Por qué confiar (full-width) ──────────────── */}
@@ -1072,12 +966,12 @@ export default function AccionDelSur() {
           <div className="pointer-events-none absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, #B9A48E, transparent 70%)', transform: 'translate(-20%, 30%)' }} />
           <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
           <div className="relative z-10">
-            <SectionLabel><span className="text-white/40">Transparencia</span></SectionLabel>
+            <SectionLabel><span className="text-white text-xl font-bold">Transparencia</span></SectionLabel>
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white max-w-3xl leading-tight">
               ¿Por qué confiar en{' '}
               <span className="text-[#E34E26]">este sistema?</span>
             </h2>
-            <p className="text-xl text-white/50 mt-4 max-w-xl font-medium">
+            <p className="text-2xl text-white mt-5 max-w-2xl font-bold leading-relaxed">
               La trazabilidad es la forma de ver con claridad por dónde pasó cada ayuda y confirmar que llegó a destino.
             </p>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
@@ -1088,8 +982,8 @@ export default function AccionDelSur() {
                     <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center mb-4">
                       <Icon size={16} className="text-[#E34E26]" />
                     </div>
-                    <h3 className="font-semibold text-lg text-white">{point.title}</h3>
-                    <p className="text-base text-white/60 mt-2 leading-relaxed">{point.text}</p>
+                    <h3 className="text-xl font-extrabold text-[#E34E26]">{point.title}</h3>
+                    <p className="text-xl text-white font-bold mt-2 leading-relaxed">{point.text}</p>
                   </div>
                 );
               })}
@@ -1116,7 +1010,7 @@ export default function AccionDelSur() {
             </div>
           </div>
           <nav className="flex flex-wrap gap-5 text-base text-stone-400">
-            {[['#inicio', 'Inicio'], ['#impacto', 'Impacto'], ['#localidad', 'Tu ciudad'], ['#confianza', 'Transparencia'], ['#', 'Instagram'], ['#', 'LinkedIn']].map(([href, label]) => (
+            {[['#inicio', 'Inicio'], ['#impacto', 'Impacto'], ['#como-funciona', 'Proceso'], ['#confianza', 'Transparencia'], ['#', 'Instagram'], ['#', 'LinkedIn']].map(([href, label]) => (
               <a key={label} href={href} className="hover:text-stone-700 transition-colors">{label}</a>
             ))}
           </nav>

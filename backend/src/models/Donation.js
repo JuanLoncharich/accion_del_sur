@@ -31,6 +31,14 @@ const Donation = sequelize.define('Donation', {
     type: DataTypes.STRING(64),
     allowNull: true,
   },
+  donor_email: {
+    type: DataTypes.STRING(255),
+    allowNull: true,
+  },
+  donation_reception_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   blockchain_hash: {
     type: DataTypes.STRING(255),
     allowNull: true,

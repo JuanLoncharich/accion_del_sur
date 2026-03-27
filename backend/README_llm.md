@@ -17,6 +17,7 @@ Pasos para activar completamente en un entorno nuevo
    - Configura en `backend/.env` o en el entorno:
      - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
      - Opcionalmente: `LLM_DB_HOST`, `LLM_DB_PORT`, `LLM_DB_USER`, `LLM_DB_PASSWORD`, `LLM_DB_NAME` (si prefieres credenciales específicas para el LLM)
+   - Opcionalmente: `OPENCODE_BIN` (ruta absoluta al binario `opencode`, útil si el proceso backend corre con un PATH restringido)
      - `JWT_SECRET` debe estar definido
 2. Usuario DB de solo lectura
    - Crea un usuario con permisos SELECT sobre la BDD `accion_del_sur` y exporta `LLM_DB_USER` y `LLM_DB_PASSWORD`.

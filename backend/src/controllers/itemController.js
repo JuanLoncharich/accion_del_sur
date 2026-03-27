@@ -1,6 +1,19 @@
 const { Op } = require('sequelize');
+const crypto = require('crypto');
 const { Item, Category, Donation, Distribution, Center, sequelize } = require('../models');
-const stellarService = require('../services/blockchain/stellarService');
+const sftService = require('../services/blockchain/sftService');
+
+const isSftEnabled = () =>
+  process.env.STELLAR_ENABLED === 'true' && Boolean(process.env.SOROBAN_CONTRACT_SFT);
+
+const isValidTokenIdHex = (value) => /^[a-f0-9]{64}$/i.test(String(value || '').trim());
+
+const resolveTokenIdFromItem = (item) => {
+  if (isValidTokenIdHex(item?.blockchain_hash)) {
+    return String(item.blockchain_hash).trim().toLowerCase();
+  }
+  return sftService.computeTokenId(item.id);
+};
 
 exports.list = async (req, res, next) => {
   try {
@@ -59,29 +72,37 @@ exports.update = async (req, res, next) => {
     // Actualizar el item
     await item.update(req.body, { transaction: t });
 
-    // Si el centro cambió y es un centro válido, registrar en blockchain
-    if (newCenterId && newCenterId !== oldCenterId) {
-      const center = await Center.findByPk(newCenterId, { transaction: t });
+    // Si el centro cambió, intentar reflejar movimiento en SFT si aplica.
+    if (newCenterId && newCenterId !== oldCenterId && isSftEnabled()) {
+      try {
+        const [fromCenter, toCenter] = await Promise.all([
+          oldCenterId ? Center.findByPk(oldCenterId, { transaction: t }) : Promise.resolve(null),
+          Center.findByPk(newCenterId, { transaction: t }),
+        ]);
 
-      if (center && center.is_active && center.blockchain_contract_id) {
-        try {
-          console.log(`[Item] Registrando item ${item.id} en centro ${center.name} (${center.blockchain_contract_id})`);
+        const canTransferOnChain =
+          oldCenterId
+          && fromCenter?.is_active
+          && toCenter?.is_active
+          && fromCenter?.blockchain_contract_id
+          && toCenter?.blockchain_contract_id
+          && item.token_status === 'minted'
+          && Number(item.quantity) > 0;
 
-          await stellarService.registrarIngresoCentro(
-            center.blockchain_contract_id,
-            {
-              itemId: item.id,
-              cantidad: item.quantity,
-              origen: oldCenterId ? 'transferencia' : 'donacion',
-              motivo: `Item asignado a centro ${center.name}`,
-            }
-          );
-
-          console.log(`[Item] Item ${item.id} registrado exitosamente en centro ${center.name}`);
-        } catch (blockchainError) {
-          console.error(`[Item] Error registrando item en centro:`, blockchainError.message);
-          // No fallamos la operación si blockchain falla (graceful degradation)
+        if (canTransferOnChain) {
+          await sftService.transferBetweenCenters({
+            fromAddress: fromCenter.blockchain_contract_id,
+            toAddress: toCenter.blockchain_contract_id,
+            tokenId: resolveTokenIdFromItem(item),
+            cantidad: Number(item.quantity),
+            motivoHash: crypto.createHash('sha256')
+              .update(`item.update center ${oldCenterId} -> ${newCenterId} (${new Date().toISOString()})`)
+              .digest('hex'),
+          });
         }
+      } catch (blockchainError) {
+        console.error('[Item] Error reflejando cambio de centro en SFT:', blockchainError.message);
+        // Graceful degradation: no revertimos cambios en MySQL por error on-chain.
       }
     }
 

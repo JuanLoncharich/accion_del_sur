@@ -496,10 +496,22 @@ class StellarService {
   }
 
   async _pollTransaccion(txId) {
-    const MAX_INTENTOS = 30;
-    for (let i = 0; i < MAX_INTENTOS; i++) {
-      await new Promise((r) => setTimeout(r, 1000));
-      const resultado = await this.rpc.getTransaction(txId);
+    const pollIntervalMs = Number(process.env.STELLAR_POLL_INTERVAL_MS || 1500);
+    const timeoutSec = Number(process.env.STELLAR_TX_TIMEOUT_SEC || 120);
+    const maxIntentos = Math.max(1, Math.ceil((timeoutSec * 1000) / Math.max(250, pollIntervalMs)));
+    for (let i = 0; i < maxIntentos; i++) {
+      await new Promise((r) => setTimeout(r, pollIntervalMs));
+
+      let resultado;
+      try {
+        resultado = await this.rpc.getTransaction(txId);
+      } catch (error) {
+        // Errores de red/transitorios del RPC: continuar reintentando hasta timeout.
+        if (i === maxIntentos - 1) {
+          throw new Error(`Error consultando estado de transacción: ${error.message || error}`);
+        }
+        continue;
+      }
 
       if (resultado.status === StellarSdk.rpc.Api.GetTransactionStatus.SUCCESS) {
         return resultado;
@@ -508,7 +520,7 @@ class StellarService {
         throw new Error(`Transacción fallida: ${txId}`);
       }
     }
-    throw new Error(`Timeout esperando transacción: ${txId}`);
+    throw new Error(`Timeout esperando transacción: ${txId} (${timeoutSec}s)`);
   }
 }
 

@@ -29,6 +29,8 @@ const tableColumnDefinitions = {
     center_latitude: 'DECIMAL(10,7) NULL',
     center_longitude: 'DECIMAL(10,7) NULL',
     center_geo_hash: 'VARCHAR(64) NULL',
+    donor_email: 'VARCHAR(255) NULL',
+    donation_reception_id: 'INT NULL',
     blockchain_hash: 'VARCHAR(255) NULL',
     blockchain_tx_id: 'VARCHAR(255) NULL',
     status: "ENUM('pending','anchored','failed') NOT NULL DEFAULT 'pending'",
@@ -116,8 +118,8 @@ const ensureCenterTables = async () => {
     CREATE TABLE IF NOT EXISTS centers (
       id INT AUTO_INCREMENT PRIMARY KEY,
       name VARCHAR(120) NOT NULL,
-      latitude DECIMAL(10,7) NOT NULL,
-      longitude DECIMAL(10,7) NOT NULL,
+      latitude DECIMAL(10,7) NULL,
+      longitude DECIMAL(10,7) NULL,
       geo_hash VARCHAR(64) NULL,
       blockchain_contract_id VARCHAR(255) NULL,
       blockchain_deploy_tx VARCHAR(255) NULL,
@@ -181,6 +183,8 @@ const ensureSchema = async () => {
   }
 
   await ensureColumnNullable('distributions', 'receiver_identifier');
+  await ensureColumnNullable('centers', 'latitude');
+  await ensureColumnNullable('centers', 'longitude');
   await ensureAuditAccessLogTable();
   await ensureDonationReceptionTables();
   await ensureCenterTables();

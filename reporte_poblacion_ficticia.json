@@ -1,0 +1,238 @@
+{
+  "timestamp": "2026-03-27T17:55:07.689Z",
+  "created_categories": [
+    {
+      "is_active": true,
+      "id": 7,
+      "name": "Higiene Personal",
+      "description": "Insumos de higiene y cuidado personal para familias vulnerables",
+      "created_at": "2026-03-27T17:55:07.861Z"
+    },
+    {
+      "is_active": true,
+      "id": 8,
+      "name": "Kit Escolar",
+      "description": "Materiales escolares para ninos y adolescentes en edad escolar",
+      "created_at": "2026-03-27T17:55:07.873Z"
+    },
+    {
+      "is_active": true,
+      "id": 9,
+      "name": "Abrigo Invernal",
+      "description": "Prendas y elementos termicos para bajas temperaturas",
+      "created_at": "2026-03-27T17:55:07.883Z"
+    }
+  ],
+  "created_centers": [
+    {
+      "id": 3,
+      "name": "Centro Logistico CABA - Barracas",
+      "latitude": "-34.6469820",
+      "longitude": "-58.3778130",
+      "geo_hash": "4982ea8614b01b4e8ba298d953f6447f28068700eed7d32fd6b830e8ad65d504",
+      "blockchain_contract_id": "CD2BJNAC2FKZFOW3I6QF3HTC3SPR5KKY3PJKXEI5G4H55UGTYT2JWBN5",
+      "blockchain_deploy_tx": "556cba7eda1a163668cf36300b33a0ccb950a3c4e11828cdadb2acf7713fff77",
+      "blockchain_init_tx": "61a4679d0cea090697ec722bd031c54ff3bccf485b23e5d2b14b12dd906e4000",
+      "is_active": true,
+      "created_by": 1,
+      "created_at": "2026-03-27T17:55:20.000Z",
+      "updated_at": "2026-03-27T17:55:20.000Z",
+      "createdBy": {
+        "id": 1,
+        "username": "admin"
+      }
+    },
+    {
+      "id": 4,
+      "name": "Centro Comunitario Rosario Norte",
+      "latitude": "-32.8908410",
+      "longitude": "-60.6643150",
+      "geo_hash": "2b8fbf02995867631154391e18046bfbcf9cfe0267ff4ac6b9ff557aabe4db1d",
+      "blockchain_contract_id": "CDSQVKEYNJAGU3ZH25P63RBBRYXOF4Q2ZQII7QUVEJAXAYTZL63ETS7J",
+      "blockchain_deploy_tx": "a7da9b61151f3e6a1dd506c543340cd10e9ff25825221f9af70af6cf031a5b8d",
+      "blockchain_init_tx": "96afaa09a3d818da7dd1af061d8308fec5cd7efb37e63e841f2f3033a83f3f9c",
+      "is_active": true,
+      "created_by": 1,
+      "created_at": "2026-03-27T17:55:29.000Z",
+      "updated_at": "2026-03-27T17:55:29.000Z",
+      "createdBy": {
+        "id": 1,
+        "username": "admin"
+      }
+    },
+    {
+      "id": 5,
+      "name": "Nodo Solidario Cordoba Capital",
+      "latitude": "-31.4200830",
+      "longitude": "-64.1887760",
+      "geo_hash": "cf6bcfbea52b1735e657cb822e3d75ca8dd67c9812264d82dd7b2f59f9576a32",
+      "blockchain_contract_id": "CCJRMQH2EZBP4EDQDZ6KXPSUSUHO3TLFPJOI3YJFVMLTET7J7PJI3RZ4",
+      "blockchain_deploy_tx": "965967f6549e8c520efe2e0ae7164e4cf707a2d51852b8d3753461a737a951b6",
+      "blockchain_init_tx": "5f1829e1aa0dbff7c27fc8987c3bbbaa663820039dfead8dff32489e08917904",
+      "is_active": true,
+      "created_by": 1,
+      "created_at": "2026-03-27T17:55:39.000Z",
+      "updated_at": "2026-03-27T17:55:39.000Z",
+      "createdBy": {
+        "id": 1,
+        "username": "admin"
+      }
+    },
+    {
+      "id": 6,
+      "name": "Punto de Acopio Mendoza Godoy Cruz",
+      "latitude": "-32.9286260",
+      "longitude": "-68.8443110",
+      "geo_hash": "84361bf797d056b877274eaa360818005700f1eb0e4ee36537fdf0a88b24e8ac",
+      "blockchain_contract_id": "CDYFNV62FC27VQTQTSW4GBL3ZKBV6DO5WBSLHS4SQIDYFLETJARBHRWQ",
+      "blockchain_deploy_tx": "5679f13600d71170010b04547b1b2626468d84951b6cdffde93db3473f610cce",
+      "blockchain_init_tx": "7eda85126e28eaffd9dbf98117d258bc65824f087cbf402cb0906fa93a1b4041",
+      "is_active": true,
+      "created_by": 1,
+      "created_at": "2026-03-27T17:55:50.000Z",
+      "updated_at": "2026-03-27T17:55:50.000Z",
+      "createdBy": {
+        "id": 1,
+        "username": "admin"
+      }
+    }
+  ],
+  "donations": [
+    {
+      "donation_id": 28,
+      "item_id": 11,
+      "center_id": 3,
+      "category": "Alimentos",
+      "quantity": 140,
+      "status": "anchored",
+      "blockchain_hash": "0b5000b73a53f0916c93c68f4b9b6ba8af5a10978634ae4f2237e1f3fbe324fa",
+      "blockchain_tx_id": "09eaa64f637fe83cd03b91a95cfbe1cca679539ec6a4ae2c0101d6d4d954fa42",
+      "donor_email": "fundacion.rioverde@donantes.ar",
+      "notes": "Donacion corporativa mensual de alimentos secos de primera necesidad"
+    },
+    {
+      "donation_id": 29,
+      "item_id": 12,
+      "center_id": 4,
+      "category": "Medicamentos",
+      "quantity": 65,
+      "status": "anchored",
+      "blockchain_hash": "d27a8d9a8d38c7a37c922450a7a1961f138abfa25f5da3df2b972820715fa5ae",
+      "blockchain_tx_id": "7fb6b945a8a4e7f5f1212147cd59ee3778615f871dbd074a8235b28d72c61086",
+      "donor_email": "salud.solidaria@donantes.ar",
+      "notes": "Botiquines de primeros auxilios y analgesicos de uso ambulatorio"
+    },
+    {
+      "donation_id": 30,
+      "item_id": 13,
+      "center_id": 5,
+      "category": "Higiene Personal",
+      "quantity": 210,
+      "status": "anchored",
+      "blockchain_hash": "1f5edc6f1efb165d45a654798d4baaa50e3b4d24182913aef5110a15580ebaad",
+      "blockchain_tx_id": "227296c44184845b63e468399992547adf374f034752b7e340e1e37f60fb07ab",
+      "donor_email": "asociacion.limpia@donantes.ar",
+      "notes": "Kit de higiene para operativos territoriales de invierno"
+    },
+    {
+      "donation_id": 31,
+      "item_id": 14,
+      "center_id": 6,
+      "category": "Kit Escolar",
+      "quantity": 180,
+      "status": "anchored",
+      "blockchain_hash": "76b1ff1a6cb1b23738647eb1ea40d8f14b037285e457214aab335874feb6e79e",
+      "blockchain_tx_id": "0d11ff800e0a454988e77e89cf733edc871e00588872a17445557d0a63b557ae",
+      "donor_email": "educacion.futura@donantes.ar",
+      "notes": "Donacion para inicio de clases en barrios de Mendoza"
+    },
+    {
+      "donation_id": 32,
+      "item_id": 15,
+      "center_id": 3,
+      "category": "Abrigo Invernal",
+      "quantity": 95,
+      "status": "anchored",
+      "blockchain_hash": "e66c57014a6156061ae669809ec5d735e484e8fcfd540e110c9b04f84c0b4504",
+      "blockchain_tx_id": "38966159d614cd6474f56478fdfddcf8afe05ee5a2313b4e7ba8110855c49de0",
+      "donor_email": "red.abrigo@donantes.ar",
+      "notes": "Prendas termicas y frazadas para dispositivos nocturnos"
+    },
+    {
+      "donation_id": 33,
+      "item_id": 16,
+      "center_id": 4,
+      "category": "Herramientas",
+      "quantity": 40,
+      "status": "anchored",
+      "blockchain_hash": "998e907bfbb34f71c66b6dc6c40fe98ca6d2d5a29755bc5a04824c36082a61d1",
+      "blockchain_tx_id": "31f3b596932e23f705965a56cff5c9e393bd3f0e6a1544b3064c958558402843",
+      "donor_email": "brigada.rescate@donantes.ar",
+      "notes": "Herramientas para cuadrillas de reparacion comunitaria"
+    }
+  ],
+  "transfers": [
+    {
+      "transfer_id": 14,
+      "item_id": 11,
+      "from_center_id": 3,
+      "to_center_id": 4,
+      "quantity": 20,
+      "status": "anchored",
+      "egreso_blockchain_hash": "e3961ed4bba386e87035139781f8097fe70e92c479a429ff0a49272e8633e51b",
+      "egreso_blockchain_tx": "e3961ed4bba386e87035139781f8097fe70e92c479a429ff0a49272e8633e51b",
+      "ingreso_blockchain_hash": "e3961ed4bba386e87035139781f8097fe70e92c479a429ff0a49272e8633e51b",
+      "ingreso_blockchain_tx": "e3961ed4bba386e87035139781f8097fe70e92c479a429ff0a49272e8633e51b"
+    },
+    {
+      "transfer_id": 15,
+      "item_id": 13,
+      "from_center_id": 5,
+      "to_center_id": 6,
+      "quantity": 30,
+      "status": "anchored",
+      "egreso_blockchain_hash": "c658e606cef23d5bd15c0f6316dec5a6a2815cdeb06faf5b315b0a4806c8aa01",
+      "egreso_blockchain_tx": "c658e606cef23d5bd15c0f6316dec5a6a2815cdeb06faf5b315b0a4806c8aa01",
+      "ingreso_blockchain_hash": "c658e606cef23d5bd15c0f6316dec5a6a2815cdeb06faf5b315b0a4806c8aa01",
+      "ingreso_blockchain_tx": "c658e606cef23d5bd15c0f6316dec5a6a2815cdeb06faf5b315b0a4806c8aa01"
+    }
+  ],
+  "blockchain_checks": [
+    {
+      "center_id": 2,
+      "center_name": "Centro Sur",
+      "contract_id": "CD6NMCOFQTPE5SWHVQMN5CAYA5X26LGYUL6TZVC4YGIG2TLTEWTNSALN",
+      "onchain_token_count": 0
+    },
+    {
+      "center_id": 1,
+      "center_name": "Centro Norte",
+      "contract_id": "CB3VW3JS56FDI2JJQTZAWRED25VGTEVDVZF7CJNNLF6KIKIIUU6MC32D",
+      "onchain_token_count": 0
+    },
+    {
+      "center_id": 3,
+      "center_name": "Centro Logistico CABA - Barracas",
+      "contract_id": "CD2BJNAC2FKZFOW3I6QF3HTC3SPR5KKY3PJKXEI5G4H55UGTYT2JWBN5",
+      "onchain_token_count": 0
+    },
+    {
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "contract_id": "CDSQVKEYNJAGU3ZH25P63RBBRYXOF4Q2ZQII7QUVEJAXAYTZL63ETS7J",
+      "onchain_token_count": 0
+    },
+    {
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "contract_id": "CCJRMQH2EZBP4EDQDZ6KXPSUSUHO3TLFPJOI3YJFVMLTET7J7PJI3RZ4",
+      "onchain_token_count": 0
+    },
+    {
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "contract_id": "CDYFNV62FC27VQTQTSW4GBL3ZKBV6DO5WBSLHS4SQIDYFLETJARBHRWQ",
+      "onchain_token_count": 0
+    }
+  ]
+}

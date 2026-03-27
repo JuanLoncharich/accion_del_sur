@@ -9,15 +9,22 @@ PROMPT_FILE="$CHATLLM_DIR/agent_prompt_mysql.txt"
 LOCAL_CONFIG_FILE="$CHATLLM_DIR/opencode.json"
 READONLY_SQL_SCRIPT="$SCRIPT_DIR/mysql_readonly_query.sh"
 LAST_RESPONSE_FILE="$CHATLLM_DIR/.last_llm_response.txt"
+LAST_RESPONSE_FALLBACK="/tmp/opencode_last_response_${USER:-user}.txt"
 
 HAS_OPENCODE=0
+OPENCODE_CMD=(opencode)
 if command -v opencode >/dev/null 2>&1; then
   HAS_OPENCODE=1
+elif command -v npx >/dev/null 2>&1; then
+  if npx -y opencode-ai --version >/dev/null 2>&1; then
+    HAS_OPENCODE=1
+    OPENCODE_CMD=(npx -y opencode-ai)
+  fi
 fi
 
 OPENCODE_MODE=""
 if [[ "$HAS_OPENCODE" -eq 1 ]]; then
-  if opencode --help 2>/dev/null | grep -q "opencode run"; then
+  if "${OPENCODE_CMD[@]}" --help 2>/dev/null | grep -q "opencode run"; then
     OPENCODE_MODE="run"
   else
     OPENCODE_MODE="legacy-p"
@@ -65,10 +72,21 @@ if [[ -f "$LOCAL_CONFIG_FILE" ]]; then
   export OPENCODE_CONFIG="$LOCAL_CONFIG_FILE"
 fi
 
+persist_last_response() {
+  local content="$1"
+  if ! (printf '%s\n' "$content" > "$LAST_RESPONSE_FILE") 2>/dev/null; then
+    (printf '%s\n' "$content" > "$LAST_RESPONSE_FALLBACK") 2>/dev/null || true
+  fi
+}
+
 cd "$PROJECT_ROOT"
 
 if [[ "$HAS_OPENCODE" -eq 1 ]]; then
-  echo "Chat MySQL (agente: mysql_qa). Escribe 'salir' para terminar."
+  if [[ "${OPENCODE_CMD[0]}" == "opencode" ]]; then
+    echo "Chat MySQL (agente: mysql_qa). Escribe 'salir' para terminar."
+  else
+    echo "Chat MySQL (agente: mysql_qa, ejecutando via npx opencode-ai). Escribe 'salir' para terminar."
+  fi
 else
   echo "Aviso: opencode no está instalado en PATH."
   echo "Modo fallback activado: ejecuta SQL de solo lectura directamente (SELECT/WITH/SHOW/DESCRIBE/EXPLAIN)."
@@ -113,30 +131,38 @@ $QUESTION"
 
   if [[ "$OPENCODE_MODE" == "run" ]]; then
     OPCODE_RAW_OUTPUT=""
-    if ! OPCODE_RAW_OUTPUT="$(opencode run --agent mysql_qa --format json "$FULL_PROMPT" 2>&1)"; then
+    if ! OPCODE_RAW_OUTPUT="$("${OPENCODE_CMD[@]}" run --agent mysql_qa --format json "$FULL_PROMPT" 2>&1)"; then
       echo "Error ejecutando opencode run" >&2
       echo "$OPCODE_RAW_OUTPUT" | tail -n 5 >&2
       echo
       continue
     fi
 
-    LAST_FINAL_RESPONSE="$(printf '%s\n' "$OPCODE_RAW_OUTPUT" | jq -r 'select(type=="object" and .type=="text" and .part.text != null) | .part.text' | tail -n 1)"
+    LAST_FINAL_RESPONSE="$(
+      printf '%s\n' "$OPCODE_RAW_OUTPUT" \
+        | sed -n '/^[[:space:]]*{/p' \
+        | jq -r 'select(type=="object" and .type=="text" and .part.text != null) | .part.text' 2>/dev/null \
+        | tail -n 1 || true
+    )"
 
     if [[ -z "$LAST_FINAL_RESPONSE" ]]; then
-      LAST_FINAL_RESPONSE="No pude generar una respuesta final en este intento."
+      LAST_FINAL_RESPONSE="No pude parsear una respuesta estructurada de opencode en este intento."
+      echo "$LAST_FINAL_RESPONSE" >&2
+      echo "Detalle de salida (ultimas 10 lineas):" >&2
+      echo "$OPCODE_RAW_OUTPUT" | tail -n 10 >&2
     fi
 
     export LAST_FINAL_RESPONSE
-    printf '%s\n' "$LAST_FINAL_RESPONSE" > "$LAST_RESPONSE_FILE"
+    persist_last_response "$LAST_FINAL_RESPONSE"
     printf '%s\n\n' "$LAST_FINAL_RESPONSE"
   else
-    opencode -p "$FULL_PROMPT" || {
+    "${OPENCODE_CMD[@]}" -p "$FULL_PROMPT" || {
       echo "Error ejecutando opencode -p" >&2
     }
 
     LAST_FINAL_RESPONSE="Modo legacy sin parseo estructurado: revisa salida de opencode arriba."
     export LAST_FINAL_RESPONSE
-    printf '%s\n' "$LAST_FINAL_RESPONSE" > "$LAST_RESPONSE_FILE"
+    persist_last_response "$LAST_FINAL_RESPONSE"
     echo
   fi
 

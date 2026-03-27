@@ -39,6 +39,10 @@ export default function Transferencias() {
     reason: '',
   });
 
+  const transferableItems = items.filter(
+    (item) => item.quantity > 0 && item.current_center_id && item.token_status === 'minted'
+  );
+
   useEffect(() => {
     fetchCenters();
     fetchItems();
@@ -287,14 +291,14 @@ export default function Transferencias() {
       {/* Items Available for Transfer */}
       <div className="bg-white rounded-2xl shadow-sm p-6">
         <h2 className="text-lg font-bold text-slate-800 mb-4">Items Disponibles</h2>
-        {items.length === 0 ? (
+        {transferableItems.length === 0 ? (
           <div className="text-center py-8 text-slate-400">
             <Package size={32} className="mx-auto mb-2" />
-            <p>No hay items disponibles</p>
+            <p>No hay ítems tokenizados y ubicados en un centro para transferir</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {items.filter((i) => i.quantity > 0).map((item) => (
+            {transferableItems.map((item) => (
               <div
                 key={item.id}
                 className="border-2 border-slate-200 rounded-xl p-4 hover:border-indigo-300 transition-colors"

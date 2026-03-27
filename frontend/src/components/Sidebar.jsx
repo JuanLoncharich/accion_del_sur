@@ -3,7 +3,6 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   ArrowRightLeft,
-  BarChart3,
   Building2,
   ClipboardList,
   Gift,
@@ -30,7 +29,6 @@ const NAV_ITEMS = [
   { to: '/distribuciones/nueva', label: 'Distribuir', icon: Handshake },
   { to: '/distribuciones', label: 'Historial Distribuciones', icon: ClipboardList },
   { to: '/analytics/historial', label: 'Historial Transacciones', icon: History },
-  { to: '/auditoria/integridad', label: 'Auditoría e Integridad', icon: BarChart3 },
   { to: '/consultas-asistente', label: 'Asistente de Consultas', icon: Bot },
 ];
 

@@ -9,6 +9,7 @@ router.get('/', authenticate, distributionController.list);
 router.post('/prepare', authenticate, [
   body('item_id').isInt().withMessage('Ítem inválido'),
   body('quantity').isInt({ min: 1 }).withMessage('Cantidad debe ser mayor a 0'),
+  body('center_id').isInt({ min: 1 }).withMessage('center_id inválido'),
   body('center_name').optional().isString().isLength({ max: 120 }),
   body('center_latitude').optional().isFloat({ min: -90, max: 90 }),
   body('center_longitude').optional().isFloat({ min: -180, max: 180 }),
@@ -30,6 +31,7 @@ router.post('/:id/finalize', authenticate, distributionController.finalize);
 router.post('/', authenticate, [
   body('item_id').isInt().withMessage('Ítem inválido'),
   body('quantity').isInt({ min: 1 }).withMessage('Cantidad debe ser mayor a 0'),
+  body('center_id').isInt({ min: 1 }).withMessage('center_id inválido'),
   body('center_name').optional().isString().isLength({ max: 120 }),
   body('center_latitude').optional().isFloat({ min: -90, max: 90 }),
   body('center_longitude').optional().isFloat({ min: -180, max: 180 }),

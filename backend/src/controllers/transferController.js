@@ -5,6 +5,15 @@ const sftService = require('../services/blockchain/sftService');
 const isSftEnabled = () =>
   process.env.STELLAR_ENABLED === 'true' && Boolean(process.env.SOROBAN_CONTRACT_SFT);
 
+const isValidTokenIdHex = (value) => /^[a-f0-9]{64}$/i.test(String(value || '').trim());
+
+const resolveTokenIdFromItem = (item) => {
+  if (isValidTokenIdHex(item?.blockchain_hash)) {
+    return String(item.blockchain_hash).trim().toLowerCase();
+  }
+  return sftService.computeTokenId(item.id);
+};
+
 exports.create = async (req, res, next) => {
   try {
     const { item_id, from_center_id, to_center_id, quantity, reason } = req.body;
@@ -32,15 +41,20 @@ exports.create = async (req, res, next) => {
     if (!item || !item.is_active) {
       return res.status(404).json({ error: 'Ítem no encontrado' });
     }
+    if (isSftEnabled() && item.token_status !== 'minted') {
+      return res.status(409).json({
+        error: 'El ítem todavía no está tokenizado. Finalizá primero la recepción QR para mintear en blockchain.',
+      });
+    }
     if (item.current_center_id !== from_center_id) {
       return res.status(409).json({
         error: `El ítem no está en el centro origen. Centro actual: ${item.current_center_id}`,
       });
     }
 
-    const transferQty = quantity || item.quantity;
+    const transferQty = quantity == null ? 1 : Number(quantity);
 
-    if (transferQty <= 0 || transferQty > item.quantity) {
+    if (!Number.isInteger(transferQty) || transferQty <= 0 || transferQty > item.quantity) {
       return res.status(400).json({
         error: `Cantidad inválida. Disponible: ${item.quantity}, solicitado: ${transferQty}`,
       });
@@ -62,7 +76,7 @@ exports.create = async (req, res, next) => {
     // ── 2. Blockchain primero (SFT transfer) ──────────────────────────────────
     let transferResult = null;
     if (isSftEnabled()) {
-      const tokenId = sftService.computeTokenId(item_id);
+      const tokenId = resolveTokenIdFromItem(item);
       const motivoHash = crypto.createHash('sha256')
         .update(reason || `Transferencia ${fromCenter.name} → ${toCenter.name}`)
         .digest('hex');
@@ -97,6 +111,11 @@ exports.create = async (req, res, next) => {
         return res.status(409).json({ error: 'El ítem cambió de ubicación durante la operación' });
       }
 
+      if (transferQty > itemLocked.quantity) {
+        await t.rollback();
+        return res.status(409).json({ error: 'Stock cambió durante la operación. Reintentá.' });
+      }
+
       const transfer = await TokenTransfer.create({
         item_id,
         from_center_id,
@@ -111,7 +130,46 @@ exports.create = async (req, res, next) => {
         ingreso_blockchain_tx: transferResult?.txId || null,
       }, { transaction: t });
 
-      await itemLocked.update({ current_center_id: to_center_id }, { transaction: t });
+      if (transferQty === itemLocked.quantity) {
+        await itemLocked.update({ current_center_id: to_center_id }, { transaction: t });
+      } else {
+        const destinationLot = await Item.findOne({
+          where: {
+            is_active: true,
+            current_center_id: to_center_id,
+            blockchain_hash: itemLocked.blockchain_hash,
+            token_status: itemLocked.token_status,
+            category_id: itemLocked.category_id,
+          },
+          transaction: t,
+          lock: t.LOCK.UPDATE,
+        });
+
+        await itemLocked.update(
+          { quantity: itemLocked.quantity - transferQty },
+          { transaction: t }
+        );
+
+        if (destinationLot) {
+          await destinationLot.update(
+            { quantity: destinationLot.quantity + transferQty },
+            { transaction: t }
+          );
+        } else {
+          await Item.create({
+            category_id: itemLocked.category_id,
+            name: itemLocked.name,
+            quantity: transferQty,
+            attributes: itemLocked.attributes,
+            image_url: itemLocked.image_url,
+            blockchain_hash: itemLocked.blockchain_hash,
+            blockchain_tx_id: itemLocked.blockchain_tx_id,
+            token_status: itemLocked.token_status,
+            current_center_id: to_center_id,
+            is_active: true,
+          }, { transaction: t });
+        }
+      }
 
       await t.commit();
 

@@ -54,7 +54,7 @@ export default function ConfirmacionDonacionQR() {
   }, [load]);
 
   useEffect(() => {
-    if (!data || data.status !== 'processing') return undefined;
+    if (!data) return undefined;
 
     const id = setInterval(() => {
       load();
@@ -123,6 +123,35 @@ export default function ConfirmacionDonacionQR() {
             <span className="ml-2 text-xs px-2 py-1 rounded-md bg-amber-100 text-amber-700">Privado</span>
           </div>
           <p className="text-xs text-slate-500 mt-2">{data.privacy_notice}</p>
+        </section>
+
+        <section className="bg-white rounded-2xl shadow-sm p-6">
+          <h2 className="font-semibold text-slate-800 mb-3">Estado de lo aceptado y minteado</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-emerald-700">Unidades aceptadas</p>
+              <p className="text-2xl font-bold text-emerald-700">{data.accepted_tracking?.accepted_total || 0}</p>
+            </div>
+            <div className="rounded-xl border border-indigo-100 bg-indigo-50 px-4 py-3">
+              <p className="text-xs uppercase tracking-wide text-indigo-700">Unidades minteadas</p>
+              <p className="text-2xl font-bold text-indigo-700">{data.accepted_tracking?.minted_total || 0}</p>
+            </div>
+          </div>
+
+          {Array.isArray(data.accepted_tracking?.donations) && data.accepted_tracking.donations.length > 0 ? (
+            <div className="space-y-2">
+              {data.accepted_tracking.donations.slice(0, 8).map((donation) => (
+                <div key={donation.donation_id} className="rounded-lg border border-slate-100 px-3 py-2">
+                  <p className="text-sm font-medium text-slate-800">{donation.item_name}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {donation.center_name || 'Centro no definido'} · {donation.quantity} un. · {donation.minted ? 'minteada' : 'pendiente de mint'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-600">Todavía no se cargaron donaciones aceptadas asociadas a tu correo.</p>
+          )}
         </section>
 
         {data.status === 'processing' ? (

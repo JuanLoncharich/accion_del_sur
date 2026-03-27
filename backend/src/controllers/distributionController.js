@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const { validationResult } = require('express-validator');
 const { Distribution, Item, Category, User, Center, sequelize } = require('../models');
 const sftService = require('../services/blockchain/sftService');
+const stellarService = require('../services/blockchain/stellarService');
 const {
   generateSaltHex,
   buildRecipientCommitment,
@@ -13,6 +14,15 @@ const {
 
 const isSftEnabled = () =>
   process.env.STELLAR_ENABLED === 'true' && Boolean(process.env.SOROBAN_CONTRACT_SFT);
+
+const isValidTokenIdHex = (value) => /^[a-f0-9]{64}$/i.test(String(value || '').trim());
+
+const resolveTokenIdFromItem = (item) => {
+  if (isValidTokenIdHex(item?.blockchain_hash)) {
+    return String(item.blockchain_hash).trim().toLowerCase();
+  }
+  return sftService.computeTokenId(item.id);
+};
 
 const DRAFT_EXPIRATION_MINUTES = 10;
 
@@ -47,10 +57,13 @@ exports.prepare = async (req, res, next) => {
       item_id,
       quantity,
       notes,
-      center_name,
-      center_latitude,
-      center_longitude,
+      center_id,
     } = req.body;
+
+    const center = await Center.findByPk(center_id);
+    if (!center || !center.is_active) {
+      return res.status(404).json({ error: 'Centro no encontrado o inactivo' });
+    }
 
     const item = await Item.findByPk(item_id);
     if (!item || !item.is_active) {
@@ -74,9 +87,9 @@ exports.prepare = async (req, res, next) => {
       expires_at: expiresAt,
       status: 'draft',
       registered_by: req.user.id,
-      center_name,
-      center_latitude,
-      center_longitude,
+      center_name: center.name,
+      center_latitude: center.latitude,
+      center_longitude: center.longitude,
       ...getRequestEvidence(req),
     });
 
@@ -264,29 +277,50 @@ exports.finalize = async (req, res, next) => {
 
     await t.commit();
 
-    // ── Blockchain primero (burn) ────────────────────────────────────────────
+    // ── Blockchain principal: contrato_entregas (DNI + firma) ───────────────
     let blockchainResult = null;
-    if (isSftEnabled()) {
-      const item = await Item.findByPk(distribution.item_id);
-      const center = await Center.findByPk(item.current_center_id);
-      const tokenId = sftService.computeTokenId(distribution.item_id);
-
+    if (stellarService.isEnabled) {
       try {
-        blockchainResult = await sftService.burnForDistribution({
-          fromAddress: center.blockchain_contract_id,
-          tokenId,
-          cantidad: distribution.quantity,
-          recipientCommitment: distribution.recipient_commitment,
-          signatureHash: distribution.signature_hash,
-          operatorId: distribution.registered_by,
+        blockchainResult = await stellarService.recordVerifiedDistribution({
+          distribution_id: distribution.id,
+          item_id: distribution.item_id,
+          quantity: distribution.quantity,
+          recipient_commitment: distribution.recipient_commitment,
+          signature_hash: distribution.signature_hash,
+          receipt_hash: receiptHash,
+          operator_id: distribution.registered_by,
+          assurance_level: distribution.assurance_level,
+          center_latitude: distribution.center_latitude,
+          center_longitude: distribution.center_longitude,
         });
-      } catch (burnError) {
-        console.error('[SFT] Error en burn:', burnError.message);
+      } catch (anchorError) {
+        console.error('[Entregas] Error en registrar_entrega_verificada:', anchorError.message);
         await Distribution.update({ status: 'failed' }, { where: { id: distribution.id } });
         return res.status(503).json({
           error: 'Error al registrar en blockchain. La entrega no fue procesada.',
-          detail: burnError.message,
+          detail: anchorError.message,
         });
+      }
+    }
+
+    // ── Burn SFT (no bloqueante): reduce balance on-chain del centro ─────────
+    if (isSftEnabled()) {
+      try {
+        const item = await Item.findByPk(distribution.item_id);
+        const center = item?.current_center_id ? await Center.findByPk(item.current_center_id) : null;
+        if (item && center?.blockchain_contract_id && item.token_status === 'minted') {
+          const tokenId = resolveTokenIdFromItem(item);
+          await sftService.burnForDistribution({
+            fromAddress: center.blockchain_contract_id,
+            tokenId,
+            cantidad: distribution.quantity,
+            recipientCommitment: distribution.recipient_commitment,
+            signatureHash: distribution.signature_hash,
+            operatorId: distribution.registered_by,
+          });
+        }
+      } catch (burnError) {
+        console.warn('[SFT] Burn no bloqueante falló en distribución:', burnError.message);
       }
     }
 

@@ -13,11 +13,11 @@ const Center = sequelize.define('Center', {
   },
   latitude: {
     type: DataTypes.DECIMAL(10, 7),
-    allowNull: false,
+    allowNull: true,
   },
   longitude: {
     type: DataTypes.DECIMAL(10, 7),
-    allowNull: false,
+    allowNull: true,
   },
   geo_hash: {
     type: DataTypes.STRING(64),
