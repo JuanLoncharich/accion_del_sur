@@ -16,7 +16,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 
-const COLORS = ['#4f46e5', '#0f766e', '#475569', '#7c3aed', '#0891b2', '#334155'];
+const COLORS = ['#E34E26', '#2E4053', '#1B2631', '#D5DBDB', '#E34E26', '#2E4053'];
 
 const StatCard = ({ icon, label, value, color }) => (
   <div className={`bg-white rounded-2xl p-6 shadow-sm border-l-4 ${color}`}>
@@ -99,11 +99,11 @@ export default function Dashboard() {
           <h2 className="font-bold text-slate-800 mb-4 inline-flex items-center gap-2"><BarChart3 size={18} /> Stock por Categoría</h2>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={stockByCategory.map(s => ({ name: s.category, total: parseInt(s.total) }))}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#D5DBDB" />
               <XAxis dataKey="name" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="total" name="Unidades" fill="#4f46e5" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="total" name="Unidades" fill="#E34E26" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -113,12 +113,12 @@ export default function Dashboard() {
           <h2 className="font-bold text-slate-800 mb-4 inline-flex items-center gap-2"><TrendingUp size={18} /> Donaciones (últimas 8 semanas)</h2>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={weeklyChartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#D5DBDB" />
               <XAxis dataKey="semana" tick={{ fontSize: 11 }} />
               <YAxis tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Line type="monotone" dataKey="donaciones" name="Lotes" stroke="#4f46e5" strokeWidth={2} dot={{ r: 4 }} />
-              <Line type="monotone" dataKey="cantidad" name="Unidades" stroke="#0f766e" strokeWidth={2} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="donaciones" name="Lotes" stroke="#E34E26" strokeWidth={2} dot={{ r: 4 }} />
+              <Line type="monotone" dataKey="cantidad" name="Unidades" stroke="#2E4053" strokeWidth={2} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
         </div>

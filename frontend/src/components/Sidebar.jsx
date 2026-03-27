@@ -2,13 +2,16 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
+  BarChart3,
   ClipboardList,
   Gift,
   Heart,
+  History,
   Handshake,
   LayoutDashboard,
   LogOut,
   Menu,
+  ShieldCheck,
   Tags,
   Users,
   X,
@@ -23,6 +26,9 @@ const NAV_ITEMS = [
   { to: '/inventario', label: 'Inventario', icon: Boxes },
   { to: '/distribuciones/nueva', label: 'Distribuir', icon: Handshake },
   { to: '/distribuciones', label: 'Historial Distribuciones', icon: ClipboardList },
+  { to: '/blockchain/trazabilidad', label: 'Trazabilidad Blockchain', icon: ShieldCheck },
+  { to: '/analytics/historial', label: 'Historial Transacciones', icon: History },
+  { to: '/auditoria/integridad', label: 'Auditoría e Integridad', icon: BarChart3 },
 ];
 
 const ADMIN_ITEMS = [
