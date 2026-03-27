@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { ToastContext } from '../components/Layout';
@@ -12,7 +12,6 @@ import {
   PackageX,
   PencilLine,
   Plus,
-  Search,
   TriangleAlert,
 } from 'lucide-react';
 import { getCategoryIcon } from '../utils/icons';
@@ -20,6 +19,9 @@ import { getCategoryIcon } from '../utils/icons';
 export default function NuevaDistribucion() {
   const addToast = useContext(ToastContext);
   const navigate = useNavigate();
+  const canvasRef = useRef(null);
+  const drawingRef = useRef(false);
+
   const [items, setItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -28,9 +30,11 @@ export default function NuevaDistribucion() {
   const [quantity, setQuantity] = useState(1);
   const [receiverId, setReceiverId] = useState('');
   const [notes, setNotes] = useState('');
+  const [centerName, setCenterName] = useState('Centro Principal');
+  const [centerLatitude, setCenterLatitude] = useState('');
+  const [centerLongitude, setCenterLongitude] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetchingItems, setFetchingItems] = useState(false);
-  const [step, setStep] = useState(0);
 
   useEffect(() => {
     api.get('/categories').then((r) => setCategories(r.data));
@@ -46,25 +50,115 @@ export default function NuevaDistribucion() {
       .finally(() => setFetchingItems(false));
   }, [search, categoryFilter]);
 
+  const getCanvasContext = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const ctx = canvas.getContext('2d');
+    ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#0f172a';
+    return ctx;
+  };
+
+  const getPointerPosition = (event) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const clientX = event.touches ? event.touches[0].clientX : event.clientX;
+    const clientY = event.touches ? event.touches[0].clientY : event.clientY;
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top,
+    };
+  };
+
+  const startDrawing = (event) => {
+    const ctx = getCanvasContext();
+    if (!ctx) return;
+    const pos = getPointerPosition(event);
+    drawingRef.current = true;
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+  };
+
+  const draw = (event) => {
+    if (!drawingRef.current) return;
+    const ctx = getCanvasContext();
+    if (!ctx) return;
+    const pos = getPointerPosition(event);
+    ctx.lineTo(pos.x, pos.y);
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => {
+    drawingRef.current = false;
+  };
+
+  const clearSignature = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  };
+
+  const isCanvasBlank = () => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return true;
+    const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    for (let i = 3; i < pixels.length; i += 4) {
+      if (pixels[i] !== 0) return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
-    if (!selectedItem) return addToast('Seleccioná un ítem', 'error');
-    if (!receiverId.trim()) return addToast('Ingresá el identificador del receptor', 'error');
+    if (!selectedItem) return addToast('Selecciona un item', 'error');
+    if (!receiverId.trim()) return addToast('Ingresa el DNI del receptor', 'error');
+    if (receiverId.trim().length < 6) return addToast('DNI invalido', 'error');
     if (quantity < 1 || quantity > selectedItem.quantity) {
-      return addToast(`Cantidad inválida. Disponible: ${selectedItem.quantity}`, 'error');
+      return addToast(`Cantidad invalida. Disponible: ${selectedItem.quantity}`, 'error');
+    }
+    if (!centerName.trim() || centerLatitude === '' || centerLongitude === '') {
+      return addToast('Completa datos del centro de entrega', 'error');
+    }
+    if (isCanvasBlank()) {
+      return addToast('Se requiere firma manuscrita del receptor', 'error');
     }
 
     setLoading(true);
     try {
-      await api.post('/distributions', {
+      const prepare = await api.post('/distributions/prepare', {
         item_id: selectedItem.id,
         quantity,
-        receiver_identifier: receiverId,
         notes,
+        center_name: centerName,
+        center_latitude: Number(centerLatitude),
+        center_longitude: Number(centerLongitude),
       });
-      addToast('¡Distribución registrada exitosamente!', 'success');
+
+      const distributionId = prepare.data.id;
+
+      await api.post(`/distributions/${distributionId}/identify-manual`, {
+        receiver_identifier: receiverId.trim(),
+        doc_type: 'DNI',
+      });
+
+      const signatureData = canvasRef.current.toDataURL('image/png');
+      await api.post(`/distributions/${distributionId}/sign`, {
+        signature_data: signatureData,
+        signature_mime: 'image/png',
+      });
+
+      const finalize = await api.post(`/distributions/${distributionId}/finalize`);
+      if (finalize.data?.status === 'pending_anchor') {
+        addToast('Entrega en pending_anchor: ancla blockchain pendiente', 'error');
+      } else {
+        addToast('Distribucion registrada y anclada en blockchain', 'success');
+      }
+
       navigate('/distribuciones');
     } catch (err) {
-      addToast(err.response?.data?.error || 'Error al registrar la distribución', 'error');
+      addToast(err.response?.data?.error || 'Error al registrar la distribucion', 'error');
     } finally {
       setLoading(false);
     }
@@ -73,20 +167,18 @@ export default function NuevaDistribucion() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-800 inline-flex items-center gap-2"><Handshake size={24} /> Registrar Distribución</h1>
-        <p className="text-slate-500 text-sm mt-1">Seleccioná el ítem a entregar y completá los datos del receptor</p>
+        <h1 className="text-2xl font-bold text-slate-800 inline-flex items-center gap-2"><Handshake size={24} /> Registrar Distribucion</h1>
+        <p className="text-slate-500 text-sm mt-1">Flujo completo: preparacion, identificacion manual, firma y finalizacion</p>
       </div>
 
       <div className="space-y-6">
-        {/* Step 0: Select item */}
         <div className="bg-white rounded-2xl shadow-sm p-6">
-          <h2 className="font-bold text-slate-800 mb-4">1. Seleccionar Ítem</h2>
+          <h2 className="font-bold text-slate-800 mb-4">1. Seleccionar Item</h2>
 
-          {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             <input
               type="text"
-              placeholder="Buscar ítem..."
+              placeholder="Buscar item..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="flex-1 border-2 border-slate-200 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500 text-sm"
@@ -96,7 +188,7 @@ export default function NuevaDistribucion() {
               onChange={(e) => setCategoryFilter(e.target.value)}
               className="border-2 border-slate-200 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500 text-sm"
             >
-              <option value="">Todas las categorías</option>
+              <option value="">Todas las categorias</option>
               {categories.map((c) => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
@@ -104,11 +196,11 @@ export default function NuevaDistribucion() {
           </div>
 
           {fetchingItems ? (
-            <p className="text-center text-slate-400 py-6">Cargando ítems...</p>
+            <p className="text-center text-slate-400 py-6">Cargando items...</p>
           ) : items.length === 0 ? (
             <div className="text-center py-8 text-slate-400">
               <div className="flex justify-center mb-2"><PackageX size={32} /></div>
-              <p>No hay ítems disponibles con stock</p>
+              <p>No hay items disponibles con stock</p>
             </div>
           ) : (
             <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -138,10 +230,9 @@ export default function NuevaDistribucion() {
           )}
         </div>
 
-        {/* Step 1: Quantity + recipient */}
         {selectedItem && (
           <div className="bg-white rounded-2xl shadow-sm p-6 space-y-5">
-            <h2 className="font-bold text-slate-800">2. Cantidad y Receptor</h2>
+            <h2 className="font-bold text-slate-800">2. Datos del receptor y centro</h2>
 
             <div className="bg-blue-50 rounded-xl p-3 flex items-center gap-3">
               {React.createElement(getCategoryIcon(selectedItem.category?.name), { size: 22, className: 'text-slate-500' })}
@@ -182,18 +273,47 @@ export default function NuevaDistribucion() {
 
             <div>
               <label className="block text-slate-700 text-sm font-semibold mb-2">
-                <span className="inline-flex items-center gap-2"><IdCard size={16} /> Identificador del receptor</span> <span className="text-red-500">*</span>
+                <span className="inline-flex items-center gap-2"><IdCard size={16} /> DNI del receptor (manual)</span> <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={receiverId}
                 onChange={(e) => setReceiverId(e.target.value)}
-                placeholder="DNI, nombre, código u otro identificador único"
+                placeholder="DNI"
                 className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500 transition-colors"
               />
-              <p className="text-xs text-slate-400 mt-1">
-                Este identificador se guardará de forma segura (hasheado) para proteger la privacidad
-              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-slate-700 text-sm font-semibold mb-2">Centro de entrega</label>
+                <input
+                  type="text"
+                  value={centerName}
+                  onChange={(e) => setCenterName(e.target.value)}
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 text-sm font-semibold mb-2">Latitud</label>
+                <input
+                  type="number"
+                  value={centerLatitude}
+                  onChange={(e) => setCenterLatitude(e.target.value)}
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500"
+                  step="0.000001"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 text-sm font-semibold mb-2">Longitud</label>
+                <input
+                  type="number"
+                  value={centerLongitude}
+                  onChange={(e) => setCenterLongitude(e.target.value)}
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500"
+                  step="0.000001"
+                />
+              </div>
             </div>
 
             <div>
@@ -208,15 +328,41 @@ export default function NuevaDistribucion() {
               />
             </div>
 
+            <div>
+              <p className="text-sm font-semibold text-slate-700 mb-2">3. Firma manuscrita del receptor</p>
+              <canvas
+                ref={canvasRef}
+                width={700}
+                height={180}
+                className="w-full border-2 border-slate-200 rounded-xl touch-none"
+                onMouseDown={startDrawing}
+                onMouseMove={draw}
+                onMouseUp={stopDrawing}
+                onMouseLeave={stopDrawing}
+                onTouchStart={startDrawing}
+                onTouchMove={draw}
+                onTouchEnd={stopDrawing}
+              />
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={clearSignature}
+                  className="px-3 py-2 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg"
+                >
+                  Limpiar firma
+                </button>
+              </div>
+            </div>
+
             <button
               onClick={handleSubmit}
               disabled={loading || quantity > selectedItem.quantity || !receiverId.trim()}
               className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-400 disabled:cursor-not-allowed text-white font-bold py-4 rounded-xl transition-all text-lg shadow-lg"
             >
               {loading ? (
-                <span className="inline-flex items-center gap-2"><LoaderCircle size={18} className="animate-spin" /> Registrando...</span>
+                <span className="inline-flex items-center gap-2"><LoaderCircle size={18} className="animate-spin" /> Procesando flujo completo...</span>
               ) : (
-                <span className="inline-flex items-center gap-2"><CircleCheckBig size={18} /> Confirmar Distribución</span>
+                <span className="inline-flex items-center gap-2"><CircleCheckBig size={18} /> Confirmar Distribucion</span>
               )}
             </button>
           </div>

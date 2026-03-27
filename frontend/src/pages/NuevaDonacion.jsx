@@ -87,6 +87,9 @@ export default function NuevaDonacion() {
   const [attributes, setAttributes] = useState({});
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
+  const [centerName, setCenterName] = useState('Centro Principal');
+  const [centerLatitude, setCenterLatitude] = useState('');
+  const [centerLongitude, setCenterLongitude] = useState('');
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -126,6 +129,15 @@ export default function NuevaDonacion() {
   };
 
   const handleSubmit = async () => {
+    if (!centerName.trim()) {
+      addToast('Ingresá el nombre del centro de entrega', 'error');
+      return;
+    }
+    if (centerLatitude === '' || centerLongitude === '') {
+      addToast('Ingresá latitud y longitud del centro', 'error');
+      return;
+    }
+
     setLoading(true);
     try {
       const formData = new FormData();
@@ -133,6 +145,9 @@ export default function NuevaDonacion() {
       formData.append('attributes', JSON.stringify(attributes));
       formData.append('quantity', quantity);
       formData.append('notes', notes);
+      formData.append('center_name', centerName);
+      formData.append('center_latitude', centerLatitude);
+      formData.append('center_longitude', centerLongitude);
       if (image) formData.append('image', image);
 
       await api.post('/donations', formData, {
@@ -275,6 +290,41 @@ export default function NuevaDonacion() {
                   placeholder="Alguna nota especial sobre esta donación..."
                   className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500 transition-colors placeholder-slate-400 h-24 resize-none"
                 />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-slate-700 text-sm font-semibold mb-2">Centro de entrega</label>
+                  <input
+                    type="text"
+                    value={centerName}
+                    onChange={(e) => setCenterName(e.target.value)}
+                    className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 text-sm font-semibold mb-2">Latitud</label>
+                  <input
+                    type="number"
+                    value={centerLatitude}
+                    onChange={(e) => setCenterLatitude(e.target.value)}
+                    className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500"
+                    step="0.000001"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-700 text-sm font-semibold mb-2">Longitud</label>
+                  <input
+                    type="number"
+                    value={centerLongitude}
+                    onChange={(e) => setCenterLongitude(e.target.value)}
+                    className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 text-slate-800 focus:outline-none focus:border-indigo-500"
+                    step="0.000001"
+                    required
+                  />
+                </div>
               </div>
 
               <div>
