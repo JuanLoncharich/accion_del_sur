@@ -65,6 +65,21 @@ const ensureAuditAccessLogTable = async () => {
   `);
 };
 
+const ensureColumnNullable = async (table, column) => {
+  const [rows] = await sequelize.query(
+    `SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column`,
+    { replacements: { table, column } }
+  );
+  if (rows.length > 0 && rows[0].IS_NULLABLE === 'NO') {
+    const [colDef] = await sequelize.query(`SHOW COLUMNS FROM ${table} LIKE :column`, { replacements: { column } });
+    if (colDef.length > 0) {
+      const type = colDef[0].Type;
+      await sequelize.query(`ALTER TABLE ${table} MODIFY COLUMN ${column} ${type} NULL`);
+      console.log(`[DB] Columna hecha nullable: ${table}.${column}`);
+    }
+  }
+};
+
 const ensureSchema = async () => {
   for (const [table, columns] of Object.entries(tableColumnDefinitions)) {
     for (const [column, definition] of Object.entries(columns)) {
@@ -73,6 +88,7 @@ const ensureSchema = async () => {
     }
   }
 
+  await ensureColumnNullable('distributions', 'receiver_identifier');
   await ensureAuditAccessLogTable();
 };
 

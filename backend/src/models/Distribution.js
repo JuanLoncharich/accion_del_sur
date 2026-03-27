@@ -17,7 +17,7 @@ const Distribution = sequelize.define('Distribution', {
   },
   receiver_identifier: {
     type: DataTypes.STRING(255),
-    allowNull: false,
+    allowNull: true,
   },
   receiver_hash: {
     type: DataTypes.STRING(255),

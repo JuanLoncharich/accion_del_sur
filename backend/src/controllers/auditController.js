@@ -11,6 +11,16 @@ const buildAuditContext = (req) => ({
   requester_device: req.headers['user-agent'] || null,
 });
 
+const sanitizeBigInt = (value) => {
+  if (typeof value === 'bigint') return Number(value);
+  if (Buffer.isBuffer(value)) return value.toString('hex');
+  if (Array.isArray(value)) return value.map(sanitizeBigInt);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(Object.entries(value).map(([k, v]) => [k, sanitizeBigInt(v)]));
+  }
+  return value;
+};
+
 exports.publicAudit = async (req, res, next) => {
   try {
     const distribution = await Distribution.findByPk(req.params.distributionId, {
@@ -25,7 +35,7 @@ exports.publicAudit = async (req, res, next) => {
       ...buildAuditContext(req),
     });
 
-    const chainRecord = await stellarService.getVerifiedDistribution(distribution.id).catch(() => null);
+    const chainRecord = await stellarService.getVerifiedDistribution(distribution.id).catch(() => null).then((r) => sanitizeBigInt(r));
 
     return res.json({
       distribution_id: distribution.id,
