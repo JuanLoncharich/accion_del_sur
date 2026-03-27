@@ -69,9 +69,8 @@ apply_config() {
       --arg model "$MODEL_FROM_ENV" \
       '
       .model = $model |
-      .default_agent = "mysql_qa" |
-      .agent = (.agent // {}) |
-      .agents = (.agents // {}) |
+  .default_agent = "mysql_qa" |
+  .agent = (.agent // {}) |
       .agent.coder = {
         "description": "Asistente general con herramientas para el proyecto",
         "mode": "primary",
@@ -98,36 +97,14 @@ apply_config() {
         },
         "prompt": $prompt
       } |
-      .agents.coder = {
-        "description": "Asistente general con herramientas para el proyecto",
-        "mode": "primary",
-        "model": $model,
-        "prompt": $prompt,
-        "tools": {
-          "bash": true,
-          "edit": false,
-          "write": false
-        }
-      } |
-      .agents.mysql_qa = {
-        "description": "Chat SQL de solo lectura para MySQL del proyecto",
-        "mode": "primary",
-        "model": $model,
-        "prompt": $prompt,
-        "tools": {
-          "bash": true,
-          "edit": false,
-          "write": false
-        }
-      }
+      del(.agents)
       ' "$target_file" > "$target_file.tmp"
   else
     jq \
       --arg prompt "$PROMPT_CONTENT" \
       '
-      .default_agent = "mysql_qa" |
-      .agent = (.agent // {}) |
-      .agents = (.agents // {}) |
+  .default_agent = "mysql_qa" |
+  .agent = (.agent // {}) |
       .agent.coder = {
         "description": "Asistente general con herramientas para el proyecto",
         "mode": "primary",
@@ -152,26 +129,7 @@ apply_config() {
         },
         "prompt": $prompt
       } |
-      .agents.coder = {
-        "description": "Asistente general con herramientas para el proyecto",
-        "mode": "primary",
-        "prompt": $prompt,
-        "tools": {
-          "bash": true,
-          "edit": false,
-          "write": false
-        }
-      } |
-      .agents.mysql_qa = {
-        "description": "Chat SQL de solo lectura para MySQL del proyecto",
-        "mode": "primary",
-        "prompt": $prompt,
-        "tools": {
-          "bash": true,
-          "edit": false,
-          "write": false
-        }
-      }
+      del(.agents)
       ' "$target_file" > "$target_file.tmp"
   fi
 

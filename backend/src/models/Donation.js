@@ -48,6 +48,10 @@ const Donation = sequelize.define('Donation', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  center_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   registered_by: {
     type: DataTypes.INTEGER,
     allowNull: false,

@@ -16,6 +16,9 @@ const auditRoutes = require('./src/routes/audit');
 const userRoutes = require('./src/routes/users');
 const dashboardRoutes = require('./src/routes/dashboard');
 const donationReceptionRoutes = require('./src/routes/donationReceptions');
+const centerRoutes = require('./src/routes/centers');
+const transferRoutes = require('./src/routes/transfers');
+const llmRoutes = require('./src/routes/llm');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -43,6 +46,9 @@ app.use('/api/audit', auditRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/donation-receptions', donationReceptionRoutes);
+app.use('/api/centers', centerRoutes);
+app.use('/api/transfers', transferRoutes);
+app.use('/api/llm', llmRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
@@ -55,10 +61,10 @@ const start = async () => {
   try {
     await sequelize.authenticate();
     console.log('[DB] Conexión establecida correctamente.');
-    await ensureSchema();
-    console.log('[DB] Esquema validado.');
     await sequelize.sync({ alter: false });
     console.log('[DB] Modelos sincronizados.');
+    await ensureSchema();
+    console.log('[DB] Esquema validado.');
     app.listen(PORT, () => {
       console.log(`[Server] Servidor corriendo en http://localhost:${PORT}`);
     });

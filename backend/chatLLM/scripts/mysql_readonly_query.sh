@@ -36,20 +36,24 @@ if [[ -f "$CHATLLM_DIR/.env" ]]; then
   set +a
 fi
 
-DB_HOST="${DB_HOST:-localhost}"
-DB_PORT="${DB_PORT:-3306}"
-DB_USER="${DB_USER:-root}"
-DB_PASSWORD="${DB_PASSWORD:-}"
-DB_NAME="${DB_NAME:-accion_del_sur}"
+DB_HOST="${LLM_DB_HOST:-${DB_HOST:-localhost}}"
+DB_PORT="${LLM_DB_PORT:-${DB_PORT:-3306}}"
+DB_USER="${LLM_DB_USER:-${DB_USER:-llm_reader}}"
+DB_PASSWORD="${LLM_DB_PASSWORD:-${DB_PASSWORD:-}}"
+DB_NAME="${LLM_DB_NAME:-${DB_NAME:-accion_del_sur}}"
 
-mysql \
-  --protocol=TCP \
-  --host="$DB_HOST" \
-  --port="$DB_PORT" \
-  --user="$DB_USER" \
-  --password="$DB_PASSWORD" \
-  --database="$DB_NAME" \
-  --table \
-  --raw \
-  --batch \
-  --execute "$SQL_TRIMMED"
+if command -v mysql >/dev/null 2>&1; then
+  mysql \
+    --protocol=TCP \
+    --host="$DB_HOST" \
+    --port="$DB_PORT" \
+    --user="$DB_USER" \
+    --password="$DB_PASSWORD" \
+    --database="$DB_NAME" \
+    --table \
+    --raw \
+    --batch \
+    --execute "$SQL_TRIMMED"
+else
+  node "$SCRIPT_DIR/mysql_readonly_query_node.js" "$SQL_TRIMMED"
+fi

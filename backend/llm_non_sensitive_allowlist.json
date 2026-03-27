@@ -1,0 +1,204 @@
+{
+  "database": "accion_del_sur",
+  "generatedAt": "2026-03-27T13:30:28.041Z",
+  "tables": {
+    "audit_access_log": {
+      "allowedColumns": [],
+      "deniedColumns": [
+        "id",
+        "distribution_id",
+        "access_type",
+        "accessed_by",
+        "purpose",
+        "requester_ip",
+        "requester_device",
+        "external_reference",
+        "created_at"
+      ]
+    },
+    "categories": {
+      "allowedColumns": [
+        "id",
+        "name",
+        "description",
+        "is_active",
+        "created_at"
+      ],
+      "deniedColumns": []
+    },
+    "category_attributes": {
+      "allowedColumns": [
+        "id",
+        "category_id",
+        "attribute_name",
+        "attribute_type",
+        "options",
+        "is_required",
+        "display_order"
+      ],
+      "deniedColumns": []
+    },
+    "centers": {
+      "allowedColumns": [
+        "id",
+        "name",
+        "is_active",
+        "created_at",
+        "updated_at"
+      ],
+      "deniedColumns": [
+        "latitude",
+        "longitude",
+        "geo_hash",
+        "blockchain_contract_id",
+        "blockchain_deploy_tx",
+        "blockchain_init_tx",
+        "created_by"
+      ]
+    },
+    "distributions": {
+      "allowedColumns": [
+        "id",
+        "item_id",
+        "quantity",
+        "notes",
+        "created_at",
+        "status",
+        "finalized_at",
+        "center_name",
+        "center_id"
+      ],
+      "deniedColumns": [
+        "receiver_identifier",
+        "receiver_hash",
+        "registered_by",
+        "blockchain_hash",
+        "nonce",
+        "expires_at",
+        "identity_capture_method",
+        "assurance_level",
+        "recipient_commitment",
+        "recipient_salt",
+        "signature_data",
+        "signature_mime",
+        "signature_hash",
+        "receipt_payload",
+        "receipt_hash",
+        "blockchain_tx_id",
+        "capture_terminal",
+        "capture_ip",
+        "capture_device",
+        "center_latitude",
+        "center_longitude"
+      ]
+    },
+    "donation_reception_details": {
+      "allowedColumns": [
+        "id",
+        "reception_id",
+        "item_id",
+        "quantity_received",
+        "quantity_accepted",
+        "quantity_rejected",
+        "rejection_reason_item"
+      ],
+      "deniedColumns": []
+    },
+    "donation_receptions": {
+      "allowedColumns": [
+        "id",
+        "status",
+        "rejection_reason",
+        "created_at",
+        "finalized_at"
+      ],
+      "deniedColumns": [
+        "public_token_qr",
+        "donor_email",
+        "donor_email_salt",
+        "donor_email_hash",
+        "anchored_tx_id",
+        "anchored_hash",
+        "created_by",
+        "finalized_by"
+      ]
+    },
+    "donations": {
+      "allowedColumns": [
+        "id",
+        "item_id",
+        "quantity",
+        "notes",
+        "created_at",
+        "center_name",
+        "status",
+        "center_id"
+      ],
+      "deniedColumns": [
+        "registered_by",
+        "center_latitude",
+        "center_longitude",
+        "center_geo_hash",
+        "blockchain_hash",
+        "blockchain_tx_id"
+      ]
+    },
+    "items": {
+      "allowedColumns": [
+        "id",
+        "category_id",
+        "name",
+        "quantity",
+        "attributes",
+        "image_url",
+        "token_status",
+        "is_active",
+        "created_at",
+        "updated_at",
+        "current_center_id"
+      ],
+      "deniedColumns": [
+        "blockchain_hash",
+        "blockchain_tx_id"
+      ]
+    },
+    "token_transfers": {
+      "allowedColumns": [
+        "id",
+        "item_id",
+        "from_center_id",
+        "to_center_id",
+        "quantity",
+        "reason",
+        "status",
+        "created_at"
+      ],
+      "deniedColumns": [
+        "egreso_blockchain_hash",
+        "egreso_blockchain_tx",
+        "ingreso_blockchain_hash",
+        "ingreso_blockchain_tx",
+        "transferred_by"
+      ]
+    },
+    "users": {
+      "allowedColumns": [],
+      "deniedColumns": [
+        "id",
+        "username",
+        "email",
+        "password_hash",
+        "role",
+        "created_at"
+      ]
+    }
+  },
+  "excludedSensitiveTables": [
+    "users",
+    "audit_access_log"
+  ],
+  "notes": [
+    "Allowlist estricta para consumo de LLM en modo lectura",
+    "Excluir completamente users y audit_access_log por contener autenticación y metadatos de acceso"
+  ]
+}

@@ -1,8 +1,8 @@
 const { Op } = require('sequelize');
 const crypto = require('crypto');
 const { validationResult } = require('express-validator');
-const { Distribution, Item, Category, User, sequelize } = require('../models');
-const stellarService = require('../services/blockchain/stellarService');
+const { Distribution, Item, Category, User, Center, sequelize } = require('../models');
+const sftService = require('../services/blockchain/sftService');
 const {
   generateSaltHex,
   buildRecipientCommitment,
@@ -10,6 +10,9 @@ const {
   buildReceiptHash,
   buildCanonicalReceipt,
 } = require('../utils/cryptoEvidence');
+
+const isSftEnabled = () =>
+  process.env.STELLAR_ENABLED === 'true' && Boolean(process.env.SOROBAN_CONTRACT_SFT);
 
 const DRAFT_EXPIRATION_MINUTES = 10;
 
@@ -213,6 +216,23 @@ exports.finalize = async (req, res, next) => {
       });
     }
 
+    // ── Validar que el ítem esté en un centro con contrato SFT ─────────────────
+    if (isSftEnabled()) {
+      if (!distribution.item.current_center_id) {
+        await t.rollback();
+        return res.status(400).json({
+          error: 'El ítem no está asignado a ningún centro. Asigne un centro antes de distribuir.',
+        });
+      }
+      const center = await Center.findByPk(distribution.item.current_center_id, { transaction: t });
+      if (!center || !center.blockchain_contract_id) {
+        await t.rollback();
+        return res.status(400).json({
+          error: 'El centro del ítem no tiene contrato blockchain desplegado.',
+        });
+      }
+    }
+
     const receiptPayload = {
       assurance_level: distribution.assurance_level,
       distribution_id: distribution.id,
@@ -234,6 +254,7 @@ exports.finalize = async (req, res, next) => {
 
     const receiptHash = buildReceiptHash(receiptPayload);
 
+    // Guardar receipt antes del blockchain call
     await distribution.update({
       receipt_payload: JSON.parse(buildCanonicalReceipt(receiptPayload)),
       receipt_hash: receiptHash,
@@ -243,61 +264,63 @@ exports.finalize = async (req, res, next) => {
 
     await t.commit();
 
-    let blockchainResult;
-    try {
-      blockchainResult = await stellarService.recordVerifiedDistribution({
-        distribution_id: distribution.id,
-        item_id: distribution.item_id,
-        quantity: distribution.quantity,
-        recipient_commitment: distribution.recipient_commitment,
-        signature_hash: distribution.signature_hash,
-        receipt_hash: receiptHash,
-        operator_id: distribution.registered_by,
-        assurance_level: distribution.assurance_level || 'MANUAL_VERIFIED',
-        center_latitude: distribution.center_latitude,
-        center_longitude: distribution.center_longitude,
-      });
-    } catch (anchorError) {
-      await distribution.update({ status: 'pending_anchor' });
-      return res.status(202).json({
-        distribution_id: distribution.id,
-        status: 'pending_anchor',
-        message: 'La ancla blockchain falló. La entrega no queda cerrada de forma definitiva.',
-        error: anchorError.message,
-      });
+    // ── Blockchain primero (burn) ────────────────────────────────────────────
+    let blockchainResult = null;
+    if (isSftEnabled()) {
+      const item = await Item.findByPk(distribution.item_id);
+      const center = await Center.findByPk(item.current_center_id);
+      const tokenId = sftService.computeTokenId(distribution.item_id);
+
+      try {
+        blockchainResult = await sftService.burnForDistribution({
+          fromAddress: center.blockchain_contract_id,
+          tokenId,
+          cantidad: distribution.quantity,
+          recipientCommitment: distribution.recipient_commitment,
+          signatureHash: distribution.signature_hash,
+          operatorId: distribution.registered_by,
+        });
+      } catch (burnError) {
+        console.error('[SFT] Error en burn:', burnError.message);
+        await Distribution.update({ status: 'failed' }, { where: { id: distribution.id } });
+        return res.status(503).json({
+          error: 'Error al registrar en blockchain. La entrega no fue procesada.',
+          detail: burnError.message,
+        });
+      }
     }
 
-    const updatePayload = {
-      status: 'anchored',
-      finalized_at: new Date(),
-    };
-    if (blockchainResult?.hash) updatePayload.blockchain_hash = blockchainResult.hash;
-    if (blockchainResult?.txId) updatePayload.blockchain_tx_id = blockchainResult.txId;
-
-    const successTx = await sequelize.transaction();
+    // ── MySQL: descontar stock y confirmar distribución ─────────────────────
+    const closeTx = await sequelize.transaction();
     try {
       const item = await Item.findByPk(distribution.item_id, {
-        transaction: successTx,
-        lock: successTx.LOCK.UPDATE,
+        transaction: closeTx,
+        lock: closeTx.LOCK.UPDATE,
       });
 
-      if (!item || !item.is_active) {
-        throw new Error('Ítem no disponible al cerrar la entrega');
-      }
-
+      if (!item || !item.is_active) throw new Error('Ítem no disponible al cerrar la entrega');
       if (item.quantity < distribution.quantity) {
         throw new Error('Stock cambió durante el cierre, reintentar la operación');
       }
 
-      await item.update({ quantity: item.quantity - distribution.quantity }, { transaction: successTx });
-      await Distribution.update(updatePayload, {
+      await item.update(
+        { quantity: item.quantity - distribution.quantity },
+        { transaction: closeTx }
+      );
+
+      await Distribution.update({
+        status: 'anchored',
+        finalized_at: new Date(),
+        blockchain_hash: blockchainResult?.hash || null,
+        blockchain_tx_id: blockchainResult?.txId || null,
+      }, {
         where: { id: distribution.id },
-        transaction: successTx,
+        transaction: closeTx,
       });
 
-      await successTx.commit();
+      await closeTx.commit();
     } catch (closeError) {
-      await successTx.rollback();
+      await closeTx.rollback();
       await Distribution.update({ status: 'failed' }, { where: { id: distribution.id } });
       throw closeError;
     }

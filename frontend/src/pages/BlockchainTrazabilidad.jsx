@@ -1,12 +1,10 @@
-import React, { useMemo, useState, useEffect, useRef } from 'react';
-import {
-  ResponsiveContainer, PieChart, Pie, Cell, Tooltip,
-  BarChart, Bar, XAxis, YAxis, CartesianGrid,
-} from 'recharts';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import {
   HandHeart, PackageOpen, Truck, Home, BadgeCheck,
   Building2, MapPin, ShieldCheck, Eye, Clock3, Fingerprint,
   ArrowRight, ChevronLeft, ChevronRight, Link2, Users, Package,
+  TrendingUp, Send, Activity, ChevronDown,
 } from 'lucide-react';
 
 /* ── DATA ─────────────────────────────────────────────────────────── */
@@ -18,7 +16,7 @@ const HERO_SLIDES = [
     subtitle: 'Trazabilidad Solidaria',
     body: 'Cada donación deja un rastro claro desde el origen hasta quien la recibe. Nada se pierde, nada se borra.',
     accent: '#E34E26',
-    image: '/assets/images/image1.jpg',
+    image: '/assets/images/image1.png',
   },
   {
     tag: 'Más de 12.000 donaciones registradas',
@@ -26,7 +24,7 @@ const HERO_SLIDES = [
     subtitle: 'Verificada y visible',
     body: 'Seguí cada movimiento en tiempo real. El sistema registra de forma permanente cada paso, sin intermediarios ocultos.',
     accent: '#2E4053',
-    image: '/assets/images/image2.jpg',
+    image: '/assets/images/image2.png',
   },
   {
     tag: '94 centros activos en todo el país',
@@ -34,7 +32,7 @@ const HERO_SLIDES = [
     subtitle: 'De norte a sur',
     body: 'Centros de donación, comunidades y familias conectados en un mismo sistema que garantiza que la ayuda llegue a destino.',
     accent: '#D5DBDB',
-    image: '/assets/images/image3.jpg',
+    image: '/assets/images/image3.png',
 
   },
 ];
@@ -50,7 +48,7 @@ const CATEGORY_BREAKDOWN = [
   { name: 'Alimentos', value: 42, color: '#E34E26' },
   { name: 'Ropa', value: 24, color: '#2E4053' },
   { name: 'Medicamentos', value: 18, color: '#1B2631' },
-  { name: 'Útiles escolares', value: 16, color: '#D5DBDB' },
+  { name: 'Útiles escolares', value: 16, color: '#B9A48E' },
 ];
 
 const FLOW_STEPS = [
@@ -68,9 +66,9 @@ const IN_PROGRESS_DONATIONS = [
 ];
 
 const TOP_CENTERS = [
-  { name: 'Centro Solidario Norte', city: 'Salta Capital', processed: 1420, categories: ['Alimentos', 'Medicamentos'] },
-  { name: 'Red Comunitaria Oeste', city: 'Mendoza Capital', processed: 1160, categories: ['Ropa', 'Útiles escolares'] },
-  { name: 'Nodo Esperanza Litoral', city: 'Corrientes Capital', processed: 980, categories: ['Alimentos', 'Ropa'] },
+  { name: 'Centro Solidario Norte', city: 'Salta', processed: 1420, categories: ['Alimentos', 'Medicamentos'] },
+  { name: 'Red Comunitaria Oeste', city: 'Mendoza', processed: 1160, categories: ['Ropa', 'Útiles escolares'] },
+  { name: 'Nodo Esperanza Litoral', city: 'Corrientes', processed: 980, categories: ['Alimentos', 'Ropa'] },
   { name: 'Puente Solidario Sur', city: 'Bahía Blanca', processed: 860, categories: ['Medicamentos', 'Alimentos'] },
 ];
 
@@ -112,8 +110,10 @@ const TRUST_POINTS = [
 /* ── HERO SLIDER ──────────────────────────────────────────────────── */
 
 function HeroSlider() {
+  const accentColor = '#E34E26';
   const [current, setCurrent] = useState(0);
   const [animating, setAnimating] = useState(false);
+  const [brokenImages, setBrokenImages] = useState({});
   const timerRef = useRef(null);
 
   const go = (idx) => {
@@ -131,25 +131,29 @@ function HeroSlider() {
   }, [current, animating]);
 
   const slide = HERO_SLIDES[current];
+  const canShowSlideImage = slide.image && !brokenImages[slide.image];
+
+  useEffect(() => {
+    if (!slide.image) return;
+    const img = new Image();
+    img.onload = () => setBrokenImages((prev) => ({ ...prev, [slide.image]: false }));
+    img.onerror = () => setBrokenImages((prev) => ({ ...prev, [slide.image]: true }));
+    img.src = slide.image;
+  }, [slide.image]);
 
   return (
     <section
       id="inicio"
-      style={{ fontFamily: "'DM Serif Display', Georgia, serif" }}
       className="relative min-h-screen flex flex-col"
     >
       {/* Background layers */}
-      <div className="absolute inset-0 bg-[#1B2631]" />
+      {!canShowSlideImage && <div className="absolute inset-0 bg-[#1B2631]" />}
       <div
-        className="absolute inset-0 transition-opacity duration-700"
+        className="absolute inset-0 bg-center bg-cover transition-opacity duration-700"
         style={{
-          background: `radial-gradient(ellipse 80% 60% at 70% 50%, ${slide.accent}22 0%, transparent 70%)`,
+          backgroundImage: canShowSlideImage ? `url(${slide.image})` : 'none',
+          opacity: canShowSlideImage ? 1 : 0,
         }}
-      />
-      {/* Subtle grain */}
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=\'0 0 512 512\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cfilter id=\'n\'%3E%3CfeTurbulence type=\'fractalNoise\' baseFrequency=\'0.75\' stitchTiles=\'stitch\'/%3E%3C/filter%3E%3Crect width=\'100%25\' height=\'100%25\' filter=\'url(%23n)\'/%3E%3C/svg%3E")', backgroundSize: '200px' }}
       />
 
       {/* Nav */}
@@ -158,14 +162,20 @@ function HeroSlider() {
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#E34E26] to-[#2E4053] flex items-center justify-center">
             <HandHeart size={15} className="text-white" />
           </div>
-          <span className="text-white font-semibold tracking-wide text-sm">Acción del Sur</span>
+          <span className="text-white font-semibold tracking-wide text-lg">Acción del Sur</span>
         </div>
-        <div className="hidden md:flex gap-7 text-sm text-white/60">
-          {['#como-funciona', '#impacto', '#progreso', '#localidad'].map((href, i) => (
+        <div className="hidden md:flex items-center gap-7 text-lg text-white">
+          {['#impacto', '#localidad', '#como-funciona'].map((href, i) => (
             <a key={href} href={href} className="hover:text-white transition-colors">
-              {['Cómo funciona', 'Impacto', 'Donaciones', 'Tu ciudad'][i]}
+              {['Impacto', 'Tu ciudad', 'Cómo funciona'][i]}
             </a>
           ))}
+          <Link
+            to="/login"
+            className="inline-flex items-center rounded-xl px-5 py-2.5 text-white font-extrabold border-2 border-white/70 hover:bg-white/10 transition-all"
+          >
+            Iniciar sesión
+          </Link>
         </div>
       </nav>
 
@@ -177,36 +187,42 @@ function HeroSlider() {
             style={{ opacity: animating ? 0 : 1, transform: animating ? 'translateY(12px)' : 'translateY(0)' }}
           >
             <span
-              className="inline-flex items-center gap-2 text-xs font-semibold tracking-widest uppercase mb-6 px-3 py-1.5 rounded-full border"
-              style={{ color: slide.accent, borderColor: `${slide.accent}44`, background: `${slide.accent}11` }}
+              className="inline-flex items-center gap-2 text-base font-bold tracking-widest uppercase mb-6 px-3.5 py-2 rounded-full border text-white"
+              style={{ borderColor: `${accentColor}AA`, background: accentColor }}
             >
               <BadgeCheck size={13} /> {slide.tag}
             </span>
 
-            <h1 className="text-5xl sm:text-7xl lg:text-8xl font-bold text-white leading-[1.0] tracking-tight whitespace-pre-line">
+            <h1 className="text-6xl sm:text-7xl lg:text-8xl font-bold text-white leading-[1.0] tracking-tight whitespace-pre-line">
               {slide.title}
             </h1>
             <p
-              className="text-xl sm:text-2xl font-light mt-2"
-              style={{ color: slide.accent }}
+              className="inline-block text-2xl sm:text-3xl font-extrabold mt-3 px-3 py-1 rounded-md text-white"
+              style={{ background: accentColor }}
             >
               {slide.subtitle}
             </p>
-            <p className="text-white/60 text-lg mt-6 max-w-xl leading-relaxed">
+            <p className="text-2xl mt-6 max-w-2xl leading-relaxed text-white font-bold">
               {slide.body}
             </p>
 
             <div className="flex flex-wrap gap-3 mt-9">
               <a
                 href="#progreso"
-                className="inline-flex items-center gap-2 text-[#1B2631] font-semibold px-6 py-3 rounded-xl text-sm transition-all hover:brightness-90"
-                style={{ background: slide.accent }}
+                className="inline-flex items-center gap-2 text-white font-extrabold px-6 py-3.5 rounded-xl text-lg border-2 border-white/40 transition-all hover:brightness-90"
+                style={{ background: accentColor }}
               >
                 Explorar donaciones <ArrowRight size={15} />
               </a>
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-2 text-white font-extrabold border-2 border-white/70 px-6 py-3.5 rounded-xl text-lg hover:bg-white/10 transition-all"
+              >
+                Iniciar sesión
+              </Link>
               <a
                 href="#como-funciona"
-                className="inline-flex items-center gap-2 text-white/80 border border-white/20 px-6 py-3 rounded-xl text-sm hover:bg-white/5 transition-all"
+                className="inline-flex items-center gap-2 text-white font-extrabold border-2 border-white/70 px-6 py-3.5 rounded-xl text-lg hover:bg-white/5 transition-all"
               >
                 ¿Cómo funciona?
               </a>
@@ -219,7 +235,7 @@ function HeroSlider() {
       <div className="relative z-10 flex items-center gap-4 px-6 sm:px-10 lg:px-16 pb-10">
         <button
           onClick={() => go(current - 1)}
-          className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:border-white/50 transition-all"
+          className="w-9 h-9 rounded-full border-2 border-white/60 flex items-center justify-center text-white/80 hover:text-white hover:border-white transition-all"
         >
           <ChevronLeft size={16} />
         </button>
@@ -231,20 +247,20 @@ function HeroSlider() {
               className="transition-all duration-300 rounded-full h-1.5"
               style={{
                 width: i === current ? 28 : 8,
-                background: i === current ? slide.accent : 'rgba(255,255,255,0.25)',
+                background: i === current ? accentColor : 'rgba(255,255,255,0.25)',
               }}
             />
           ))}
         </div>
         <button
           onClick={() => go(current + 1)}
-          className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:border-white/50 transition-all"
+          className="w-9 h-9 rounded-full border-2 border-white/60 flex items-center justify-center text-white/80 hover:text-white hover:border-white transition-all"
         >
           <ChevronRight size={16} />
         </button>
 
         {/* Slide counter */}
-        <span className="ml-auto text-white/30 text-xs tabular-nums">
+        <span className="ml-auto text-white/40 text-base tabular-nums">
           {String(current + 1).padStart(2, '0')} / {String(HERO_SLIDES.length).padStart(2, '0')}
         </span>
       </div>
@@ -266,16 +282,16 @@ function ProgressCard({ donation }) {
     <article className="bg-white border border-stone-200 rounded-2xl p-5 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-xs text-stone-400 font-mono">{donation.id}</p>
-          <h3 className="text-base font-semibold text-stone-800 mt-0.5">{donation.type}</h3>
-          <p className="text-sm text-stone-500 mt-0.5">{donation.quantity}</p>
+          <p className="text-sm text-stone-400 font-mono">{donation.id}</p>
+          <h3 className="text-lg font-semibold text-stone-800 mt-0.5">{donation.type}</h3>
+          <p className="text-base text-stone-500 mt-0.5">{donation.quantity}</p>
         </div>
-        <span className={`text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 ${st.bg} ${st.text}`}>
+        <span className={`text-sm font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 ${st.bg} ${st.text}`}>
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: st.dot }} />
           {donation.status}
         </span>
       </div>
-      <p className="text-sm text-stone-500 mt-4 flex items-center gap-1.5">
+      <p className="text-base text-stone-500 mt-4 flex items-center gap-1.5">
         <MapPin size={12} className="shrink-0" /> {donation.route}
       </p>
       <div className="mt-3 h-1.5 bg-stone-100 rounded-full overflow-hidden">
@@ -289,14 +305,584 @@ function ProgressCard({ donation }) {
           }}
         />
       </div>
-      <p className="text-xs text-stone-400 mt-2">{donation.progress}% completado</p>
+      <p className="text-sm text-stone-400 mt-2">{donation.progress}% completado</p>
     </article>
   );
 }
 
 function SectionLabel({ children }) {
   return (
-    <p className="text-xs font-bold tracking-[0.2em] uppercase text-stone-400 mb-3">{children}</p>
+    <p className="text-base font-bold tracking-[0.2em] uppercase text-stone-400 mb-3">{children}</p>
+  );
+}
+
+/* ── DONATION JOURNEY ─────────────────────────────────────────────── */
+
+function DonationJourney() {
+  const sectionRef = useRef(null);
+  const [visibleSteps, setVisibleSteps] = useState(new Set());
+
+  useEffect(() => {
+    const cards = sectionRef.current?.querySelectorAll('[data-step]');
+    if (!cards) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisibleSteps((prev) => new Set([...prev, entry.target.dataset.step]));
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+    );
+    cards.forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, []);
+
+  const stepNums = ['01', '02', '03', '04'];
+
+  return (
+    <section id="como-funciona" ref={sectionRef} className="relative overflow-hidden">
+      {/* Subtle dot-grid background texture */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          backgroundImage: 'radial-gradient(circle, #1B2631 0.7px, transparent 0.7px)',
+          backgroundSize: '26px 26px',
+          opacity: 0.025,
+        }}
+      />
+
+      <div className="relative z-10">
+        <SectionLabel>El proceso</SectionLabel>
+        <h2 className="text-4xl sm:text-5xl font-bold text-[#1B2631] max-w-xl leading-tight">
+          ¿Cómo funciona una donación?
+        </h2>
+        <p className="text-xl text-[#2E4053]/60 mt-3 max-w-xl">
+          Un recorrido simple, de principio a fin, visible para cualquier persona.
+        </p>
+
+        {/* ═══ DESKTOP: Alternating Winding Timeline ═══ */}
+        <div className="hidden md:block mt-20 relative">
+          {/* Decorative winding SVG path */}
+          <svg
+            className="absolute left-0 top-0 w-full h-full pointer-events-none"
+            viewBox="0 0 200 1000"
+            preserveAspectRatio="none"
+            style={{ opacity: 0.05 }}
+          >
+            <path
+              d="M100 0 C50 125,150 125,100 250 C50 375,150 375,100 500 C50 625,150 625,100 750 C50 875,150 875,100 1000"
+              stroke="#E34E26"
+              strokeWidth="2.5"
+              fill="none"
+              strokeDasharray="8 6"
+            />
+          </svg>
+
+          {/* Central vertical gradient line */}
+          <div className="absolute left-1/2 top-0 bottom-0 -translate-x-1/2">
+            <div
+              className="absolute left-1/2 -translate-x-1/2 w-[2px] h-full"
+              style={{
+                background: 'linear-gradient(180deg, #E34E26 0%, #2E4053 45%, #1B2631 100%)',
+                maskImage: 'linear-gradient(180deg, transparent, black 2%, black 98%, transparent)',
+                WebkitMaskImage: 'linear-gradient(180deg, transparent, black 2%, black 98%, transparent)',
+              }}
+            />
+            {/* Animated traveling dots */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div
+                className="journey-dot absolute left-1/2 -translate-x-1/2 w-2.5 h-2.5 rounded-full bg-[#E34E26]"
+                style={{ boxShadow: '0 0 12px 3px rgba(227,78,38,0.5)' }}
+              />
+              <div
+                className="journey-dot-delayed absolute left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-[#E34E26]/60"
+                style={{ boxShadow: '0 0 8px 2px rgba(227,78,38,0.3)' }}
+              />
+            </div>
+          </div>
+
+          {/* Start marker */}
+          <div className="absolute left-1/2 -translate-x-1/2 -top-1 flex flex-col items-center z-20">
+            <div className="w-5 h-5 rounded-full bg-[#E34E26] border-[3px] border-[#F4F6F7] shadow-md" />
+            <span className="mt-2 text-xs font-extrabold tracking-[0.3em] text-[#E34E26] uppercase">Inicio</span>
+          </div>
+
+          {/* Steps */}
+          <div className="space-y-16 pt-14 pb-16">
+            {FLOW_STEPS.map((step, i) => {
+              const Icon = step.icon;
+              const isLeft = i % 2 === 0;
+              const isVis = visibleSteps.has(String(i));
+              const delay = `${i * 120}ms`;
+
+              const cardContent = (align) => (
+                <div
+                  className={`${align === 'right' ? 'pr-6' : 'pl-6'} transition-all duration-700 ease-out`}
+                  style={{
+                    transitionDelay: delay,
+                    opacity: isVis ? 1 : 0,
+                    transform: isVis ? 'translateX(0)' : `translateX(${align === 'right' ? '-50px' : '50px'})`,
+                  }}
+                >
+                  <div className={`relative bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-[#D5DBDB]/60 shadow-sm ${align === 'right' ? 'ml-auto' : ''} max-w-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group overflow-hidden`}>
+                    {/* Giant background numeral */}
+                    <span
+                      className={`absolute -top-5 ${align === 'right' ? 'right-3' : 'left-3'} text-[100px] font-black leading-none select-none pointer-events-none`}
+                      style={{ color: 'rgba(227,78,38,0.05)' }}
+                    >
+                      {stepNums[i]}
+                    </span>
+                    {/* Accent bar toward center */}
+                    <div
+                      className={`absolute top-4 ${align === 'right' ? 'right-0 rounded-l-full' : 'left-0 rounded-r-full'} w-1 h-12 bg-gradient-to-b from-[#E34E26] to-[#E34E26]/10`}
+                    />
+                    <div className="relative z-10">
+                      <span className="inline-block text-sm font-extrabold tracking-[0.25em] text-[#E34E26] uppercase mb-2">
+                        Paso {i + 1}
+                      </span>
+                      <h3 className="text-2xl font-bold text-[#1B2631] group-hover:text-[#E34E26] transition-colors duration-300">
+                        {step.title}
+                      </h3>
+                      <p className="text-[#2E4053]/60 mt-2 leading-relaxed text-base">
+                        {step.description}
+                      </p>
+                    </div>
+                    {/* Connector arm toward center */}
+                    <div
+                      className={`absolute top-1/2 -translate-y-1/2 h-[2px] w-6 ${align === 'right' ? '-right-6' : '-left-6'}`}
+                      style={{
+                        background: align === 'right'
+                          ? 'linear-gradient(90deg, transparent, #D5DBDB)'
+                          : 'linear-gradient(270deg, transparent, #D5DBDB)',
+                      }}
+                    />
+                  </div>
+                </div>
+              );
+
+              return (
+                <div key={step.title} data-step={i} className="grid grid-cols-[1fr_72px_1fr] items-center">
+                  {isLeft ? cardContent('right') : <div />}
+
+                  {/* Center diamond node */}
+                  <div className="flex justify-center relative z-10">
+                    <div
+                      className="transition-all duration-500"
+                      style={{ transitionDelay: delay, opacity: isVis ? 1 : 0, transform: isVis ? 'scale(1) rotate(45deg)' : 'scale(0.4) rotate(45deg)' }}
+                    >
+                      <div className="w-14 h-14 rounded-xl bg-[#1B2631] flex items-center justify-center shadow-xl relative overflow-hidden" style={{ boxShadow: '0 8px 24px rgba(27,38,49,0.3)' }}>
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#E34E26]/25 to-transparent" />
+                        <Icon size={22} className="text-[#E34E26] -rotate-45 relative z-10" />
+                      </div>
+                    </div>
+                    {/* Pulse ring */}
+                    {isVis && (
+                      <div className="absolute inset-0 flex justify-center items-center pointer-events-none">
+                        <div className="w-14 h-14 rounded-xl rotate-45 border-2 border-[#E34E26]/20 animate-ping" style={{ animationDuration: '3s' }} />
+                      </div>
+                    )}
+                  </div>
+
+                  {!isLeft ? cardContent('left') : <div />}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* End marker */}
+          <div className="absolute left-1/2 -translate-x-1/2 -bottom-1 flex flex-col items-center z-20">
+            <div className="w-8 h-8 rounded-full bg-[#1B2631] flex items-center justify-center border-[3px] border-[#F4F6F7] shadow-md">
+              <BadgeCheck size={14} className="text-[#E34E26]" />
+            </div>
+            <span className="mt-2 text-xs font-extrabold tracking-[0.3em] text-[#1B2631]/60 uppercase">Confirmado</span>
+          </div>
+        </div>
+
+        {/* ═══ MOBILE: Vertical Journey ═══ */}
+        <div className="md:hidden mt-12 relative pl-16">
+          {/* Left vertical path */}
+          <div className="absolute left-[22px] top-2 bottom-2 w-[2px]" style={{
+            background: 'linear-gradient(180deg, #E34E26, #2E4053, #1B2631)',
+          }} />
+          {/* Mobile traveling dot */}
+          <div
+            className="absolute left-[16px] journey-dot w-3 h-3 rounded-full bg-[#E34E26]"
+            style={{ boxShadow: '0 0 10px rgba(227,78,38,0.5)' }}
+          />
+
+          <div className="space-y-8">
+            {FLOW_STEPS.map((step, i) => {
+              const Icon = step.icon;
+              return (
+                <div key={step.title} className="relative" data-step={i}>
+                  {/* Node on the line */}
+                  <div className="absolute -left-16 top-1 w-11 h-11 rounded-lg bg-[#1B2631] flex items-center justify-center shadow-lg rotate-45">
+                    <Icon size={18} className="text-[#E34E26] -rotate-45" />
+                  </div>
+                  {/* Horizontal connector */}
+                  <div className="absolute -left-5 top-5 w-5 h-[2px] bg-gradient-to-r from-[#D5DBDB] to-transparent" />
+                  {/* Card */}
+                  <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 border border-[#D5DBDB]/60 shadow-sm relative overflow-hidden">
+                    <span
+                      className="absolute -top-3 right-2 text-[80px] font-black leading-none select-none pointer-events-none"
+                      style={{ color: 'rgba(227,78,38,0.04)' }}
+                    >
+                      {stepNums[i]}
+                    </span>
+                    <span className="relative z-10 inline-block text-sm font-extrabold tracking-[0.25em] text-[#E34E26] uppercase mb-1">
+                      Paso {i + 1}
+                    </span>
+                    <h3 className="text-xl font-bold text-[#1B2631] relative z-10">{step.title}</h3>
+                    <p className="text-[#2E4053]/60 mt-2 text-base leading-relaxed relative z-10">{step.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── Animated Counter Hook ──────────────────────────────────────── */
+function useCountUp(target, isVisible, duration = 1800) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!isVisible) { setCount(0); return; }
+    let start = 0;
+    const startTime = performance.now();
+    const step = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      start = Math.round(ease * target);
+      setCount(start);
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [isVisible, target, duration]);
+  return count;
+}
+
+/* ── CATEGORY ICONS (inline SVGs for editorial feel) ───────────── */
+const CATEGORY_ICONS = {
+  'Alimentos': (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/>
+    </svg>
+  ),
+  'Ropa': (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <path d="M16 3h5v5M8 3H3v5M21 8l-5 3v10H8V11L3 8"/>
+    </svg>
+  ),
+  'Medicamentos': (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <rect x="3" y="3" width="18" height="18" rx="3"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+    </svg>
+  ),
+  'Útiles escolares': (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+    </svg>
+  ),
+};
+
+function ImpactStory() {
+  const sectionRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const maxProcessed = TOP_CENTERS[0].processed;
+  const totalDonations = TOP_CENTERS.reduce((s, c) => s + c.processed, 0);
+
+  const animatedTotal = useCountUp(totalDonations, isVisible, 2200);
+
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.12 }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section id="impacto" ref={sectionRef} className="relative overflow-hidden">
+      {/* ─── Hero heading block ─── */}
+      <div className="relative rounded-t-[2rem] bg-[#1B2631] px-6 py-14 sm:px-10 sm:py-20 lg:px-16 lg:py-24 overflow-hidden">
+        {/* Decorative gradient blobs */}
+        <div className="pointer-events-none absolute top-0 left-0 w-[500px] h-[500px] rounded-full opacity-[0.07]" style={{ background: 'radial-gradient(circle, #E34E26, transparent 70%)', transform: 'translate(-30%, -40%)' }} />
+        <div className="pointer-events-none absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, #B9A48E, transparent 70%)', transform: 'translate(30%, 40%)' }} />
+        {/* Subtle grid texture */}
+        <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
+
+        <div className="relative z-10 max-w-6xl">
+          <p
+            className="text-base font-bold tracking-[0.25em] uppercase text-[#E34E26] mb-5"
+            style={{ opacity: isVisible ? 1 : 0, transform: isVisible ? 'translateY(0)' : 'translateY(12px)', transition: 'all 0.6s cubic-bezier(0.16,1,0.3,1)' }}
+          >
+            Impacto real · datos verificados
+          </p>
+          <h2
+            className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.08] max-w-4xl"
+            style={{ opacity: isVisible ? 1 : 0, transform: isVisible ? 'translateY(0)' : 'translateY(20px)', transition: 'all 0.7s cubic-bezier(0.16,1,0.3,1) 0.08s' }}
+          >
+            Cuando una red se mueve,{' '}
+            <span className="text-[#E34E26]">los números cuentan historias reales.</span>
+          </h2>
+          <div
+            className="mt-8 flex flex-wrap items-end gap-6 sm:gap-10"
+            style={{ opacity: isVisible ? 1 : 0, transform: isVisible ? 'translateY(0)' : 'translateY(16px)', transition: 'all 0.7s cubic-bezier(0.16,1,0.3,1) 0.2s' }}
+          >
+            <div>
+              <p className="text-6xl sm:text-7xl lg:text-8xl font-black tabular-nums text-white leading-none tracking-tight">
+                {animatedTotal.toLocaleString()}
+              </p>
+              <p className="mt-2 text-lg sm:text-xl text-white/50 font-medium">donaciones trazadas en 4 centros principales</p>
+            </div>
+            <div className="h-14 w-px bg-white/15 hidden sm:block" />
+            <div className="hidden sm:block">
+              <p className="text-2xl font-black text-[#E34E26]">4</p>
+              <p className="text-base text-white/50 font-medium">categorías de ayuda</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Full-width category spectrum bar ─── */}
+      <div className="relative bg-[#1B2631]">
+        <div className="px-6 sm:px-10 lg:px-14 pb-1">
+          <p
+            className="text-sm font-bold uppercase tracking-[0.25em] text-white/40 mb-3"
+            style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.5s 0.4s' }}
+          >
+            Distribución por tipo de ayuda
+          </p>
+        </div>
+        <div className="relative h-14 sm:h-16 flex overflow-hidden">
+          {CATEGORY_BREAKDOWN.map((cat, idx) => {
+            const prevPercent = CATEGORY_BREAKDOWN.slice(0, idx).reduce((s, c) => s + c.value, 0);
+            return (
+              <div
+                key={cat.name}
+                className="relative h-full flex items-center justify-center group cursor-default transition-all duration-1000 ease-out overflow-hidden"
+                style={{
+                  width: isVisible ? `${cat.value}%` : '0%',
+                  background: cat.color,
+                  transitionDelay: `${400 + idx * 150}ms`,
+                }}
+              >
+                {/* Floating label */}
+                <div
+                  className="flex items-center gap-1.5 sm:gap-2 text-white/90 select-none transition-all duration-700"
+                  style={{ opacity: isVisible ? 1 : 0, transitionDelay: `${800 + idx * 150}ms` }}
+                >
+                  <span className="text-lg sm:text-xl font-black tabular-nums">{cat.value}%</span>
+                  <span className="text-xs sm:text-sm font-bold uppercase tracking-wider hidden sm:inline">{cat.name}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {/* Mobile category labels below the bar */}
+        <div className="sm:hidden flex px-2 py-2 gap-1 bg-[#1B2631]">
+          {CATEGORY_BREAKDOWN.map((cat) => (
+            <div key={cat.name} className="flex items-center gap-1 flex-1 justify-center">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: cat.color }} />
+              <span className="text-xs text-white/60 font-medium truncate">{cat.name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Main content: Centers + Category detail ─── */}
+      <div className="rounded-b-[2rem] border border-t-0 border-[#1B2631]/8 bg-[#F7F1EA] relative overflow-hidden">
+        {/* Warm radial accent */}
+        <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse at 20% 0%, rgba(227,78,38,0.08), transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(27,38,49,0.05), transparent 50%)' }} />
+
+        <div className="relative z-10 px-6 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-16">
+          {/* ─── Centers ranked list ─── */}
+          <div className="mb-14 lg:mb-16">
+            <p
+              className="text-sm font-extrabold uppercase tracking-[0.25em] text-[#1B2631]/45 mb-6"
+              style={{ opacity: isVisible ? 1 : 0, transform: isVisible ? 'translateY(0)' : 'translateY(8px)', transition: 'all 0.5s 0.5s' }}
+            >
+              Centros más activos – según donaciones procesadas
+            </p>
+
+            <div className="space-y-4">
+              {TOP_CENTERS.map((center, i) => {
+                const fill = (center.processed / maxProcessed) * 100;
+                const delay = 600 + i * 140;
+                return (
+                  <CenterRankCard
+                    key={center.name}
+                    center={center}
+                    rank={i + 1}
+                    fill={fill}
+                    isVisible={isVisible}
+                    delay={delay}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ─── Category detail cards ─── */}
+          <div>
+            <p
+              className="text-sm font-extrabold uppercase tracking-[0.25em] text-[#1B2631]/45 mb-6"
+              style={{ opacity: isVisible ? 1 : 0, transform: isVisible ? 'translateY(0)' : 'translateY(8px)', transition: 'all 0.5s 0.9s' }}
+            >
+              ¿Qué se dona?
+            </p>
+
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              {CATEGORY_BREAKDOWN.map((cat, i) => (
+                <CategoryDetailCard
+                  key={cat.name}
+                  category={cat}
+                  isVisible={isVisible}
+                  delay={1000 + i * 130}
+                  totalDonations={totalDonations}
+                />
+              ))}
+            </div>
+
+            <p
+              className="mt-8 text-base leading-relaxed text-[#1B2631]/55 max-w-2xl"
+              style={{ opacity: isVisible ? 1 : 0, transition: 'opacity 0.6s 1.6s' }}
+            >
+              Alimentos y abrigo sostienen la mayor parte de la red, mientras medicamentos y útiles escolares responden a necesidades críticas en momentos puntuales.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ── Center Rank Card ──────────────────────────────────────────── */
+function CenterRankCard({ center, rank, fill, isVisible, delay }) {
+  const animatedCount = useCountUp(center.processed, isVisible, 1600 + rank * 200);
+  
+  return (
+    <article
+      className="group relative overflow-hidden rounded-2xl border border-[#1B2631]/8 bg-white/80 backdrop-blur-sm shadow-[0_2px_16px_rgba(27,38,49,0.04)] hover:shadow-[0_8px_32px_rgba(27,38,49,0.1)] hover:-translate-y-0.5 transition-all duration-500"
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? 'translateY(0)' : 'translateY(24px)',
+        transition: `all 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+      }}
+    >
+      {/* Giant rank number — decorative watermark */}
+      <span
+        className="pointer-events-none absolute -top-6 -left-2 select-none font-black leading-none text-[#1B2631] sm:-top-8"
+        style={{ fontSize: 'clamp(6rem, 12vw, 10rem)', opacity: 0.03 }}
+      >
+        {rank}
+      </span>
+
+      {/* Progress fill bar — absolute behind content */}
+      <div className="absolute bottom-0 left-0 h-1 bg-gradient-to-r from-[#E34E26] to-[#E34E26]/60 transition-all duration-[1800ms] ease-out rounded-br-2xl"
+        style={{ width: isVisible ? `${fill}%` : '0%', transitionDelay: `${delay + 300}ms` }}
+      />
+
+      <div className="relative z-10 flex items-center gap-4 px-5 py-5 sm:px-7 sm:py-6">
+        {/* Rank badge */}
+        <div className="shrink-0 w-11 h-11 sm:w-14 sm:h-14 rounded-xl bg-[#1B2631] flex items-center justify-center shadow-lg">
+          <span className="text-lg sm:text-xl font-black text-[#E34E26]">#{rank}</span>
+        </div>
+
+        {/* Center info */}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-lg sm:text-xl font-extrabold text-[#1B2631] leading-snug group-hover:text-[#E34E26] transition-colors duration-300 truncate">
+            {center.name}
+          </h3>
+          <p className="mt-0.5 flex items-center gap-1.5 text-base font-medium text-[#1B2631]/50">
+            <MapPin size={13} className="shrink-0 text-[#E34E26]/60" /> {center.city}
+          </p>
+        </div>
+
+        {/* Donation count — the hero number */}
+        <div className="shrink-0 text-right">
+          <p className="text-3xl sm:text-4xl lg:text-5xl font-black tabular-nums text-[#E34E26] leading-none tracking-tight">
+            {animatedCount.toLocaleString()}
+          </p>
+          <p className="mt-1 text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-[#1B2631]/40">
+            donaciones
+          </p>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+/* ── Category Detail Card ──────────────────────────────────────── */
+function CategoryDetailCard({ category, isVisible, delay, totalDonations }) {
+  const estimatedCount = Math.round((category.value / 100) * totalDonations);
+  const animatedPercent = useCountUp(category.value, isVisible, 1400);
+  const Icon = CATEGORY_ICONS[category.name];
+
+  return (
+    <div
+      className="group relative overflow-hidden rounded-2xl border border-[#1B2631]/8 bg-white/70 backdrop-blur-sm p-5 sm:p-6 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-500"
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.97)',
+        transition: `all 0.7s cubic-bezier(0.16,1,0.3,1) ${delay}ms`,
+      }}
+    >
+      {/* Color accent strip at top */}
+      <div className="absolute top-0 left-0 right-0 h-1 transition-all duration-1000" style={{ background: category.color, opacity: isVisible ? 1 : 0, transitionDelay: `${delay + 200}ms` }} />
+      
+      {/* Background percentage watermark */}
+      <span className="pointer-events-none absolute -bottom-3 -right-1 select-none text-7xl sm:text-8xl font-black leading-none" style={{ color: category.color, opacity: 0.06 }}>
+        {category.value}
+      </span>
+
+      <div className="relative z-10">
+        {/* Icon + label */}
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${category.color}18` }}>
+            <span style={{ color: category.color }}>{Icon}</span>
+          </div>
+          <p className="text-base font-bold uppercase tracking-wider text-[#1B2631]/60">{category.name}</p>
+        </div>
+
+        {/* Big percentage */}
+        <p className="text-4xl sm:text-5xl font-black tabular-nums leading-none" style={{ color: category.color }}>
+          {animatedPercent}
+          <span className="text-lg sm:text-xl font-bold ml-0.5" style={{ color: `${category.color}99` }}>%</span>
+        </p>
+
+        {/* Estimated count */}
+        <p className="mt-2 text-sm font-semibold text-[#1B2631]/40">
+          ~{estimatedCount.toLocaleString()} donaciones
+        </p>
+
+        {/* Mini fill bar */}
+        <div className="mt-3 h-1.5 w-full rounded-full bg-[#1B2631]/5 overflow-hidden">
+          <div
+            className="h-full rounded-full transition-all duration-[1600ms] ease-out"
+            style={{
+              width: isVisible ? `${category.value}%` : '0%',
+              background: category.color,
+              transitionDelay: `${delay + 400}ms`,
+            }}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -307,20 +893,24 @@ export default function AccionDelSur() {
   const [selectedCity, setSelectedCity] = useState(cities[0]);
   const cityData = CITY_EXPLORER_DATA[selectedCity];
 
-  const centerChartData = useMemo(
-    () => TOP_CENTERS.map((c) => ({ name: c.name.split(' ').slice(-1)[0], donaciones: c.processed })),
-    []
-  );
-
   return (
-    <div style={{ fontFamily: "'DM Sans', system-ui, sans-serif" }} className="bg-stone-50 text-stone-800">
+    <div className="bg-stone-50 text-stone-800">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap');
         html { scroll-behavior: smooth; }
         * { box-sizing: border-box; }
+        @keyframes journeyTravel {
+          0% { top: -4%; opacity: 0; }
+          8% { opacity: 1; }
+          92% { opacity: 1; }
+          100% { top: 104%; opacity: 0; }
+        }
+        .journey-dot { animation: journeyTravel 4s ease-in-out infinite; }
+        .journey-dot-delayed { animation: journeyTravel 4s ease-in-out infinite 2s; }
+
       `}</style>
 
       <HeroSlider />
+
 
       {/* ── Live ticker strip ──────────────────────────────────────── */}
       <div className="bg-[#1B2631] border-y border-white/5 overflow-hidden py-3">
@@ -328,7 +918,7 @@ export default function AccionDelSur() {
           {[...Array(3)].flatMap(() =>
             ['12.480 donaciones registradas', '94 centros activos', '38.200 beneficiarios', '524.000 kg entregados', 'Transparencia total garantizada']
               .map((t, i) => (
-                <span key={`${t}-${i}`} className="text-xs text-white/40 font-medium tracking-wider uppercase flex items-center gap-3">
+                <span key={`${t}-${i}`} className="text-base text-white/50 font-medium tracking-wider uppercase flex items-center gap-3">
                   <span className="w-1 h-1 rounded-full bg-[#E34E26] inline-block" />
                   {t}
                 </span>
@@ -340,218 +930,177 @@ export default function AccionDelSur() {
         @keyframes marquee { from { transform: translateX(0) } to { transform: translateX(-33.333%) } }
       `}</style>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 space-y-28">
+      {/* ── Impacto (full-width) ─────────────────────────────────── */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-20 py-20">
+        <ImpactStory />
+      </div>
 
-        {/* ── Cómo funciona ─────────────────────────────────────── */}
-        <section id="como-funciona">
-          <SectionLabel>El proceso</SectionLabel>
-          <h2 className="text-4xl font-bold text-stone-800 max-w-xl leading-tight">¿Cómo funciona una donación?</h2>
-          <p className="text-stone-500 mt-3 max-w-lg">Un recorrido simple, de principio a fin, visible para cualquier persona.</p>
+      {/* ── Explorador por ciudad (full-width) ─────────────────── */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-20 py-20">
+        <section id="localidad" className="relative rounded-3xl overflow-hidden">
+          {/* Dark editorial background */}
+          <div className="relative bg-[#1B2631] rounded-t-3xl px-6 py-12 sm:px-10 sm:py-16 lg:px-14 lg:py-20 overflow-hidden">
+            {/* Decorative elements */}
+            <div className="pointer-events-none absolute top-0 right-0 w-[500px] h-[500px] rounded-full opacity-[0.06]" style={{ background: 'radial-gradient(circle, #E34E26, transparent 70%)', transform: 'translate(20%, -40%)' }} />
+            <div className="pointer-events-none absolute bottom-0 left-0 w-[350px] h-[350px] rounded-full opacity-[0.04]" style={{ background: 'radial-gradient(circle, #B9A48E, transparent 70%)', transform: 'translate(-20%, 30%)' }} />
+            <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
 
-          <div className="grid md:grid-cols-4 gap-0 mt-12 relative">
-            {/* connector line */}
-            <div className="hidden md:block absolute top-9 left-[12.5%] right-[12.5%] h-px bg-gradient-to-r from-transparent via-stone-200 to-transparent" />
-            {FLOW_STEPS.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <div key={step.title} className="flex flex-col items-center text-center px-4 relative">
-                  <div className="relative">
-                    <div className="w-16 h-16 rounded-2xl bg-white border border-stone-200 shadow-sm flex items-center justify-center text-[#E34E26] mb-4 z-10 relative">
-                      <Icon size={24} />
-                    </div>
-                    <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-[#1B2631] text-white text-[10px] font-bold flex items-center justify-center z-20">{i + 1}</span>
-                  </div>
-                  <h3 className="font-semibold text-stone-800 text-sm">{step.title}</h3>
-                  <p className="text-stone-500 text-xs mt-2 leading-relaxed">{step.description}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+            <div className="relative z-10">
+              <p className="text-base font-bold tracking-[0.25em] uppercase text-[#E34E26] mb-5">Explorador</p>
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-[1.08] max-w-3xl">
+                ¿Qué pasa en{' '}
+                <span className="text-[#E34E26]">tu ciudad?</span>
+              </h2>
+              <p className="text-xl text-white/50 mt-4 max-w-xl font-medium">
+                Elegí una localidad y mirá el movimiento de donaciones en esa zona.
+              </p>
 
-        {/* ── Impacto ───────────────────────────────────────────── */}
-        <section id="impacto">
-          <SectionLabel>Impacto global</SectionLabel>
-          <h2 className="text-4xl font-bold text-stone-800">La ayuda en números</h2>
-          <p className="text-stone-500 mt-3 max-w-lg">Una mirada general de todo lo que ya está en movimiento.</p>
-
-          {/* Stat cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
-            {SUMMARY_STATS.map((s) => {
-              const Icon = s.icon;
-              return (
-                <div key={s.label} className="bg-white border border-stone-200 rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
-                  <div className="w-9 h-9 rounded-xl bg-[#1B2631] flex items-center justify-center mb-4">
-                    <Icon size={16} className="text-[#E34E26]" />
-                  </div>
-                  <p className="text-2xl font-bold text-stone-800">{s.value}</p>
-                  <p className="text-xs text-stone-500 mt-1">{s.label}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Charts */}
-          <div className="grid lg:grid-cols-[1.6fr_1fr] gap-6 mt-6">
-            <div className="bg-white border border-stone-200 rounded-2xl p-6">
-              <p className="text-sm font-semibold text-stone-700 mb-4">Centros con mayor actividad</p>
-              <ResponsiveContainer width="100%" height={210}>
-                <BarChart data={centerChartData} barSize={28}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#D5DBDB" />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#2E4053' }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: '#2E4053' }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ borderRadius: 12, border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', fontSize: 12 }}
-                    cursor={{ fill: '#F4F6F7' }}
-                  />
-                  <Bar dataKey="donaciones" fill="#E34E26" radius={[6, 6, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="bg-white border border-stone-200 rounded-2xl p-6">
-              <p className="text-sm font-semibold text-stone-700 mb-4">Desglose por categoría</p>
-              <ResponsiveContainer width="100%" height={130}>
-                <PieChart>
-                  <Pie data={CATEGORY_BREAKDOWN} dataKey="value" nameKey="name" outerRadius={58} innerRadius={34} paddingAngle={3}>
-                    {CATEGORY_BREAKDOWN.map((e) => <Cell key={e.name} fill={e.color} />)}
-                  </Pie>
-                  <Tooltip formatter={(v) => `${v}%`} contentStyle={{ borderRadius: 10, border: 'none', fontSize: 12 }} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="mt-3 space-y-2">
-                {CATEGORY_BREAKDOWN.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-xs text-stone-600">
-                      <span className="w-2.5 h-2.5 rounded-sm" style={{ background: item.color }} />
-                      {item.name}
-                    </div>
-                    <span className="text-xs font-semibold text-stone-700">{item.value}%</span>
-                  </div>
+              {/* City selector — pill tabs */}
+              <div className="mt-10 flex flex-wrap gap-2">
+                {cities.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setSelectedCity(c)}
+                    className={`px-5 py-2.5 rounded-full text-base font-bold tracking-wide transition-all duration-300 border-2 ${
+                      selectedCity === c
+                        ? 'bg-[#E34E26] border-[#E34E26] text-white shadow-lg shadow-[#E34E26]/20'
+                        : 'border-white/15 text-white/60 hover:border-white/30 hover:text-white/90 hover:bg-white/5'
+                    }`}
+                  >
+                    {c}
+                  </button>
                 ))}
               </div>
             </div>
           </div>
-        </section>
 
-        {/* ── Donaciones en progreso ────────────────────────────── */}
-        <section id="progreso">
-          <SectionLabel>En movimiento</SectionLabel>
-          <h2 className="text-4xl font-bold text-stone-800">Donaciones en progreso</h2>
-          <p className="text-stone-500 mt-3">Seguí en tiempo real qué está en camino y qué ya fue entregado.</p>
-          <div className="grid md:grid-cols-2 gap-4 mt-10">
-            {IN_PROGRESS_DONATIONS.map((d) => <ProgressCard key={d.id} donation={d} />)}
+          {/* Stats ribbon */}
+          <div className="bg-[#1B2631] border-t border-white/5">
+            <div className="grid grid-cols-3">
+              {[
+                { label: 'Recibidas', value: cityData.received, icon: TrendingUp },
+                { label: 'Enviadas', value: cityData.sent, icon: Send },
+                { label: 'Centros activos', value: cityData.activeCenters, icon: Activity },
+              ].map((m, i) => {
+                const Icon = m.icon;
+                return (
+                  <div
+                    key={m.label}
+                    className={`relative py-8 px-6 sm:px-8 text-center group ${
+                      i < 2 ? 'border-r border-white/5' : ''
+                    }`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#E34E26]/0 to-[#E34E26]/0 group-hover:from-[#E34E26]/5 group-hover:to-transparent transition-all duration-500" />
+                    <div className="relative z-10">
+                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mx-auto mb-3">
+                        <Icon size={18} className="text-[#E34E26]" />
+                      </div>
+                      <p className="text-3xl sm:text-4xl lg:text-5xl font-black tabular-nums text-white leading-none tracking-tight">
+                        {m.value}
+                      </p>
+                      <p className="mt-2 text-sm sm:text-base font-bold uppercase tracking-[0.2em] text-white/40">
+                        {m.label}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </section>
 
-        {/* ── Centros ───────────────────────────────────────────── */}
-        <section id="centros">
-          <SectionLabel>Red de centros</SectionLabel>
-          <h2 className="text-4xl font-bold text-stone-800">Centros más activos</h2>
-          <p className="text-stone-500 mt-3">Estos centros hoy están entre los que más ayuda mueven en el sistema.</p>
-          <div className="grid md:grid-cols-2 gap-4 mt-10">
-            {TOP_CENTERS.map((center, i) => (
-              <article key={center.name} className="bg-white border border-stone-200 rounded-2xl p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 flex gap-4">
-                <div className="shrink-0 w-10 h-10 rounded-xl bg-stone-100 flex items-center justify-center text-stone-400 text-sm font-bold">
-                  #{i + 1}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-stone-800 truncate">{center.name}</h3>
-                  <p className="text-xs text-stone-400 flex items-center gap-1 mt-0.5"><MapPin size={10} />{center.city}</p>
-                  <p className="text-sm text-stone-600 mt-2">
-                    <span className="font-semibold text-stone-800">{center.processed.toLocaleString()}</span> donaciones procesadas
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 mt-2.5">
-                    {center.categories.map((c) => (
-                      <span key={c} className="text-[11px] bg-[#F4F6F7] text-[#1B2631] px-2 py-0.5 rounded-full font-medium">{c}</span>
+          {/* Bottom content area */}
+          <div className="rounded-b-3xl border border-t-0 border-[#1B2631]/8 bg-[#F7F1EA] relative overflow-hidden">
+            <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(ellipse at 20% 0%, rgba(227,78,38,0.06), transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(27,38,49,0.04), transparent 50%)' }} />
+            
+            <div className="relative z-10 px-6 py-10 sm:px-10 sm:py-14 lg:px-14 lg:py-16">
+              <div className="grid lg:grid-cols-2 gap-6">
+                {/* Frequent categories */}
+                <div className="group relative overflow-hidden rounded-2xl border border-[#1B2631]/8 bg-white/80 backdrop-blur-sm p-6 sm:p-8 hover:shadow-lg transition-all duration-500">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#E34E26] to-[#E34E26]/30" />
+                  <span className="pointer-events-none absolute -bottom-4 -right-2 select-none text-8xl font-black leading-none text-[#1B2631]/[0.03]">
+                    ✦
+                  </span>
+                  <p className="text-sm font-extrabold uppercase tracking-[0.25em] text-[#1B2631]/45 mb-5">Categorías frecuentes</p>
+                  <div className="flex flex-wrap gap-3">
+                    {cityData.frequentCategories.map((c, i) => (
+                      <span
+                        key={c}
+                        className="relative inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-base font-bold transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
+                        style={{
+                          background: i === 0 ? '#1B2631' : i === 1 ? '#2E4053' : '#E34E26',
+                          color: 'white',
+                        }}
+                      >
+                        <span className="w-2 h-2 rounded-full bg-white/30" />
+                        {c}
+                      </span>
                     ))}
                   </div>
                 </div>
-              </article>
-            ))}
-          </div>
-        </section>
 
-        {/* ── Explorador por ciudad ─────────────────────────────── */}
-        <section id="localidad" className="bg-white border border-stone-200 rounded-3xl p-6 sm:p-10">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6 mb-8">
-            <div>
-              <SectionLabel>Explorador</SectionLabel>
-              <h2 className="text-4xl font-bold text-stone-800">¿Qué pasa en tu ciudad?</h2>
-              <p className="text-stone-500 mt-2 max-w-md">Elegí una localidad y mirá el movimiento de donaciones en esa zona.</p>
-            </div>
-            <div className="w-full lg:w-72">
-              <label className="block text-xs font-semibold text-stone-500 mb-2 uppercase tracking-wider">Seleccionar localidad</label>
-              <select
-                value={selectedCity}
-                onChange={(e) => setSelectedCity(e.target.value)}
-                className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm text-stone-800 focus:outline-none focus:ring-2 focus:ring-[#E34E26]/30 appearance-none"
-              >
-                {cities.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-4 mb-6">
-            {[
-              { label: 'Recibidas', value: cityData.received },
-              { label: 'Enviadas', value: cityData.sent },
-              { label: 'Centros activos', value: cityData.activeCenters },
-            ].map((m) => (
-              <div key={m.label} className="bg-stone-50 border border-stone-100 rounded-xl p-4 text-center">
-                <p className="text-2xl font-bold text-stone-800">{m.value}</p>
-                <p className="text-xs text-stone-500 mt-1">{m.label}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="grid lg:grid-cols-2 gap-4">
-            <div className="bg-stone-50 border border-stone-100 rounded-xl p-4">
-              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-3">Categorías frecuentes</p>
-              <div className="flex flex-wrap gap-2">
-                {cityData.frequentCategories.map((c) => (
-                  <span key={c} className="text-sm bg-[#F4F6F7] text-[#1B2631] px-3 py-1 rounded-full font-medium">{c}</span>
-                ))}
-              </div>
-            </div>
-            <div className="bg-stone-50 border border-stone-100 rounded-xl p-4">
-              <p className="text-xs font-semibold text-stone-500 uppercase tracking-wider mb-3">Donaciones recientes</p>
-              <ul className="space-y-2">
-                {cityData.recent.map((item) => (
-                  <li key={item} className="flex items-start gap-2 text-sm text-stone-600">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-[#E34E26] shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Trust / Por qué confiar ───────────────────────────── */}
-        <section id="confianza" className="bg-[#1B2631] rounded-3xl p-8 sm:p-12 text-white overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#E34E26] opacity-[0.04] blur-3xl pointer-events-none translate-x-1/2 -translate-y-1/2" />
-          <SectionLabel><span className="text-white/40">Transparencia</span></SectionLabel>
-          <h2 className="text-4xl font-bold text-white max-w-xl leading-tight">
-            ¿Por qué confiar en este sistema?
-          </h2>
-          <p className="text-white/50 mt-3 max-w-lg">
-            La trazabilidad es la forma de ver con claridad por dónde pasó cada ayuda y confirmar que llegó a destino.
-          </p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
-            {TRUST_POINTS.map((point) => {
-              const Icon = point.icon;
-              return (
-                <div key={point.title} className="border border-white/10 rounded-2xl p-5 hover:border-white/20 hover:bg-white/5 transition-all duration-300">
-                  <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center mb-4">
-                    <Icon size={16} className="text-[#E34E26]" />
+                {/* Recent donations */}
+                <div className="group relative overflow-hidden rounded-2xl border border-[#1B2631]/8 bg-white/80 backdrop-blur-sm p-6 sm:p-8 hover:shadow-lg transition-all duration-500">
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#2E4053] to-[#1B2631]/30" />
+                  <span className="pointer-events-none absolute -bottom-4 -right-2 select-none text-8xl font-black leading-none text-[#E34E26]/[0.04]">
+                    ↗
+                  </span>
+                  <p className="text-sm font-extrabold uppercase tracking-[0.25em] text-[#1B2631]/45 mb-5">Donaciones recientes</p>
+                  <div className="space-y-3">
+                    {cityData.recent.map((item, i) => (
+                      <div
+                        key={item}
+                        className="flex items-start gap-3 p-3 rounded-xl bg-[#1B2631]/[0.02] border border-[#1B2631]/5 hover:bg-[#1B2631]/[0.05] hover:border-[#1B2631]/10 transition-all duration-300"
+                      >
+                        <div className="shrink-0 mt-0.5 w-7 h-7 rounded-lg bg-[#1B2631] flex items-center justify-center">
+                          <span className="text-sm font-black text-[#E34E26]">{i + 1}</span>
+                        </div>
+                        <p className="text-base font-medium text-[#1B2631]/70 leading-relaxed">{item}</p>
+                      </div>
+                    ))}
                   </div>
-                  <h3 className="font-semibold text-sm text-white">{point.title}</h3>
-                  <p className="text-xs text-white/50 mt-2 leading-relaxed">{point.text}</p>
                 </div>
-              );
-            })}
+              </div>
+            </div>
           </div>
         </section>
+      </div>
+
+      {/* ── Trust / Por qué confiar (full-width) ──────────────── */}
+      <div className="w-full px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-20 pb-20">
+        <section id="confianza" className="bg-[#1B2631] rounded-3xl p-8 sm:p-12 lg:p-16 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-[#E34E26] opacity-[0.04] blur-3xl pointer-events-none translate-x-1/2 -translate-y-1/2" />
+          <div className="pointer-events-none absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full opacity-[0.05]" style={{ background: 'radial-gradient(circle, #B9A48E, transparent 70%)', transform: 'translate(-20%, 30%)' }} />
+          <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
+          <div className="relative z-10">
+            <SectionLabel><span className="text-white/40">Transparencia</span></SectionLabel>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white max-w-3xl leading-tight">
+              ¿Por qué confiar en{' '}
+              <span className="text-[#E34E26]">este sistema?</span>
+            </h2>
+            <p className="text-xl text-white/50 mt-4 max-w-xl font-medium">
+              La trazabilidad es la forma de ver con claridad por dónde pasó cada ayuda y confirmar que llegó a destino.
+            </p>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mt-10">
+              {TRUST_POINTS.map((point) => {
+                const Icon = point.icon;
+                return (
+                  <div key={point.title} className="border border-white/10 rounded-2xl p-5 hover:border-white/20 hover:bg-white/5 transition-all duration-300">
+                    <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center mb-4">
+                      <Icon size={16} className="text-[#E34E26]" />
+                    </div>
+                    <h3 className="font-semibold text-lg text-white">{point.title}</h3>
+                    <p className="text-base text-white/60 mt-2 leading-relaxed">{point.text}</p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 space-y-28">
+        {/* ── Cómo funciona ─────────────────────────────────────── */}
+        <DonationJourney />
       </main>
 
       {/* ── Footer ────────────────────────────────────────────────── */}
@@ -562,11 +1111,11 @@ export default function AccionDelSur() {
               <HandHeart size={14} className="text-[#E34E26]" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-stone-800">Acción del Sur</p>
-              <p className="text-xs text-stone-400">Trazabilidad Solidaria</p>
+              <p className="text-lg font-semibold text-stone-800">Acción del Sur</p>
+              <p className="text-base text-stone-400">Trazabilidad Solidaria</p>
             </div>
           </div>
-          <nav className="flex flex-wrap gap-5 text-xs text-stone-400">
+          <nav className="flex flex-wrap gap-5 text-base text-stone-400">
             {[['#inicio', 'Inicio'], ['#impacto', 'Impacto'], ['#localidad', 'Tu ciudad'], ['#confianza', 'Transparencia'], ['#', 'Instagram'], ['#', 'LinkedIn']].map(([href, label]) => (
               <a key={label} href={href} className="hover:text-stone-700 transition-colors">{label}</a>
             ))}

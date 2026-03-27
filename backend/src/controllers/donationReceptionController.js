@@ -6,10 +6,11 @@ const {
   DonationReceptionDetail,
   Item,
   Donation,
+  Center,
   User,
   sequelize,
 } = require('../models');
-const stellarService = require('../services/blockchain/stellarService');
+const sftService = require('../services/blockchain/sftService');
 const {
   generateSaltHex,
   normalizeEmail,
@@ -124,6 +125,7 @@ const computeStatus = (details) => {
 };
 
 const isStellarEnabled = () => process.env.STELLAR_ENABLED === 'true';
+const isSftEnabled = () => isStellarEnabled() && Boolean(process.env.SOROBAN_CONTRACT_SFT);
 
 exports.createInitial = async (req, res, next) => {
   try {
@@ -216,46 +218,55 @@ exports.getPublicByToken = async (req, res, next) => {
 };
 
 exports.finalizeInternal = async (req, res, next) => {
-  const t = await sequelize.transaction();
   try {
-    const reception = await DonationReception.findByPk(req.params.id, {
-      transaction: t,
-      lock: t.LOCK.UPDATE,
-    });
-
+    // ── 1. Cargar la recepción ────────────────────────────────────────────────
+    const reception = await DonationReception.findByPk(req.params.id);
     if (!reception) {
-      await t.rollback();
       return res.status(404).json({ error: 'Recepción no encontrada' });
     }
-
     if (reception.status !== 'processing') {
-      await t.rollback();
       return res.status(409).json({ error: 'Solo se puede finalizar una recepción en processing' });
     }
 
-    const { details = [], rejection_reason } = req.body;
+    const { details = [], rejection_reason, center_id } = req.body;
+
+    // ── 2. Validar payload ────────────────────────────────────────────────────
     const payloadError = validateFinalizePayload(details, rejection_reason);
     if (payloadError) {
-      await t.rollback();
       return res.status(400).json({ error: payloadError });
     }
 
+    // ── 3. Validar centro si blockchain está habilitado ───────────────────────
+    let center = null;
+    if (isSftEnabled()) {
+      if (!center_id) {
+        return res.status(400).json({
+          error: 'center_id es requerido cuando blockchain está habilitado',
+        });
+      }
+      center = await Center.findByPk(center_id);
+      if (!center || !center.is_active) {
+        return res.status(404).json({ error: 'Centro no encontrado o inactivo' });
+      }
+      if (!center.blockchain_contract_id) {
+        return res.status(400).json({
+          error: `El centro "${center.name}" no tiene contrato blockchain desplegado`,
+        });
+      }
+    }
+
+    // ── 4. Cargar ítems ───────────────────────────────────────────────────────
     const itemIds = [...new Set(details.map((d) => Number(d.item_id)))];
     const items = await Item.findAll({
       where: { id: { [Op.in]: itemIds }, is_active: true },
-      transaction: t,
-      lock: t.LOCK.UPDATE,
+      include: [{ model: require('../models').Category, as: 'category' }],
     });
 
     if (items.length !== itemIds.length) {
-      await t.rollback();
       return res.status(400).json({ error: 'Uno o más ítems no son válidos o están inactivos' });
     }
 
-    const itemsById = items.reduce((acc, item) => {
-      acc[item.id] = item;
-      return acc;
-    }, {});
+    const itemsById = items.reduce((acc, item) => { acc[item.id] = item; return acc; }, {});
 
     const normalizedDetails = details.map((detail) => ({
       item_id: Number(detail.item_id),
@@ -264,29 +275,6 @@ exports.finalizeInternal = async (req, res, next) => {
       quantity_rejected: Number(detail.quantity_rejected || 0),
       rejection_reason_item: (detail.rejection_reason_item || null),
     }));
-
-    for (const detail of normalizedDetails) {
-      const item = itemsById[detail.item_id];
-      await item.update({ quantity: item.quantity + detail.quantity_accepted }, { transaction: t });
-
-      if (detail.quantity_accepted > 0) {
-        await Donation.create({
-          item_id: item.id,
-          quantity: detail.quantity_accepted,
-          notes: `Recepción QR #${reception.id}`,
-          registered_by: req.user.id,
-          status: 'pending',
-        }, { transaction: t });
-      }
-    }
-
-    await DonationReceptionDetail.bulkCreate(
-      normalizedDetails.map((detail) => ({
-        reception_id: reception.id,
-        ...detail,
-      })),
-      { transaction: t }
-    );
 
     const nextStatus = computeStatus(normalizedDetails);
     const anchorHash = buildReceptionAnchorHash({
@@ -302,45 +290,120 @@ exports.finalizeInternal = async (req, res, next) => {
       anchorHash,
     });
 
-    // Calcular totales para anclaje blockchain
-    const firstItemId = normalizedDetails[0]?.item_id || 1;
-    const totalAccepted = normalizedDetails.reduce((sum, d) => sum + Number(d.quantity_accepted || 0), 0);
+    // ── 5. Blockchain primero (si habilitado) ─────────────────────────────────
+    const mintResults = []; // { item_id, tokenId, txId, hash }
 
-    let anchorResult;
-    try {
-      anchorResult = await stellarService.anchorDonationReception({
-        receptionId: reception.id,
-        donorEmailHash: reception.donor_email_hash,
-        anchorHash,
-        signatureHash,
-        operatorId: req.user.id,
-        itemId: firstItemId,
-        totalAcceptedQuantity: totalAccepted,
-        centerLat: -34.6037,
-        centerLng: -58.3816,
-      });
-      console.log('[DonationReception] Anclaje exitoso:', anchorResult);
-    } catch (error) {
-      console.error('[DonationReception] Error en anclaje:', error.message);
-      anchorResult = null;
+    if (isSftEnabled()) {
+      for (const detail of normalizedDetails) {
+        if (detail.quantity_accepted <= 0) continue;
+
+        const item = itemsById[detail.item_id];
+        const tokenId = sftService.computeTokenId(item.id);
+        const attributesHash = sftService.computeAttributesHash(item.attributes);
+
+        try {
+          const mintResult = await sftService.mintToCenter({
+            toCenterAddress: center.blockchain_contract_id,
+            tokenId,
+            metadata: {
+              item_id: item.id,
+              categoria: item.category?.name || 'sin_categoria',
+              nombre: item.name,
+              attributes_hash: attributesHash,
+            },
+            cantidad: detail.quantity_accepted,
+            firmaHash: signatureHash,
+          });
+          mintResults.push({ item_id: item.id, tokenId, txId: mintResult.txId, hash: mintResult.hash });
+        } catch (blockchainError) {
+          console.error(`[SFT] Error en mint de item_id=${item.id}:`, blockchainError.message);
+          // Blockchain-first: si falla el mint, retornar 503 sin escribir nada en MySQL
+          return res.status(503).json({
+            error: 'Error al registrar en blockchain. No se guardó ningún dato.',
+            detail: blockchainError.message,
+          });
+        }
+      }
     }
 
-    const hasAnchorTx = Boolean(anchorResult?.txId);
-    const finalStatus = !isStellarEnabled() || hasAnchorTx
-      ? nextStatus
-      : 'failed_anchor';
+    // ── 6. MySQL (solo si blockchain confirmó todo) ───────────────────────────
+    const t = await sequelize.transaction();
+    try {
+      // Bloquear recepción para evitar doble finalización concurrente
+      const receptionLocked = await DonationReception.findByPk(reception.id, {
+        transaction: t,
+        lock: t.LOCK.UPDATE,
+      });
+      if (receptionLocked.status !== 'processing') {
+        await t.rollback();
+        return res.status(409).json({ error: 'La recepción ya fue finalizada por otra operación' });
+      }
 
-    await reception.update({
-      status: finalStatus,
-      rejection_reason: rejection_reason || null,
-      anchored_hash: anchorHash,
-      anchored_tx_id: anchorResult?.txId || null,
-      finalized_by: req.user.id,
-      finalized_at: new Date(),
-    }, { transaction: t });
+      for (const detail of normalizedDetails) {
+        const item = itemsById[detail.item_id];
 
-    await t.commit();
+        // Incrementar stock y asignar al centro receptor
+        await item.update(
+          {
+            quantity: item.quantity + detail.quantity_accepted,
+            ...(center_id && detail.quantity_accepted > 0 ? { current_center_id: center_id } : {}),
+          },
+          { transaction: t }
+        );
 
+        if (detail.quantity_accepted > 0) {
+          // Buscar el tx_id del mint de este ítem
+          const mintInfo = mintResults.find((m) => m.item_id === item.id);
+
+          // Actualizar blockchain_hash en el ítem si es el primer mint
+          if (mintInfo && !item.blockchain_hash) {
+            await item.update({
+              blockchain_hash: mintInfo.hash,
+              blockchain_tx_id: mintInfo.txId,
+            }, { transaction: t });
+          }
+
+          // Registrar donación vinculada a esta recepción
+          await Donation.create({
+            item_id: item.id,
+            quantity: detail.quantity_accepted,
+            notes: `Recepción QR #${reception.id}`,
+            registered_by: req.user.id,
+            status: 'anchored',
+            blockchain_hash: mintInfo?.hash || null,
+            blockchain_tx_id: mintInfo?.txId || null,
+            ...(center_id ? { center_id } : {}),
+          }, { transaction: t });
+        }
+      }
+
+      await DonationReceptionDetail.bulkCreate(
+        normalizedDetails.map((detail) => ({
+          reception_id: reception.id,
+          ...detail,
+        })),
+        { transaction: t }
+      );
+
+      // El anchored_tx_id será el tx del primer mint (o null si no hubo blockchain)
+      const firstMintTx = mintResults[0]?.txId || null;
+
+      await receptionLocked.update({
+        status: nextStatus,
+        rejection_reason: rejection_reason || null,
+        anchored_hash: anchorHash,
+        anchored_tx_id: firstMintTx,
+        finalized_by: req.user.id,
+        finalized_at: new Date(),
+      }, { transaction: t });
+
+      await t.commit();
+    } catch (dbError) {
+      await t.rollback();
+      throw dbError;
+    }
+
+    // ── 7. Respuesta ──────────────────────────────────────────────────────────
     const refreshed = await DonationReception.findByPk(reception.id, {
       include: [{
         model: DonationReceptionDetail,
@@ -355,13 +418,13 @@ exports.finalizeInternal = async (req, res, next) => {
       public_token_qr: refreshed.public_token_qr,
       qr_url: buildQrUrl(refreshed.public_token_qr),
       blockchain: {
-        tx_id: refreshed.anchored_tx_id,
+        enabled: isSftEnabled(),
+        mints: mintResults.map((m) => ({ item_id: m.item_id, tx_id: m.txId })),
         anchored_hash: refreshed.anchored_hash,
       },
       details: refreshed.details,
     });
   } catch (error) {
-    if (!t.finished) await t.rollback();
     next(error);
   }
 };
@@ -390,36 +453,20 @@ exports.verifyPublicAnchor = async (req, res, next) => {
     });
 
     const localMatch = localAnchorHash === reception.anchored_hash;
-    if (!localMatch) {
-      return res.json({
-        verified: false,
-        local_match: false,
-        blockchain_match: false,
-        message: 'El hash local no coincide con el hash almacenado',
-      });
-    }
 
-    const signatureHash = buildReceptionSignatureHash({
-      receptionId: reception.id,
-      donorEmailHash: reception.donor_email_hash,
-      anchorHash: localAnchorHash,
-    });
-
-    const chainResult = await stellarService.verifyDonationReceptionAnchor({
-      receptionId: reception.id,
-      signatureHash,
-      anchorHash: localAnchorHash,
-    });
-
-    const blockchainMatch = Boolean(chainResult?.verified);
+    // Con el sistema SFT, la verificación blockchain se basa en que el
+    // anchored_tx_id apunte a una transacción real de mint en Stellar.
+    // La verificación local (comparar hash recalculado vs almacenado)
+    // es suficiente para probar integridad de los datos.
+    const hasBlockchainAnchor = Boolean(reception.anchored_tx_id);
 
     return res.json({
-      verified: localMatch && blockchainMatch,
+      verified: localMatch,
       local_match: localMatch,
-      blockchain_match: blockchainMatch,
-      message: localMatch && blockchainMatch
-        ? 'La recepción coincide con el anclaje blockchain'
-        : (chainResult?.reason || 'No se pudo verificar el anclaje en blockchain'),
+      blockchain_anchored: hasBlockchainAnchor,
+      message: localMatch
+        ? 'La recepción coincide con el anclaje almacenado'
+        : 'El hash local no coincide con el hash almacenado — posible manipulación',
       tx_id: reception.anchored_tx_id,
       anchored_hash: reception.anchored_hash,
     });

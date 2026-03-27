@@ -1,14 +1,19 @@
 /**
- * stellarService.js — Integración real con Stellar Testnet + Contrato Soroban
+ * stellarService.js — Integración con Stellar Testnet + Contratos Soroban
  *
- * Activa cuando STELLAR_ENABLED=true en .env.
- * Requiere: STELLAR_SECRET_KEY, SOROBAN_CONTRACT_ID configurados.
+ * Soporta múltiples contratos:
+ *   - contrato_donaciones: minteo de tokens
+ *   - contrato_entregas: entrega final a destinatarios
+ *   - contrato_centro: N instancias (una por centro de distribución)
  *
- * Patrón de transacciones (según guía vendimia-tech):
+ * Patrón de transacciones:
  *   simulateTransaction → prepareTransaction → sendTransaction → polling
  */
 
 const StellarSdk = require('@stellar/stellar-sdk');
+const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
 const NETWORKS = {
   testnet: {
@@ -27,7 +32,11 @@ class StellarService {
   constructor() {
     this.networkName = process.env.STELLAR_NETWORK || 'testnet';
     this.isEnabled = process.env.STELLAR_ENABLED === 'true';
-    this.contractId = process.env.SOROBAN_CONTRACT_ID || null;
+
+    // Contract IDs
+    this.donacionesContractId = process.env.SOROBAN_CONTRACT_DONACIONES || process.env.SOROBAN_CONTRACT_ID || null;
+    this.entregasContractId = process.env.SOROBAN_CONTRACT_ENTREGAS || null;
+    this.centroWasmHash = process.env.CENTRO_WASM_HASH || null;
 
     if (this.isEnabled) {
       this._init();
@@ -38,21 +47,32 @@ class StellarService {
     const net = NETWORKS[this.networkName];
     if (!net) throw new Error(`[Stellar] Red desconocida: ${this.networkName}`);
 
-    this.rpc = new StellarSdk.rpc.Server(net.rpcUrl);
+    const rpcUrl = process.env.STELLAR_RPC_URL || net.rpcUrl;
+    const rpcOptions = {};
+    const rpcProtocol = new URL(rpcUrl).protocol.toLowerCase();
+    if (rpcProtocol === 'http:') {
+      rpcOptions.allowHttp = true;
+      console.warn('[Stellar] Usando Soroban RPC por HTTP inseguro (modo desarrollo).');
+    }
+
+    this.rpc = new StellarSdk.rpc.Server(rpcUrl, rpcOptions);
     this.horizon = new StellarSdk.Horizon.Server(net.horizonUrl);
     this.passphrase = net.passphrase;
 
     if (!process.env.STELLAR_SECRET_KEY) {
-      console.warn('[Stellar] ⚠️  STELLAR_SECRET_KEY no configurada. Modo simulación activo.');
+      console.warn('[Stellar] STELLAR_SECRET_KEY no configurada.');
       this.keypair = null;
     } else {
       this.keypair = StellarSdk.Keypair.fromSecret(process.env.STELLAR_SECRET_KEY);
-      console.log(`[Stellar] ✅ Servicio inicializado en ${this.networkName}`);
+      console.log(`[Stellar] Servicio inicializado en ${this.networkName}`);
       console.log(`[Stellar]    Cuenta: ${this.keypair.publicKey()}`);
+      console.log(`[Stellar]    SFT: ${process.env.SOROBAN_CONTRACT_SFT || 'no configurado'}`);
+      console.log(`[Stellar]    Donaciones (legacy): ${this.donacionesContractId || 'no configurado'}`);
+      console.log(`[Stellar]    Entregas (legacy): ${this.entregasContractId || 'no configurado'}`);
     }
   }
 
-  // ─── Métodos públicos ──────────────────────────────────────────────────────
+  // ─── Helpers ──────────────────────────────────────────────────────────────
 
   _hexToBytesScVal(hexValue) {
     const normalized = (hexValue || '').toString().trim().toLowerCase();
@@ -66,34 +86,14 @@ class StellarService {
     return Math.round(Number(value || 0) * 1_000_000);
   }
 
-  /**
-   * Mintea un token de trazabilidad para un ítem de donación.
-   * Llama a mint_token_donacion() del contrato Soroban.
-   *
-   * @param {Object} params
-   * @param {Object} params.item     — Objeto Item de Sequelize
-   * @param {Object} params.donation — Objeto Donation de Sequelize
-   * @returns {{ hash, txId, status }} o { hash: null, status: 'pending' } si no está habilitado
-   */
-  async mintDonationToken({
-    item,
-    donation,
-    center_latitude,
-    center_longitude,
-    center_geo_hash,
-  }) {
-    if (!this.isEnabled) {
-      console.log(`[Stellar] mintDonationToken deshabilitado → item_id=${item.id}`);
-      return { hash: null, txId: null, status: 'pending' };
-    }
+  // ─── Contrato Donaciones ─────────────────────────────────────────────────
 
-    if (!this.contractId) {
-      console.warn('[Stellar] SOROBAN_CONTRACT_ID no configurado');
+  async mintDonationToken({ item, donation, center_latitude, center_longitude, center_geo_hash }) {
+    if (!this.isEnabled || !this.donacionesContractId) {
       return { hash: null, txId: null, status: 'pending' };
     }
 
     try {
-      // nativeToScVal con objeto genera scvMap con claves Symbol automáticamente
       const metadataScVal = StellarSdk.nativeToScVal(
         { categoria: item.category?.name || 'desconocida', nombre: item.name || '' },
         { type: 'map' }
@@ -108,79 +108,37 @@ class StellarService {
         this._hexToBytesScVal(center_geo_hash),
       ];
 
-      const result = await this._invocarContrato('mint_token_donacion', args);
-
-      console.log(`[Stellar] ✅ Token minteado → item_id=${item.id} hash=${result.hash}`);
+      const result = await this._invocarContrato(this.donacionesContractId, 'mint_token_donacion', args);
+      console.log(`[Stellar] Token minteado → item_id=${item.id} hash=${result.hash}`);
       return { hash: result.hash, txId: result.txId, status: 'minted' };
     } catch (error) {
-      console.error(`[Stellar] ❌ Error en minteo → item_id=${item.id}:`, error.message);
+      console.error(`[Stellar] Error en minteo → item_id=${item.id}:`, error.message);
       throw error;
     }
   }
 
-  /**
-   * Registra una distribución en la blockchain.
-   * Llama a registrar_distribucion() del contrato Soroban.
-   *
-   * @param {Object} params
-   * @param {Object} params.distribution — Objeto Distribution de Sequelize
-   * @param {Object} params.item         — Objeto Item de Sequelize
-   * @returns {{ hash, txId }}
-   */
-  async recordDistribution({ distribution, item }) {
-    if (!this.isEnabled) {
-      console.log(`[Stellar] recordDistribution deshabilitado → distribution_id=${distribution.id}`);
-      return { hash: null, txId: null, status: 'pending' };
+  async verifyToken(itemId) {
+    if (!this.isEnabled || !this.donacionesContractId) {
+      return { verified: false, reason: 'Blockchain no habilitada' };
     }
-
-    if (!this.contractId) {
-      console.warn('[Stellar] SOROBAN_CONTRACT_ID no configurado');
-      return { hash: null, txId: null, status: 'pending' };
-    }
-
     try {
-      // receptor_hash ya viene como hex string de 64 chars → convertir a BytesN<32>
-      const receptorHashBytes = Buffer.from(distribution.receiver_hash, 'hex');
-      const receptorHashScVal = StellarSdk.xdr.ScVal.scvBytes(receptorHashBytes);
-
-      const args = [
-        StellarSdk.nativeToScVal(item.id, { type: 'u64' }),
-        receptorHashScVal,
-        StellarSdk.nativeToScVal(distribution.quantity, { type: 'u64' }),
-      ];
-
-      const result = await this._invocarContrato('registrar_distribucion', args);
-
-      console.log(`[Stellar] ✅ Distribución registrada → dist_id=${distribution.id} hash=${result.hash}`);
-      return { hash: result.hash, txId: result.txId };
+      const args = [StellarSdk.nativeToScVal(itemId, { type: 'u64' })];
+      const result = await this._invocarContrato(this.donacionesContractId, 'verificar_token', args, { readOnly: true });
+      return { verified: result.returnValue === true };
     } catch (error) {
-      console.error(`[Stellar] ❌ Error en distribución → dist_id=${distribution.id}:`, error.message);
-      throw error;
+      return { verified: false, reason: error.message };
     }
   }
 
-  /**
-   * Registra una entrega verificada con pruebas de integridad y operador.
-   */
-  async recordVerifiedDistribution({
-    distribution_id,
-    item_id,
-    quantity,
-    recipient_commitment,
-    signature_hash,
-    receipt_hash,
-    operator_id,
-    assurance_level,
-    center_latitude,
-    center_longitude,
-  }) {
-    if (!this.isEnabled) {
-      console.log(`[Stellar] recordVerifiedDistribution deshabilitado → distribution_id=${distribution_id}`);
-      return { hash: null, txId: null, status: 'pending' };
-    }
+  // ─── Contrato Entregas ───────────────────────────────────────────────────
 
-    if (!this.contractId) {
-      console.warn('[Stellar] SOROBAN_CONTRACT_ID no configurado');
+  async recordVerifiedDistribution({
+    distribution_id, item_id, quantity,
+    recipient_commitment, signature_hash, receipt_hash,
+    operator_id, assurance_level, center_latitude, center_longitude,
+  }) {
+    const contractId = this.entregasContractId || this.donacionesContractId;
+    if (!this.isEnabled || !contractId) {
       return { hash: null, txId: null, status: 'pending' };
     }
 
@@ -197,20 +155,22 @@ class StellarService {
       StellarSdk.nativeToScVal(this._scaleCoordinate(center_longitude), { type: 'i64' }),
     ];
 
-    const result = await this._invocarContrato('registrar_entrega_verificada', args);
+    const result = await this._invocarContrato(contractId, 'registrar_entrega_verificada', args);
     return { hash: result.hash, txId: result.txId, status: 'anchored' };
   }
 
   async getVerifiedDistribution(distributionId) {
-    if (!this.isEnabled || !this.contractId) return null;
+    const contractId = this.entregasContractId || this.donacionesContractId;
+    if (!this.isEnabled || !contractId) return null;
 
     const args = [StellarSdk.nativeToScVal(distributionId, { type: 'u64' })];
-    const result = await this._invocarContrato('obtener_entrega', args, { readOnly: true });
+    const result = await this._invocarContrato(contractId, 'obtener_entrega', args, { readOnly: true });
     return result.returnValue || null;
   }
 
   async verifyDeliveryHashes(distributionId, signatureHash, receiptHash) {
-    if (!this.isEnabled || !this.contractId) {
+    const contractId = this.entregasContractId || this.donacionesContractId;
+    if (!this.isEnabled || !contractId) {
       return { verified: false, reason: 'Blockchain no habilitada' };
     }
 
@@ -220,26 +180,19 @@ class StellarService {
       this._hexToBytesScVal(receiptHash),
     ];
 
-    const result = await this._invocarContrato('verificar_hashes', args, { readOnly: true });
+    const result = await this._invocarContrato(contractId, 'verificar_hashes', args, { readOnly: true });
     return { verified: result.returnValue === true };
   }
 
-  async anchorDonationReception({
-    receptionId,
-    donorEmailHash,
-    anchorHash,
-    signatureHash,
-    operatorId,
-    itemId = 1,
-    totalAcceptedQuantity = 0,
-    centerLat = -34.6037,
-    centerLng = -58.3816,
-  }) {
-    if (!this.isEnabled) {
-      return { hash: null, txId: null, status: 'pending' };
-    }
+  // ─── Donation Reception Anchor (reusa contrato_entregas) ─────────────────
 
-    if (!this.contractId) {
+  async anchorDonationReception({
+    receptionId, donorEmailHash, anchorHash, signatureHash,
+    operatorId, itemId = 1, totalAcceptedQuantity = 0,
+    centerLat = -34.6037, centerLng = -58.3816,
+  }) {
+    const contractId = this.entregasContractId || this.donacionesContractId;
+    if (!this.isEnabled || !contractId) {
       return { hash: null, txId: null, status: 'pending' };
     }
 
@@ -256,51 +209,247 @@ class StellarService {
       StellarSdk.nativeToScVal(this._scaleCoordinate(centerLng), { type: 'i64' }),
     ];
 
-    const result = await this._invocarContrato('registrar_entrega_verificada', args);
+    const result = await this._invocarContrato(contractId, 'registrar_entrega_verificada', args);
     return { hash: result.hash, txId: result.txId, status: 'anchored' };
   }
 
   async verifyDonationReceptionAnchor({ receptionId, signatureHash, anchorHash }) {
-    if (!this.isEnabled || !this.contractId) {
+    if (!this.isEnabled) {
       return { verified: false, reason: 'Blockchain no habilitada' };
     }
-
     return this.verifyDeliveryHashes(receptionId, signatureHash, anchorHash);
   }
 
-  /**
-   * Verifica si un ítem tiene token registrado en el contrato.
-   *
-   * @param {number} itemId
-   * @returns {{ verified: boolean, reason?: string }}
-   */
-  async verifyToken(itemId) {
-    if (!this.isEnabled || !this.contractId) {
-      return { verified: false, reason: 'Blockchain no habilitada' };
+  // ─── Contrato Centro — Deploy + Operaciones ─────────────────────────────
+
+  async uploadCentroWasm(wasmPath) {
+    if (!this.isEnabled || !this.keypair) {
+      throw new Error('Stellar no habilitado o keypair no configurado');
     }
 
-    try {
-      const args = [StellarSdk.nativeToScVal(itemId, { type: 'u64' })];
-      const result = await this._invocarContrato('verificar_token', args, { readOnly: true });
-      return { verified: result.returnValue === true };
-    } catch (error) {
-      console.error('[Stellar] Error verificando token:', error.message);
-      return { verified: false, reason: error.message };
-    }
-  }
-
-  // ─── Core: invocar contrato ────────────────────────────────────────────────
-
-  /**
-   * Patrón completo según vendimia-tech guide:
-   * build → simulate → prepare → sign → send → poll
-   */
-  async _invocarContrato(metodo, args, { readOnly = false } = {}) {
-    if (!this.keypair) throw new Error('Keypair no configurado');
+    const wasm = fs.readFileSync(wasmPath);
+    console.log(`[Stellar] Subiendo WASM de centro: ${wasm.length} bytes`);
 
     const account = await this.rpc.getAccount(this.keypair.publicKey());
 
-    const contrato = new StellarSdk.Contract(this.contractId);
+    const tx = new StellarSdk.TransactionBuilder(account, {
+      fee: '100000',
+      networkPassphrase: this.passphrase,
+    })
+      .setTimeout(30)
+      .addOperation(StellarSdk.Operation.uploadContractWasm({ wasm }))
+      .build();
+
+    const sim = await this.rpc.simulateTransaction(tx);
+    if (StellarSdk.rpc.Api.isSimulationError(sim)) {
+      throw new Error(`Simulación upload WASM falló: ${sim.error}`);
+    }
+
+    const prepared = await this.rpc.prepareTransaction(tx);
+    prepared.sign(this.keypair);
+
+    const response = await this.rpc.sendTransaction(prepared);
+    if (response.status === 'ERROR') {
+      throw new Error(`Upload WASM rechazado: ${JSON.stringify(response.errorResult)}`);
+    }
+
+    const result = await this._pollTransaccion(response.hash);
+
+    // Extract WASM hash from result
+    let wasmHash;
+    if (result.returnValue) {
+      try {
+        const native = StellarSdk.scValToNative(result.returnValue);
+        if (Buffer.isBuffer(native)) {
+          wasmHash = native.toString('hex');
+        }
+      } catch {}
+    }
+
+    if (!wasmHash) {
+      // Compute hash locally as fallback
+      wasmHash = crypto.createHash('sha256').update(wasm).digest('hex');
+    }
+
+    this.centroWasmHash = wasmHash;
+    console.log(`[Stellar] WASM de centro subido. Hash: ${wasmHash}`);
+    return { wasmHash, txId: response.hash };
+  }
+
+  async deployCenterContract() {
+    if (!this.isEnabled || !this.keypair) {
+      throw new Error('Stellar no habilitado o keypair no configurado');
+    }
+
+    if (!this.centroWasmHash) {
+      throw new Error('CENTRO_WASM_HASH no configurado. Subir WASM primero.');
+    }
+
+    const salt = crypto.randomBytes(32);
+    const wasmHashBuffer = Buffer.from(this.centroWasmHash, 'hex');
+
+    const account = await this.rpc.getAccount(this.keypair.publicKey());
+
+    const tx = new StellarSdk.TransactionBuilder(account, {
+      fee: '100000',
+      networkPassphrase: this.passphrase,
+    })
+      .setTimeout(30)
+      .addOperation(StellarSdk.Operation.createCustomContract({
+        address: new StellarSdk.Address(this.keypair.publicKey()),
+        wasmHash: wasmHashBuffer,
+        salt,
+      }))
+      .build();
+
+    const sim = await this.rpc.simulateTransaction(tx);
+    if (StellarSdk.rpc.Api.isSimulationError(sim)) {
+      throw new Error(`Simulación deploy centro falló: ${sim.error}`);
+    }
+
+    const prepared = await this.rpc.prepareTransaction(tx);
+    prepared.sign(this.keypair);
+
+    const response = await this.rpc.sendTransaction(prepared);
+    if (response.status === 'ERROR') {
+      throw new Error(`Deploy centro rechazado: ${JSON.stringify(response.errorResult)}`);
+    }
+
+    const result = await this._pollTransaccion(response.hash);
+
+    // Extract contract ID from the result
+    let contractId = null;
+    if (result.returnValue) {
+      try {
+        const native = StellarSdk.scValToNative(result.returnValue);
+        if (typeof native === 'string') {
+          contractId = native;
+        } else if (Buffer.isBuffer(native)) {
+          contractId = StellarSdk.StrKey.encodeContract(native);
+        }
+      } catch {}
+    }
+
+    // Fallback: compute contract ID from address hash preimage
+    if (!contractId) {
+      try {
+        const preimage = StellarSdk.xdr.HashIdPreimage.envelopeTypeContractId(
+          new StellarSdk.xdr.HashIdPreimageContractId({
+            networkId: Buffer.from(
+              crypto.createHash('sha256').update(this.passphrase).digest()
+            ),
+            contractIdPreimage: StellarSdk.xdr.ContractIdPreimage.contractIdPreimageFromAddress(
+              new StellarSdk.xdr.ContractIdPreimageFromAddress({
+                address: new StellarSdk.Address(this.keypair.publicKey()).toScAddress(),
+                salt,
+              })
+            ),
+          })
+        );
+        const contractIdHash = crypto.createHash('sha256').update(preimage.toXDR()).digest();
+        contractId = StellarSdk.StrKey.encodeContract(contractIdHash);
+      } catch (e) {
+        console.error('[Stellar] Error computing contract ID:', e.message);
+      }
+    }
+
+    console.log(`[Stellar] Centro deployado. Contract ID: ${contractId}`);
+    return { contractId, txId: response.hash };
+  }
+
+  async initializeCenter(contractId, { nombre, lat_e6, lng_e6, geo_hash }) {
+    if (!this.isEnabled || !this.keypair) {
+      return { success: false, status: 'pending' };
+    }
+
+    const geoHashHex = geo_hash || crypto.createHash('sha256').update(`${nombre}|${lat_e6}|${lng_e6}`).digest('hex');
+
+    const args = [
+      StellarSdk.nativeToScVal(nombre, { type: 'string' }),
+      StellarSdk.nativeToScVal(lat_e6, { type: 'i64' }),
+      StellarSdk.nativeToScVal(lng_e6, { type: 'i64' }),
+      this._hexToBytesScVal(geoHashHex),
+    ];
+
+    const result = await this._invocarContrato(contractId, 'inicializar', args);
+    return { success: true, hash: result.hash, txId: result.txId };
+  }
+
+  async registrarIngresoCentro(contractId, { itemId, cantidad, origen, firmaHash, motivo }) {
+    if (!this.isEnabled || !this.keypair) {
+      return { hash: null, txId: null, status: 'pending' };
+    }
+
+    const firmaHex = firmaHash || '0'.repeat(64);
+
+    const args = [
+      StellarSdk.nativeToScVal(Number(itemId), { type: 'u64' }),
+      StellarSdk.nativeToScVal(Number(cantidad), { type: 'u64' }),
+      StellarSdk.nativeToScVal(origen || 'donacion', { type: 'string' }),
+      this._hexToBytesScVal(firmaHex),
+      StellarSdk.nativeToScVal(motivo || 'Ingreso', { type: 'string' }),
+    ];
+
+    const result = await this._invocarContrato(contractId, 'registrar_ingreso', args);
+    return { hash: result.hash, txId: result.txId, status: 'anchored' };
+  }
+
+  async registrarEgresoCentro(contractId, { itemId, cantidad, destino, firmaHash, motivo }) {
+    if (!this.isEnabled || !this.keypair) {
+      return { hash: null, txId: null, status: 'pending' };
+    }
+
+    const firmaHex = firmaHash || '0'.repeat(64);
+
+    const args = [
+      StellarSdk.nativeToScVal(Number(itemId), { type: 'u64' }),
+      StellarSdk.nativeToScVal(Number(cantidad), { type: 'u64' }),
+      StellarSdk.nativeToScVal(destino || 'desconocido', { type: 'string' }),
+      this._hexToBytesScVal(firmaHex),
+      StellarSdk.nativeToScVal(motivo || 'Egreso', { type: 'string' }),
+    ];
+
+    const result = await this._invocarContrato(contractId, 'registrar_egreso', args);
+    return { hash: result.hash, txId: result.txId, status: 'anchored' };
+  }
+
+  async obtenerInventarioCentro(contractId) {
+    if (!this.isEnabled || !this.keypair) {
+      return { items: [], status: 'pending' };
+    }
+
+    const result = await this._invocarContrato(contractId, 'obtener_inventario', [], { readOnly: true });
+    return { items: result.returnValue || [], status: 'ok' };
+  }
+
+  async obtenerInfoCentro(contractId) {
+    if (!this.isEnabled || !this.keypair) {
+      return null;
+    }
+
+    const result = await this._invocarContrato(contractId, 'obtener_info', [], { readOnly: true });
+    return result.returnValue || null;
+  }
+
+  async tieneItemCentro(contractId, itemId) {
+    if (!this.isEnabled || !this.keypair) {
+      return false;
+    }
+
+    const args = [StellarSdk.nativeToScVal(Number(itemId), { type: 'u64' })];
+    const result = await this._invocarContrato(contractId, 'tiene_item', args, { readOnly: true });
+    return result.returnValue === true;
+  }
+
+  // ─── Core: invocar contrato ──────────────────────────────────────────────
+
+  async _invocarContrato(contractId, metodo, args, { readOnly = false } = {}) {
+    if (!this.keypair) throw new Error('Keypair no configurado');
+    if (!contractId) throw new Error(`Contract ID no proporcionado para método: ${metodo}`);
+
+    const account = await this.rpc.getAccount(this.keypair.publicKey());
+
+    const contrato = new StellarSdk.Contract(contractId);
 
     const tx = new StellarSdk.TransactionBuilder(account, {
       fee: StellarSdk.BASE_FEE,
@@ -310,37 +459,28 @@ class StellarService {
       .setTimeout(30)
       .build();
 
-    // 1. Simular primero (detecta errores antes de gastar fees)
     const sim = await this.rpc.simulateTransaction(tx);
     if (StellarSdk.rpc.Api.isSimulationError(sim)) {
-      throw new Error(`Simulación falló: ${sim.error}`);
+      throw new Error(`Simulación falló [${metodo}]: ${sim.error}`);
     }
 
     if (readOnly) {
-      // Para lectura, el valor de retorno está en la simulación
       const returnValue = StellarSdk.scValToNative(sim.result?.retval);
       return { returnValue };
     }
 
-    // 2. Preparar (agrega auth entries y recursos de fee)
     const txPreparada = await this.rpc.prepareTransaction(tx);
-
-    // 3. Firmar
     txPreparada.sign(this.keypair);
 
-    // 4. Enviar
     const response = await this.rpc.sendTransaction(txPreparada);
-
     if (response.status === 'ERROR') {
-      throw new Error(`Transacción rechazada: ${JSON.stringify(response.errorResult)}`);
+      throw new Error(`Transacción rechazada [${metodo}]: ${JSON.stringify(response.errorResult)}`);
     }
 
-    // 5. Polling hasta confirmación
     const txId = response.hash;
     const resultado = await this._pollTransaccion(txId);
 
-    // Extraer valor de retorno (el hash del contrato)
-    let hash = txId; // fallback: usar el tx hash
+    let hash = txId;
     if (resultado.returnValue) {
       try {
         const retNativo = StellarSdk.scValToNative(resultado.returnValue);
@@ -348,17 +488,13 @@ class StellarService {
           hash = retNativo.toString('hex');
         }
       } catch {
-        // si no se puede parsear, usamos txId
+        // fallback to txId
       }
     }
 
     return { hash, txId };
   }
 
-  /**
-   * Polling hasta que la transacción se confirme o falle.
-   * Máximo 30 intentos con 1 segundo de intervalo.
-   */
   async _pollTransaccion(txId) {
     const MAX_INTENTOS = 30;
     for (let i = 0; i < MAX_INTENTOS; i++) {
@@ -371,11 +507,9 @@ class StellarService {
       if (resultado.status === StellarSdk.rpc.Api.GetTransactionStatus.FAILED) {
         throw new Error(`Transacción fallida: ${txId}`);
       }
-      // NOT_FOUND = todavía pendiente, seguir esperando
     }
     throw new Error(`Timeout esperando transacción: ${txId}`);
   }
-
 }
 
 module.exports = new StellarService();

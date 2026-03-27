@@ -40,6 +40,10 @@ const Item = sequelize.define('Item', {
     type: DataTypes.ENUM('pending', 'minted', 'failed'),
     defaultValue: 'pending',
   },
+  current_center_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
   is_active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
