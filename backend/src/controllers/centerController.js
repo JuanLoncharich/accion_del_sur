@@ -8,12 +8,26 @@ exports.create = async (req, res, next) => {
   try {
     const { name, latitude, longitude } = req.body;
 
-    if (!name || latitude == null || longitude == null) {
-      return res.status(400).json({ error: 'Se requiere name, latitude y longitude' });
+    if (!name || !String(name).trim()) {
+      return res.status(400).json({ error: 'Se requiere name' });
     }
 
+    const normalizedLatitude = latitude == null || latitude === '' ? null : Number(latitude);
+    const normalizedLongitude = longitude == null || longitude === '' ? null : Number(longitude);
+
+    if (normalizedLatitude != null && Number.isNaN(normalizedLatitude)) {
+      return res.status(400).json({ error: 'latitude inválida' });
+    }
+
+    if (normalizedLongitude != null && Number.isNaN(normalizedLongitude)) {
+      return res.status(400).json({ error: 'longitude inválida' });
+    }
+
+    const latForChain = normalizedLatitude ?? 0;
+    const lngForChain = normalizedLongitude ?? 0;
+
     const geoHash = crypto.createHash('sha256')
-      .update(`${name}|${Number(latitude).toFixed(6)}|${Number(longitude).toFixed(6)}`)
+      .update(`${name}|${Number(latForChain).toFixed(6)}|${Number(lngForChain).toFixed(6)}`)
       .digest('hex');
 
     // ── Blockchain-first: si blockchain está habilitado, el contrato
@@ -30,8 +44,8 @@ exports.create = async (req, res, next) => {
 
         const initResult = await stellarService.initializeCenter(blockchainContractId, {
           nombre: name,
-          lat_e6: Math.round(Number(latitude) * 1_000_000),
-          lng_e6: Math.round(Number(longitude) * 1_000_000),
+          lat_e6: Math.round(Number(latForChain) * 1_000_000),
+          lng_e6: Math.round(Number(lngForChain) * 1_000_000),
           geo_hash: geoHash,
         });
         initTx = initResult.txId;
@@ -50,8 +64,8 @@ exports.create = async (req, res, next) => {
     // ── MySQL: solo se escribe si blockchain confirmó (o si está deshabilitado) ──
     const center = await Center.create({
       name,
-      latitude,
-      longitude,
+      latitude: normalizedLatitude,
+      longitude: normalizedLongitude,
       geo_hash: geoHash,
       blockchain_contract_id: blockchainContractId,
       blockchain_deploy_tx: deployTx,

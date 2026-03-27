@@ -23,6 +23,7 @@ export default function NuevaDistribucion() {
   const drawingRef = useRef(false);
 
   const [items, setItems] = useState([]);
+  const [centers, setCenters] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [search, setSearch] = useState('');
@@ -30,14 +31,18 @@ export default function NuevaDistribucion() {
   const [quantity, setQuantity] = useState(1);
   const [receiverId, setReceiverId] = useState('');
   const [notes, setNotes] = useState('');
-  const [centerName, setCenterName] = useState('Centro Principal');
-  const [centerLatitude, setCenterLatitude] = useState('');
-  const [centerLongitude, setCenterLongitude] = useState('');
+  const [centerId, setCenterId] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetchingItems, setFetchingItems] = useState(false);
 
   useEffect(() => {
-    api.get('/categories').then((r) => setCategories(r.data));
+    Promise.all([
+      api.get('/categories'),
+      api.get('/centers', { params: { active: true } }),
+    ]).then(([categoriesRes, centersRes]) => {
+      setCategories(categoriesRes.data);
+      setCenters(centersRes.data?.data || []);
+    });
   }, []);
 
   useEffect(() => {
@@ -118,8 +123,8 @@ export default function NuevaDistribucion() {
     if (quantity < 1 || quantity > selectedItem.quantity) {
       return addToast(`Cantidad invalida. Disponible: ${selectedItem.quantity}`, 'error');
     }
-    if (!centerName.trim() || centerLatitude === '' || centerLongitude === '') {
-      return addToast('Completa datos del centro de entrega', 'error');
+    if (!centerId) {
+      return addToast('Seleccioná un centro de entrega', 'error');
     }
     if (isCanvasBlank()) {
       return addToast('Se requiere firma manuscrita del receptor', 'error');
@@ -131,9 +136,7 @@ export default function NuevaDistribucion() {
         item_id: selectedItem.id,
         quantity,
         notes,
-        center_name: centerName,
-        center_latitude: Number(centerLatitude),
-        center_longitude: Number(centerLongitude),
+        center_id: Number(centerId),
       });
 
       const distributionId = prepare.data.id;
@@ -284,35 +287,19 @@ export default function NuevaDistribucion() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
               <div>
-                <label className="block text-slate-700 text-sm font-semibold mb-2">Centro de entrega</label>
-                <input
-                  type="text"
-                  value={centerName}
-                  onChange={(e) => setCenterName(e.target.value)}
+                <label className="block text-slate-700 text-sm font-semibold mb-2">Centro de entrega <span className="text-red-500">*</span></label>
+                <select
+                  value={centerId}
+                  onChange={(e) => setCenterId(e.target.value)}
                   className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-700 text-sm font-semibold mb-2">Latitud</label>
-                <input
-                  type="number"
-                  value={centerLatitude}
-                  onChange={(e) => setCenterLatitude(e.target.value)}
-                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500"
-                  step="0.000001"
-                />
-              </div>
-              <div>
-                <label className="block text-slate-700 text-sm font-semibold mb-2">Longitud</label>
-                <input
-                  type="number"
-                  value={centerLongitude}
-                  onChange={(e) => setCenterLongitude(e.target.value)}
-                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500"
-                  step="0.000001"
-                />
+                >
+                  <option value="">Seleccionar centro...</option>
+                  {centers.map((center) => (
+                    <option key={center.id} value={center.id}>{center.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
 

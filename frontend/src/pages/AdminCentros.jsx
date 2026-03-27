@@ -6,9 +6,7 @@ import {
   Plus,
   Edit,
   Trash2,
-  MapPin,
   CheckCircle2,
-  XCircle,
   LoaderCircle,
   ChevronDown,
   ChevronUp,
@@ -25,8 +23,6 @@ export default function AdminCentros() {
   const [formData, setFormData] = useState({
     name: '',
     center_type: 'regional',
-    latitude: '',
-    longitude: '',
   });
 
   const fetchCenters = async () => {
@@ -59,7 +55,7 @@ export default function AdminCentros() {
       }
       setShowForm(false);
       setEditingCenter(null);
-      setFormData({ name: '', center_type: 'regional', latitude: '', longitude: '' });
+      setFormData({ name: '', center_type: 'regional' });
       fetchCenters();
     } catch (err) {
       addToast(err.response?.data?.error || 'Error al guardar centro', 'error');
@@ -71,8 +67,6 @@ export default function AdminCentros() {
     setFormData({
       name: center.name,
       center_type: center.center_type || 'regional',
-      latitude: center.latitude,
-      longitude: center.longitude,
     });
     setShowForm(true);
   };
@@ -92,27 +86,7 @@ export default function AdminCentros() {
   const handleCancel = () => {
     setShowForm(false);
     setEditingCenter(null);
-    setFormData({ name: '', center_type: 'regional', latitude: '', longitude: '' });
-  };
-
-  const getLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setFormData({
-            ...formData,
-            latitude: position.coords.latitude.toFixed(7),
-            longitude: position.coords.longitude.toFixed(7),
-          });
-          addToast('Ubicación obtenida', 'success');
-        },
-        (error) => {
-          addToast('No se pudo obtener la ubicación', 'error');
-        }
-      );
-    } else {
-      addToast('Geolocalización no soportada', 'error');
-    }
+    setFormData({ name: '', center_type: 'regional' });
   };
 
   if (loading) {
@@ -184,45 +158,6 @@ export default function AdminCentros() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-slate-700 text-sm font-semibold mb-2">
-                    Latitud
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    required
-                    value={formData.latitude}
-                    onChange={(e) => setFormData({ ...formData, latitude: e.target.value })}
-                    className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500"
-                    placeholder="-34.6037"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-700 text-sm font-semibold mb-2">
-                    Longitud
-                  </label>
-                  <input
-                    type="number"
-                    step="any"
-                    required
-                    value={formData.longitude}
-                    onChange={(e) => setFormData({ ...formData, longitude: e.target.value })}
-                    className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500"
-                    placeholder="-58.3816"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={getLocation}
-                className="w-full px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-sm flex items-center justify-center gap-2"
-              >
-                <MapPin size={16} /> Usar mi ubicación actual
-              </button>
-
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
@@ -290,11 +225,6 @@ function CenterCard({ center, onEdit, onDelete }) {
         </div>
 
         <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2 text-slate-600">
-            <MapPin size={14} />
-            <span>{center.latitude}, {center.longitude}</span>
-          </div>
-
           {center.blockchain_contract_id && (
             <div className="flex items-start gap-2 text-slate-600">
               <LinkIcon size={14} className="mt-0.5 shrink-0" />

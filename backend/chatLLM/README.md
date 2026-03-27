@@ -32,7 +32,7 @@ Para el agente del LLM se recomienda usar credenciales dedicadas de solo lectura
 
 ## Requisitos
 
-- OpenCode CLI instalado (`opencode --version`)
+- OpenCode CLI disponible: global (`opencode --version`) o por npx (`npx -y opencode-ai --version`)
 - Cliente MySQL instalado (`mysql --version`)
 - Configuración de proveedor/modelo LLM en OpenCode (según tu instalación actual)
 

@@ -125,27 +125,75 @@ function getNonEmptyTextLines(text) {
     .filter(Boolean);
 }
 
+function buildOpencodeCandidates(env) {
+  const home = env.HOME || process.env.HOME;
+  const homeLocalBin = home ? path.join(home, '.local', 'bin', 'opencode') : null;
+
+  const binaryCandidates = [
+    env.OPENCODE_BIN,
+    homeLocalBin,
+    '/usr/local/bin/opencode',
+    '/usr/bin/opencode',
+    'opencode',
+  ].filter(Boolean);
+
+  const invocations = binaryCandidates.map((candidate) => ({
+    command: candidate,
+    fixedArgs: [],
+    label: candidate,
+  }));
+
+  invocations.push({
+    command: 'npx',
+    fixedArgs: ['-y', 'opencode-ai'],
+    label: 'npx -y opencode-ai',
+  });
+
+  return invocations;
+}
+
+function ensureHomeLocalBinInPath(env) {
+  const home = env.HOME || process.env.HOME;
+  if (!home) return env;
+
+  const localBin = path.join(home, '.local', 'bin');
+  const currentPath = String(env.PATH || process.env.PATH || '');
+  const hasLocalBin = currentPath.split(path.delimiter).includes(localBin);
+
+  if (hasLocalBin) return env;
+
+  return {
+    ...env,
+    PATH: currentPath ? `${localBin}${path.delimiter}${currentPath}` : localBin,
+  };
+}
+
 async function detectOpencodeMode(env) {
-  try {
-    const help = await runCommand('opencode', ['--help'], {
-      env,
-      cwd: projectRoot,
-      timeoutMs: 15_000,
-    });
+  const candidates = buildOpencodeCandidates(env);
 
-    const helpText = `${help.stdout || ''}\n${help.stderr || ''}`;
-    if (/\bopencode\s+run\b/i.test(helpText)) {
-      return 'run';
+  for (const candidate of candidates) {
+    try {
+      const help = await runCommand(candidate.command, [...candidate.fixedArgs, '--help'], {
+        env,
+        cwd: projectRoot,
+        timeoutMs: 15_000,
+      });
+
+      const helpText = `${help.stdout || ''}\n${help.stderr || ''}`;
+      return {
+        candidate,
+        mode: /\bopencode\s+run\b/i.test(helpText) ? 'run' : 'legacy-p',
+      };
+    } catch (error) {
+      if (error && (error.code === 'ENOENT' || error.code === 'EACCES')) {
+        continue;
+      }
+
+      throw error;
     }
-
-    return 'legacy-p';
-  } catch (error) {
-    if (error && error.code === 'ENOENT') {
-      return null;
-    }
-
-    throw error;
   }
+
+  return null;
 }
 
 function extractLegacyTextOutput(rawOutput) {
@@ -159,10 +207,10 @@ function extractLegacyTextOutput(rawOutput) {
   return (filtered.length ? filtered : lines).join('\n').trim();
 }
 
-async function runWithOpencodeRun(finalPrompt, env) {
+async function runWithOpencodeRun(opencodeCandidate, finalPrompt, env) {
   const result = await runCommand(
-    'opencode',
-    ['run', '--agent', 'mysql_qa', '--format', 'json', finalPrompt],
+    opencodeCandidate.command,
+    [...opencodeCandidate.fixedArgs, 'run', '--agent', 'mysql_qa', '--format', 'json', finalPrompt],
     { env, cwd: projectRoot }
   );
 
@@ -185,8 +233,8 @@ async function runWithOpencodeRun(finalPrompt, env) {
   };
 }
 
-async function runWithOpencodeLegacy(finalPrompt, env) {
-  const result = await runCommand('opencode', ['-p', finalPrompt], {
+async function runWithOpencodeLegacy(opencodeCandidate, finalPrompt, env) {
+  const result = await runCommand(opencodeCandidate.command, [...opencodeCandidate.fixedArgs, '-p', finalPrompt], {
     env,
     cwd: projectRoot,
   });
@@ -226,18 +274,21 @@ async function runWithOpencode(question) {
     env.OPENAI_API_KEY = normalizeOpenAiKey(env.OPENAI_API_KEY);
   }
 
-  const mode = await detectOpencodeMode(env);
-  if (!mode) {
-    const missingError = new Error('opencode no está disponible en PATH.');
+  const preparedEnv = ensureHomeLocalBinInPath(env);
+
+  const opencodeInfo = await detectOpencodeMode(preparedEnv);
+  if (!opencodeInfo) {
+    const candidates = buildOpencodeCandidates(preparedEnv).map((candidate) => candidate.label).join(', ');
+    const missingError = new Error(`opencode no está disponible. Candidatos probados: ${candidates}`);
     missingError.code = 'ENOENT';
     throw missingError;
   }
 
-  if (mode === 'run') {
-    return runWithOpencodeRun(finalPrompt, env);
+  if (opencodeInfo.mode === 'run') {
+    return runWithOpencodeRun(opencodeInfo.candidate, finalPrompt, preparedEnv);
   }
 
-  return runWithOpencodeLegacy(finalPrompt, env);
+  return runWithOpencodeLegacy(opencodeInfo.candidate, finalPrompt, preparedEnv);
 }
 
 async function runReadonlySql(sql) {

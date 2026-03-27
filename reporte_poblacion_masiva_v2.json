@@ -1,0 +1,928 @@
+{
+  "summary": {
+    "timestamp": "2026-03-27T18:26:10.667148Z",
+    "centers_processed": 6,
+    "categories_processed": 9,
+    "donations_created": 53,
+    "failures": 55,
+    "without_blockchain_fields": 0,
+    "min_quantity": 320,
+    "max_quantity": 5780
+  },
+  "created": [
+    {
+      "donation_id": 35,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 9,
+      "category_name": "Abrigo Invernal",
+      "quantity": 320,
+      "status": "anchored",
+      "blockchain_hash": "22a264ee63bc826a6df778800a62ca8f7033d50f14c7c738ece23b505f2bf3c4",
+      "blockchain_tx_id": "fd96c459744ced430e0d8442b29bc4e7ac57ac136003ddbc58978a76631e9cf0",
+      "item_id": 20
+    },
+    {
+      "donation_id": 36,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 9,
+      "category_name": "Abrigo Invernal",
+      "quantity": 393,
+      "status": "anchored",
+      "blockchain_hash": "e85f440b865d705e30c4e50635ffb8880ca03b3c54f294deb577b800bbd96de9",
+      "blockchain_tx_id": "904512ca060d9ea8352642eb6b1d023565a1a0f755dbaa24e8b2e1acc134123c",
+      "item_id": 21
+    },
+    {
+      "donation_id": 37,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 2,
+      "category_name": "Alimentos",
+      "quantity": 520,
+      "status": "anchored",
+      "blockchain_hash": "7a42e3892368f826928202014a6ca95a3d8d846df25088da80018663edf96b1c",
+      "blockchain_tx_id": "d43e6d6af12560c080bd69c16c2a2ba1ff5706bce3261e4eebbc54e4837e6737",
+      "item_id": 22
+    },
+    {
+      "donation_id": 38,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 2,
+      "category_name": "Alimentos",
+      "quantity": 609,
+      "status": "anchored",
+      "blockchain_hash": "aed2b8245fdc8acc45eda51abc7d07e612c25f05cadd1579f3474f0bf1f6bdc6",
+      "blockchain_tx_id": "2daa7da712fc2a8f5cb1979e135568464de476eae877326d777b5adb2b001f3a",
+      "item_id": 23
+    },
+    {
+      "donation_id": 39,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 3,
+      "category_name": "Bebidas",
+      "quantity": 698,
+      "status": "anchored",
+      "blockchain_hash": "b16efe34e810d8f791443efa2519fea699857cb8bcbf93f69f6eea4163753333",
+      "blockchain_tx_id": "1e620fb0faf54cd32f1a2c16ce51328414b6cbea3dfaee478bfc61d38060dc28",
+      "item_id": 24
+    },
+    {
+      "donation_id": 40,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 3,
+      "category_name": "Bebidas",
+      "quantity": 809,
+      "status": "anchored",
+      "blockchain_hash": "561f627b4213258dc8863498bb9b07c904c3c65a78c1a36bca329154d1ded213",
+      "blockchain_tx_id": "bb09e49f9a35c702ab6ea53d1d5e5ad0b9e87523261afb520144187c62e22afb",
+      "item_id": 25
+    },
+    {
+      "donation_id": 41,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 6,
+      "category_name": "Herramientas",
+      "quantity": 906,
+      "status": "anchored",
+      "blockchain_hash": "1209fe3bc3497e47376dfbd9df0600a17c63384c85f859671956d8289e5a0be8",
+      "blockchain_tx_id": "2100928cb2c951ece0248c3a4fb2602c4cb328e7bd3b1c537ef77994e4cdc335",
+      "item_id": 26
+    },
+    {
+      "donation_id": 42,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 6,
+      "category_name": "Herramientas",
+      "quantity": 1055,
+      "status": "anchored",
+      "blockchain_hash": "42f28a46039f894d3a0179d090851ba795ef081ae128cf54ee4e496d3453244d",
+      "blockchain_tx_id": "4fa6b4ee9df38af233dbff70b0cae2b1d8b707c0e26a20508dfce695367415fd",
+      "item_id": 27
+    },
+    {
+      "donation_id": 43,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 7,
+      "category_name": "Higiene Personal",
+      "quantity": 1204,
+      "status": "anchored",
+      "blockchain_hash": "1d7968ffc995d6a495071668f4a957bed35c6ef912f62c667e5cb535cb2bbb1e",
+      "blockchain_tx_id": "828a086e42d1c27f2f9e543f428ca2f3559cc11a6a96937f03dcaadfeb3ba568",
+      "item_id": 28
+    },
+    {
+      "donation_id": 44,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 7,
+      "category_name": "Higiene Personal",
+      "quantity": 1331,
+      "status": "anchored",
+      "blockchain_hash": "539b4c4c41a13f1f0452f5a35a6743c4212946f7f32ded28a7d9fdb17672cb54",
+      "blockchain_tx_id": "5b77de199b11317b057eb64bd16cee279530e55a751864d0745136d997b164d2",
+      "item_id": 29
+    },
+    {
+      "donation_id": 45,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 8,
+      "category_name": "Kit Escolar",
+      "quantity": 1442,
+      "status": "anchored",
+      "blockchain_hash": "48a97e421546f8d4cae1cf88c51a459a8c10a88442eed63643dd263cef880c1c",
+      "blockchain_tx_id": "b46228f82204dde9d49fd36fdd8a0603f329bf893502969fcdca2c2571f8487b",
+      "item_id": 30
+    },
+    {
+      "donation_id": 46,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 8,
+      "category_name": "Kit Escolar",
+      "quantity": 1531,
+      "status": "anchored",
+      "blockchain_hash": "1664a6e0ea12d234b4911d011800bb0f8c1101a0f9a49a91ee6e2493e34d8e7b",
+      "blockchain_tx_id": "5286942a5f66ebace556ab9030a9a53f3a0140863ec3e9214479221a64c76281",
+      "item_id": 31
+    },
+    {
+      "donation_id": 47,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 5,
+      "category_name": "Medicamentos",
+      "quantity": 1620,
+      "status": "anchored",
+      "blockchain_hash": "707d56f1f282aee234577e650bea2e7b18bb6131a499582be18876aba99d4b60",
+      "blockchain_tx_id": "c19428df9bd98c8003efaf866741c683e207cf8b11a4e5bb68b181cf3e55b6ac",
+      "item_id": 32
+    },
+    {
+      "donation_id": 48,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 5,
+      "category_name": "Medicamentos",
+      "quantity": 1717,
+      "status": "anchored",
+      "blockchain_hash": "ea676268c71eb961cae5f1a68dc8717be7d1bcb40517e72a5f910ebd76c2bc21",
+      "blockchain_tx_id": "4ef816610329c42882640ba69743e4e1a8f8f0806790c72975da929a6d606d8a",
+      "item_id": 33
+    },
+    {
+      "donation_id": 49,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 1,
+      "category_name": "Prendas",
+      "quantity": 1844,
+      "status": "anchored",
+      "blockchain_hash": "4d75f61869104baa4ccff5be73311be9bdd6cc31779301dfc699479403c8a786",
+      "blockchain_tx_id": "1896bf33d094c1d914bb0ce29d007bd2c4202aba5744980910e3812bc4d8009c",
+      "item_id": 34
+    },
+    {
+      "donation_id": 50,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 1,
+      "category_name": "Prendas",
+      "quantity": 1941,
+      "status": "anchored",
+      "blockchain_hash": "0764c726a72f8e1d245f332a1d022fffdada0c4cb2a016886e4b33b66cb9a53f",
+      "blockchain_tx_id": "971a203cb3e2fc06df4db97147b379d7cd449a42314c67f86866f9badacbb4c9",
+      "item_id": 35
+    },
+    {
+      "donation_id": 51,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 4,
+      "category_name": "Productos de Limpieza",
+      "quantity": 2014,
+      "status": "anchored",
+      "blockchain_hash": "aa2c9c9d7bebc4b1665647aaaf6b028742ba8fabfcd5636643ec69849dac3054",
+      "blockchain_tx_id": "d4a9e2ecda343d017bf9cce3c7a390a7d84ea149d8fa82e968129dde59e2d66e",
+      "item_id": 36
+    },
+    {
+      "donation_id": 52,
+      "center_id": 6,
+      "center_name": "Punto de Acopio Mendoza Godoy Cruz",
+      "category_id": 4,
+      "category_name": "Productos de Limpieza",
+      "quantity": 2111,
+      "status": "anchored",
+      "blockchain_hash": "309a9481e459e8ea01c7a08ac3fe34bac4438189cd70104663963c4f42c6957f",
+      "blockchain_tx_id": "97d2275a3536c6889265285afe990d449325795c24193e52b02cfec98411b379",
+      "item_id": 37
+    },
+    {
+      "donation_id": 53,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 9,
+      "category_name": "Abrigo Invernal",
+      "quantity": 2222,
+      "status": "anchored",
+      "blockchain_hash": "e9a5f5201eb3c3c856e0a224527af5ac7eb1767fb1aff9bd53ba41a60cde9785",
+      "blockchain_tx_id": "ffe33d4e4c5413cd8999c0d22c8d7c3fa0523060b7d8cb68e5e6f2b2950f1d1b",
+      "item_id": 38
+    },
+    {
+      "donation_id": 54,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 9,
+      "category_name": "Abrigo Invernal",
+      "quantity": 2349,
+      "status": "anchored",
+      "blockchain_hash": "a8f367490dc152cfb61a4e64005fbab621425de4c265530ebcd4b2f3ce635b65",
+      "blockchain_tx_id": "271e100b429948c75d281198883d065fdf70b5a1081046f0f6fea5907710ea1e",
+      "item_id": 39
+    },
+    {
+      "donation_id": 55,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 2,
+      "category_name": "Alimentos",
+      "quantity": 2422,
+      "status": "anchored",
+      "blockchain_hash": "6a339ff6defc6e73cf17dea3ea81f41e8bec092b4ced841a6c10732c0402a727",
+      "blockchain_tx_id": "f51be1433d9d0053727139b58a21f22fe67f7fe7dfff19f89613988fef4f7ce0",
+      "item_id": 40
+    },
+    {
+      "donation_id": 56,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 2,
+      "category_name": "Alimentos",
+      "quantity": 2533,
+      "status": "anchored",
+      "blockchain_hash": "fc1a47a4b962599b89839d0febe02918e25c37e2fe96c54f2b7a6baceab5c0bd",
+      "blockchain_tx_id": "4f72cecb38e1aa788319ea570aebcf0c5df190e9d325309bc1fff7b0786705b2",
+      "item_id": 41
+    },
+    {
+      "donation_id": 57,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 3,
+      "category_name": "Bebidas",
+      "quantity": 2660,
+      "status": "anchored",
+      "blockchain_hash": "a6bb133cb1e3638ad7b8a3ff0539668e9e56f9b850ef1b2a810f5422eaa6c323",
+      "blockchain_tx_id": "534e8c9a77b82da331bac17b6167af50307caa0779a49ed1ac5db2857af97be1",
+      "item_id": 42
+    },
+    {
+      "donation_id": 58,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 3,
+      "category_name": "Bebidas",
+      "quantity": 2749,
+      "status": "anchored",
+      "blockchain_hash": "0db5549dd341d8a11a21a653574f960b92e8bef366b66b340cddda33fc9dad14",
+      "blockchain_tx_id": "7bb5d209bf618e88deec417d8e468b353b0b4591caa43cb165d9d7091eba7bf8",
+      "item_id": 43
+    },
+    {
+      "donation_id": 59,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 6,
+      "category_name": "Herramientas",
+      "quantity": 2822,
+      "status": "anchored",
+      "blockchain_hash": "45fff65563e17379eda2d9b8669b9a74fa206a5bc89db9464c8552e62ac9059e",
+      "blockchain_tx_id": "374109f63c122133d3bda2278554c96e9fcfcdd267cdfb3c8e94d796a609dcc6",
+      "item_id": 44
+    },
+    {
+      "donation_id": 60,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 6,
+      "category_name": "Herramientas",
+      "quantity": 2919,
+      "status": "anchored",
+      "blockchain_hash": "220b2f8d3e09ffab8feb349a5a0876dcf3325fa0a91514839622d2aca8159041",
+      "blockchain_tx_id": "6775d1d0e5a41f5b9fac73dfab03c30b6124f1ad525a46488f1fc12ab138d7bc",
+      "item_id": 45
+    },
+    {
+      "donation_id": 61,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 7,
+      "category_name": "Higiene Personal",
+      "quantity": 3008,
+      "status": "anchored",
+      "blockchain_hash": "974d104c2634afb7a29fa96e7197ab32737d798ae5007256f7d3d0b7d167e79b",
+      "blockchain_tx_id": "8328b9ee3a302bed639016330fffd8112b8159738580a19ef0f6dd11a57b1e21",
+      "item_id": 46
+    },
+    {
+      "donation_id": 62,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 7,
+      "category_name": "Higiene Personal",
+      "quantity": 3081,
+      "status": "anchored",
+      "blockchain_hash": "05e61d6c50e7b275661df1d1945ef1ef0c48e0912a0248f81edecd71d1a415a8",
+      "blockchain_tx_id": "ffa6f51f0b028d2b231cdb19307bbf7351f277a4049226474d70adaab26255ef",
+      "item_id": 47
+    },
+    {
+      "donation_id": 63,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 8,
+      "category_name": "Kit Escolar",
+      "quantity": 3208,
+      "status": "anchored",
+      "blockchain_hash": "1341e8c9a34cb8e87513243dd7666d8f48802e318d5d16789c3c0069c19b57c8",
+      "blockchain_tx_id": "e7145194d110fe87eb88dd67f30eb1d17b75d17a748f4cd1ff4f37f6b09de92f",
+      "item_id": 48
+    },
+    {
+      "donation_id": 64,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 8,
+      "category_name": "Kit Escolar",
+      "quantity": 3335,
+      "status": "anchored",
+      "blockchain_hash": "72ee4a60f2d705b3f39855c65a692f18fe45f4e085cf503d8a9b630a37b6e692",
+      "blockchain_tx_id": "eff785be5dd3e234ab61b2e517a3327f7ffea19595b89bd7e5803e505f0c4cda",
+      "item_id": 49
+    },
+    {
+      "donation_id": 65,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 5,
+      "category_name": "Medicamentos",
+      "quantity": 3446,
+      "status": "anchored",
+      "blockchain_hash": "7acbf1ccd5fa5f92b2127e1b93d77c212a0f44fc6acbaba7d7b53d1904b1bf44",
+      "blockchain_tx_id": "10d9fcfd5700cdb854c7e78cca36dee23f5a64aa8e245af041ae9f158a5d6f2c",
+      "item_id": 50
+    },
+    {
+      "donation_id": 66,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 5,
+      "category_name": "Medicamentos",
+      "quantity": 3519,
+      "status": "anchored",
+      "blockchain_hash": "5e01968a2c66ab2a0fb7f52e241c75f12b4b981e26c5390285a636352842fca9",
+      "blockchain_tx_id": "8eeae16fc73d05ef250a690947078ab536b4a6ff74fc850327d575d1c3709997",
+      "item_id": 51
+    },
+    {
+      "donation_id": 67,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 1,
+      "category_name": "Prendas",
+      "quantity": 3668,
+      "status": "anchored",
+      "blockchain_hash": "948c7b26c730ea4a849c9bc10a0cd941503753c8b6e548a6ec43dd00a3162ff3",
+      "blockchain_tx_id": "8c0703d72a1c82aafce325fe07fc8586656e5b9c3c8b00f6835261cff032747e",
+      "item_id": 52
+    },
+    {
+      "donation_id": 68,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 1,
+      "category_name": "Prendas",
+      "quantity": 3795,
+      "status": "anchored",
+      "blockchain_hash": "a36447e6a52a3eb0df0e9de2ff36c8617bb7df1a3f6446056a861cd483da2173",
+      "blockchain_tx_id": "96b0007b1c2ae24e37f50cd4f37e78d9cf9cbc7629564262834caeddcab337a7",
+      "item_id": 53
+    },
+    {
+      "donation_id": 69,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 4,
+      "category_name": "Productos de Limpieza",
+      "quantity": 3922,
+      "status": "anchored",
+      "blockchain_hash": "69cdab7de3b4c27dd1969357b39c284535ccacba7bd2c17c46a413059abb67f1",
+      "blockchain_tx_id": "21115bcff7f0e27ef9743d548a8f875301fec15a788a10eb7c426178c1fed241",
+      "item_id": 54
+    },
+    {
+      "donation_id": 70,
+      "center_id": 5,
+      "center_name": "Nodo Solidario Cordoba Capital",
+      "category_id": 4,
+      "category_name": "Productos de Limpieza",
+      "quantity": 4019,
+      "status": "anchored",
+      "blockchain_hash": "c6efe5e70ce84038af15729f7a65dfc9842f9f8784dfa68c902ff43fa3a6f6c1",
+      "blockchain_tx_id": "0e79e91345089cc0193c9a41c38d1299ea470b3346623ad2609e7715ecf7d94f",
+      "item_id": 55
+    },
+    {
+      "donation_id": 71,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 9,
+      "category_name": "Abrigo Invernal",
+      "quantity": 4108,
+      "status": "anchored",
+      "blockchain_hash": "f08533ddeeda991622a71d5def2f6c8f7c2e275269acaefaa18af3ed638d69a2",
+      "blockchain_tx_id": "a60a2836350616ba5bbfd14a5ca3e0a3a7ff98de2a6c14e1c1e7f4e3c798134d",
+      "item_id": 56
+    },
+    {
+      "donation_id": 72,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 9,
+      "category_name": "Abrigo Invernal",
+      "quantity": 4205,
+      "status": "anchored",
+      "blockchain_hash": "c8588f3d546814a4cf78ea1bd5d544de310438a05a1d657bb03ea60fdb2d83bd",
+      "blockchain_tx_id": "a6b731eb7d620b9ce3fbbd2c28de8bf2aa16c100e1691a09f6549a559c47a64f",
+      "item_id": 57
+    },
+    {
+      "donation_id": 73,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 2,
+      "category_name": "Alimentos",
+      "quantity": 4316,
+      "status": "anchored",
+      "blockchain_hash": "354381cb30da9b722459680f5b2bd9fe405a31cfbb5751a1f5bd9034ba369918",
+      "blockchain_tx_id": "7501a361afd470b67ce95b66e0d217764236ab656277d3fc9baecb84bd4e76bc",
+      "item_id": 58
+    },
+    {
+      "donation_id": 74,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 2,
+      "category_name": "Alimentos",
+      "quantity": 4443,
+      "status": "anchored",
+      "blockchain_hash": "acde6b7ceced44c3eed3e60b8d5d134bb6ead52c4cc274acaf6b10cc1bae3036",
+      "blockchain_tx_id": "7b49ec78b61822a9d230f2363b4ccfd28e4ff9f4d9c3806de8baa8c2e3cc14b9",
+      "item_id": 59
+    },
+    {
+      "donation_id": 75,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 3,
+      "category_name": "Bebidas",
+      "quantity": 4540,
+      "status": "anchored",
+      "blockchain_hash": "d3acbee208db03263a380e43a98c8f174e4cbf780829adc7cc4e7254a9200c52",
+      "blockchain_tx_id": "f072d4f992132adf9b991574f5602f5b02fd054ecf6dbe43feeee02591610e9f",
+      "item_id": 60
+    },
+    {
+      "donation_id": 76,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 3,
+      "category_name": "Bebidas",
+      "quantity": 4629,
+      "status": "anchored",
+      "blockchain_hash": "68d1d79f8a4f4d308d6415c0044bef64ee2d3d53ccdcf4494845aaefb208e592",
+      "blockchain_tx_id": "20efd4b9bf5bd8ffbc106f5da8227af5ad3f941c325f00e36380b90f452d1314",
+      "item_id": 61
+    },
+    {
+      "donation_id": 77,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 6,
+      "category_name": "Herramientas",
+      "quantity": 4756,
+      "status": "anchored",
+      "blockchain_hash": "aeebc4b5e0c40cd355fef6a7b42d8e9ea4f0d3195f60c5d384df43cb755b1d57",
+      "blockchain_tx_id": "c1cabf5a2d60ac07833f6a5af483367b23f666b88e07877898aec5bdb2e2f0e1",
+      "item_id": 62
+    },
+    {
+      "donation_id": 78,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 6,
+      "category_name": "Herramientas",
+      "quantity": 4867,
+      "status": "anchored",
+      "blockchain_hash": "0051cfd064ea4a91086438ce7f6b3d21ca62d76ee264a63f3692e57cda89cd6e",
+      "blockchain_tx_id": "853ea6e21066e730b10bddf5d9a5d9765a3201d265ea6e860b5bd35ec040700b",
+      "item_id": 63
+    },
+    {
+      "donation_id": 79,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 7,
+      "category_name": "Higiene Personal",
+      "quantity": 4940,
+      "status": "anchored",
+      "blockchain_hash": "3f710ac088db33363087de2b9a657541fe5447821debaa9fe5cbd538eb1a5f29",
+      "blockchain_tx_id": "e46757284ef1ea66923ad1b132665a4a2a75f2d1de555595f47829a873f0f315",
+      "item_id": 64
+    },
+    {
+      "donation_id": 80,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 7,
+      "category_name": "Higiene Personal",
+      "quantity": 5067,
+      "status": "anchored",
+      "blockchain_hash": "c7befc2ac0d86316d594f56992c97b0029624290a2abbb3a1651509503081381",
+      "blockchain_tx_id": "e4b9c6ccf6d362d09562478915e6c888dc54d8fe80e7ed3bf5d93a2a4b17d579",
+      "item_id": 65
+    },
+    {
+      "donation_id": 81,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 8,
+      "category_name": "Kit Escolar",
+      "quantity": 5156,
+      "status": "anchored",
+      "blockchain_hash": "21a36da5aaa0c63bdc8604397cb4aaafbf1916a3aae9b882b8971672281d6908",
+      "blockchain_tx_id": "b2d3b915282b814117a465f808e8f43b26eeb324f6bde8ddb93a668568efd305",
+      "item_id": 66
+    },
+    {
+      "donation_id": 82,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 8,
+      "category_name": "Kit Escolar",
+      "quantity": 5245,
+      "status": "anchored",
+      "blockchain_hash": "1cc3fc8ea9b12e36c7759a2b33a01d4d27d37b998961e225d17938b27841f13c",
+      "blockchain_tx_id": "8a2e82633f111fc954905eefb5742400b5fed60b7d54cb631dfa8f04b0ef19f8",
+      "item_id": 67
+    },
+    {
+      "donation_id": 83,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 5,
+      "category_name": "Medicamentos",
+      "quantity": 5372,
+      "status": "anchored",
+      "blockchain_hash": "2a788a2c0a72683fd7fd06802a325a04c559b1c5cc80344c68b250253c57e76f",
+      "blockchain_tx_id": "f81c9a4abf5e3492fca09365c04f8c5f1f4457d8910b78077a626fd93e667cdf",
+      "item_id": 68
+    },
+    {
+      "donation_id": 84,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 5,
+      "category_name": "Medicamentos",
+      "quantity": 5483,
+      "status": "anchored",
+      "blockchain_hash": "c3185ce989f81cff132392d97158f557186888b46f92b1896226c926e4f351ac",
+      "blockchain_tx_id": "19489115235653093b97cc7ee1b40f1ce3ee1b176ef7649b0f5056be13c23935",
+      "item_id": 69
+    },
+    {
+      "donation_id": 85,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 1,
+      "category_name": "Prendas",
+      "quantity": 5610,
+      "status": "anchored",
+      "blockchain_hash": "daa75fb435bacc9eb528c10accc3429b21c096bd930da73693ee3335f2c46c42",
+      "blockchain_tx_id": "4bf4372131a87b7327ddcdc2c16a02c2d6f5597d690817f2982a7d53c216876c",
+      "item_id": 70
+    },
+    {
+      "donation_id": 86,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 1,
+      "category_name": "Prendas",
+      "quantity": 5707,
+      "status": "anchored",
+      "blockchain_hash": "89dbe34e747fd63c92583dc90f5b7f2340e58b78b88b0831ae77091612bee50e",
+      "blockchain_tx_id": "6a58fe998911c844dc1def0ea63c7fded2ee7e71285169cb2d99dffebb94808c",
+      "item_id": 71
+    },
+    {
+      "donation_id": 87,
+      "center_id": 4,
+      "center_name": "Centro Comunitario Rosario Norte",
+      "category_id": 4,
+      "category_name": "Productos de Limpieza",
+      "quantity": 5780,
+      "status": "anchored",
+      "blockchain_hash": "9391c5a7cc2d45dadccbf1690fd543624177677b944e8953ff3ac96b1d0ba509",
+      "blockchain_tx_id": "2280ab5a30010e199155fddfdec3bde2de512486b857d9ebf86cf1c84bfeec00",
+      "item_id": 72
+    }
+  ],
+  "failures": [
+    {
+      "center": "Centro Comunitario Rosario Norte",
+      "category": "Productos de Limpieza",
+      "error": "Remote end closed connection without response"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Abrigo Invernal",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Abrigo Invernal",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Alimentos",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Alimentos",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Bebidas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Bebidas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Herramientas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Herramientas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Higiene Personal",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Higiene Personal",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Kit Escolar",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Kit Escolar",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Medicamentos",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Medicamentos",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Prendas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Prendas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Productos de Limpieza",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Logistico CABA - Barracas",
+      "category": "Productos de Limpieza",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Abrigo Invernal",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Abrigo Invernal",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Alimentos",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Alimentos",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Bebidas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Bebidas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Herramientas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Herramientas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Higiene Personal",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Higiene Personal",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Kit Escolar",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Kit Escolar",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Medicamentos",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Medicamentos",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Prendas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Prendas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Productos de Limpieza",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Sur",
+      "category": "Productos de Limpieza",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Abrigo Invernal",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Abrigo Invernal",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Alimentos",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Alimentos",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Bebidas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Bebidas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Herramientas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Herramientas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Higiene Personal",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Higiene Personal",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Kit Escolar",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Kit Escolar",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Medicamentos",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Medicamentos",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Prendas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Prendas",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Productos de Limpieza",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    },
+    {
+      "center": "Centro Norte",
+      "category": "Productos de Limpieza",
+      "error": "<urlopen error [Errno 111] Connection refused>"
+    }
+  ],
+  "without_blockchain_fields": []
+}

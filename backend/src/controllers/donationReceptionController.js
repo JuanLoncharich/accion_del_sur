@@ -34,7 +34,7 @@ const buildQrUrl = (token) => {
   return `${base}/confirmacion-donacion/${token}`;
 };
 
-const buildPublicPayload = (reception) => {
+const buildPublicPayload = (reception, acceptedTracking) => {
   const isFinal = reception.status !== 'processing';
 
   return {
@@ -60,6 +60,7 @@ const buildPublicPayload = (reception) => {
       tx_id: reception.anchored_tx_id,
       anchored_hash: reception.anchored_hash,
     },
+    accepted_tracking: acceptedTracking,
   };
 };
 
@@ -126,6 +127,7 @@ const computeStatus = (details) => {
 
 const isStellarEnabled = () => process.env.STELLAR_ENABLED === 'true';
 const isSftEnabled = () => isStellarEnabled() && Boolean(process.env.SOROBAN_CONTRACT_SFT);
+const isValidTokenIdHex = (value) => /^[a-f0-9]{64}$/i.test(String(value || '').trim());
 
 exports.createInitial = async (req, res, next) => {
   try {
@@ -211,7 +213,39 @@ exports.getPublicByToken = async (req, res, next) => {
 
     if (!reception) return maskedNotFound(res);
 
-    return res.json(buildPublicPayload(reception));
+    const donorDonations = await Donation.findAll({
+      where: {
+        donor_email: reception.donor_email,
+        status: 'anchored',
+      },
+      include: [
+        { model: Item, as: 'item', attributes: ['id', 'name'] },
+        { model: Center, as: 'center', attributes: ['id', 'name'] },
+      ],
+      order: [['created_at', 'DESC']],
+      limit: 30,
+    });
+
+    const acceptedTotal = donorDonations.reduce((sum, donation) => sum + Number(donation.quantity || 0), 0);
+    const mintedTotal = donorDonations
+      .filter((donation) => Boolean(donation.blockchain_tx_id || donation.blockchain_hash))
+      .reduce((sum, donation) => sum + Number(donation.quantity || 0), 0);
+
+    const acceptedTracking = {
+      accepted_total: acceptedTotal,
+      minted_total: mintedTotal,
+      donations: donorDonations.map((donation) => ({
+        donation_id: donation.id,
+        item_name: donation.item?.name || `Ítem #${donation.item_id}`,
+        quantity: donation.quantity,
+        center_name: donation.center?.name || donation.center_name || null,
+        minted: Boolean(donation.blockchain_tx_id || donation.blockchain_hash),
+        blockchain_tx_id: donation.blockchain_tx_id,
+        created_at: donation.created_at,
+      })),
+    };
+
+    return res.json(buildPublicPayload(reception, acceptedTracking));
   } catch (error) {
     next(error);
   }
@@ -298,7 +332,9 @@ exports.finalizeInternal = async (req, res, next) => {
         if (detail.quantity_accepted <= 0) continue;
 
         const item = itemsById[detail.item_id];
-        const tokenId = sftService.computeTokenId(item.id);
+        const tokenId = isValidTokenIdHex(item.blockchain_hash)
+          ? String(item.blockchain_hash).trim().toLowerCase()
+          : sftService.computeTokenId(item.id);
         const attributesHash = sftService.computeAttributesHash(item.attributes);
 
         try {
@@ -355,13 +391,14 @@ exports.finalizeInternal = async (req, res, next) => {
           // Buscar el tx_id del mint de este ítem
           const mintInfo = mintResults.find((m) => m.item_id === item.id);
 
-          // Actualizar blockchain_hash en el ítem si es el primer mint
+          const mintedPatch = {
+            token_status: 'minted',
+          };
           if (mintInfo && !item.blockchain_hash) {
-            await item.update({
-              blockchain_hash: mintInfo.hash,
-              blockchain_tx_id: mintInfo.txId,
-            }, { transaction: t });
+            mintedPatch.blockchain_hash = mintInfo.tokenId;
+            mintedPatch.blockchain_tx_id = mintInfo.txId;
           }
+          await item.update(mintedPatch, { transaction: t });
 
           // Registrar donación vinculada a esta recepción
           await Donation.create({
@@ -370,7 +407,9 @@ exports.finalizeInternal = async (req, res, next) => {
             notes: `Recepción QR #${reception.id}`,
             registered_by: req.user.id,
             status: 'anchored',
-            blockchain_hash: mintInfo?.hash || null,
+            donor_email: reception.donor_email,
+            donation_reception_id: reception.id,
+            blockchain_hash: mintInfo?.tokenId || null,
             blockchain_tx_id: mintInfo?.txId || null,
             ...(center_id ? { center_id } : {}),
           }, { transaction: t });
