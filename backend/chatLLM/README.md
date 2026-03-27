@@ -14,6 +14,14 @@ El backend ya define MySQL con estas variables (`backend/.env`):
 
 El script de consultas carga automáticamente esas variables.
 
+Para el agente del LLM se recomienda usar credenciales dedicadas de solo lectura con estas variables (prioridad sobre `DB_*`):
+
+- `LLM_DB_HOST`
+- `LLM_DB_PORT`
+- `LLM_DB_USER`
+- `LLM_DB_PASSWORD`
+- `LLM_DB_NAME`
+
 ## Archivos principales
 
 - `agent_prompt_mysql.txt`: prompt del agente con reglas de seguridad.
@@ -37,6 +45,16 @@ cd backend/chatLLM
 ```
 
 2. El setup toma modelo desde `backend/.env` (`OPENAI_MODEL`) y lo convierte a formato OpenCode (`openai/...`).
+
+2.1 Configura credenciales del agente (idealmente en `backend/chatLLM/.env`) para que use el usuario restringido:
+
+```bash
+LLM_DB_HOST=localhost
+LLM_DB_PORT=3306
+LLM_DB_NAME=accion_del_sur
+LLM_DB_USER=llm_reader
+LLM_DB_PASSWORD=tu_password_llm_reader
+```
 
 3. (Opcional) si quieres forzar otro modelo para este agente:
 

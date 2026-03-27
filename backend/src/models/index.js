@@ -8,6 +8,8 @@ const Distribution = require('./Distribution');
 const AuditAccessLog = require('./AuditAccessLog');
 const DonationReception = require('./DonationReception');
 const DonationReceptionDetail = require('./DonationReceptionDetail');
+const Center = require('./Center');
+const TokenTransfer = require('./TokenTransfer');
 
 // Category <-> CategoryAttribute
 Category.hasMany(CategoryAttribute, { foreignKey: 'category_id', as: 'attributes' });
@@ -33,6 +35,7 @@ Donation.belongsTo(User, { foreignKey: 'registered_by', as: 'registeredBy' });
 User.hasMany(Distribution, { foreignKey: 'registered_by', as: 'distributions' });
 Distribution.belongsTo(User, { foreignKey: 'registered_by', as: 'registeredBy' });
 
+// DonationReception
 User.hasMany(DonationReception, { foreignKey: 'created_by', as: 'createdReceptions' });
 DonationReception.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
 
@@ -45,11 +48,37 @@ DonationReceptionDetail.belongsTo(DonationReception, { foreignKey: 'reception_id
 Item.hasMany(DonationReceptionDetail, { foreignKey: 'item_id', as: 'receptionDetails' });
 DonationReceptionDetail.belongsTo(Item, { foreignKey: 'item_id', as: 'item' });
 
+// AuditAccessLog
 Distribution.hasMany(AuditAccessLog, { foreignKey: 'distribution_id', as: 'auditAccessLogs' });
 AuditAccessLog.belongsTo(Distribution, { foreignKey: 'distribution_id', as: 'distribution' });
 
 User.hasMany(AuditAccessLog, { foreignKey: 'accessed_by', as: 'auditAccesses' });
 AuditAccessLog.belongsTo(User, { foreignKey: 'accessed_by', as: 'accessedBy' });
+
+// Center
+User.hasMany(Center, { foreignKey: 'created_by', as: 'centers' });
+Center.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
+
+// Item <-> Center (current location)
+Center.hasMany(Item, { foreignKey: 'current_center_id', as: 'items' });
+Item.belongsTo(Center, { foreignKey: 'current_center_id', as: 'currentCenter' });
+
+// Donation <-> Center
+Center.hasMany(Donation, { foreignKey: 'center_id', as: 'donations' });
+Donation.belongsTo(Center, { foreignKey: 'center_id', as: 'center' });
+
+// TokenTransfer
+Item.hasMany(TokenTransfer, { foreignKey: 'item_id', as: 'transfers' });
+TokenTransfer.belongsTo(Item, { foreignKey: 'item_id', as: 'item' });
+
+Center.hasMany(TokenTransfer, { foreignKey: 'from_center_id', as: 'outgoingTransfers' });
+TokenTransfer.belongsTo(Center, { foreignKey: 'from_center_id', as: 'fromCenter' });
+
+Center.hasMany(TokenTransfer, { foreignKey: 'to_center_id', as: 'incomingTransfers' });
+TokenTransfer.belongsTo(Center, { foreignKey: 'to_center_id', as: 'toCenter' });
+
+User.hasMany(TokenTransfer, { foreignKey: 'transferred_by', as: 'transfers' });
+TokenTransfer.belongsTo(User, { foreignKey: 'transferred_by', as: 'transferredBy' });
 
 module.exports = {
   sequelize,
@@ -62,4 +91,6 @@ module.exports = {
   AuditAccessLog,
   DonationReception,
   DonationReceptionDetail,
+  Center,
+  TokenTransfer,
 };

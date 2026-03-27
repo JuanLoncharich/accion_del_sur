@@ -141,7 +141,7 @@ export default function Dashboard() {
             </ResponsiveContainer>
             <div className="flex flex-wrap gap-2 justify-center md:justify-start">
               {stockPieData.map((item, index) => (
-                <div key={item.name} className="flex items-center gap-2 text-sm">
+                <div key={`${item.name}-${index}`} className="flex items-center gap-2 text-sm">
                   <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
                   <span className="text-slate-600">{item.name}: <strong>{item.value}</strong></span>
                 </div>

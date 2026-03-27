@@ -1,0 +1,851 @@
+{
+  "generatedAt": "2026-03-27T13:21:52.884Z",
+  "database": "accion_del_sur",
+  "tables": {
+    "audit_access_log": {
+      "rowCount": 9,
+      "sensitiveColumns": [
+        "purpose",
+        "requester_ip",
+        "requester_device"
+      ],
+      "sensitiveRows": [
+        {
+          "requester_ip": "::ffff:127.0.0.1",
+          "requester_device": "node"
+        },
+        {
+          "requester_ip": "::ffff:127.0.0.1",
+          "requester_device": "node"
+        },
+        {
+          "purpose": "e2e",
+          "requester_ip": "::ffff:127.0.0.1",
+          "requester_device": "node"
+        },
+        {
+          "requester_ip": "::ffff:127.0.0.1",
+          "requester_device": "node"
+        },
+        {
+          "purpose": "api_test",
+          "requester_ip": "::ffff:127.0.0.1",
+          "requester_device": "node"
+        },
+        {
+          "purpose": "second_check",
+          "requester_ip": "::ffff:127.0.0.1",
+          "requester_device": "node"
+        },
+        {
+          "requester_ip": "::ffff:127.0.0.1",
+          "requester_device": "node"
+        },
+        {
+          "purpose": "api_test",
+          "requester_ip": "::ffff:127.0.0.1",
+          "requester_device": "node"
+        },
+        {
+          "purpose": "second_check",
+          "requester_ip": "::ffff:127.0.0.1",
+          "requester_device": "node"
+        }
+      ]
+    },
+    "categories": {
+      "rowCount": 10,
+      "sensitiveColumns": [
+        "description"
+      ],
+      "sensitiveRows": [
+        {
+          "description": "Ropa y accesorios de vestimenta"
+        },
+        {
+          "description": "Productos alimenticios"
+        },
+        {
+          "description": "Líquidos para consumo"
+        },
+        {
+          "description": "Artículos de higiene y limpieza"
+        },
+        {
+          "description": "Productos farmacéuticos y primeros auxilios"
+        },
+        {
+          "description": "Equipamiento y herramientas"
+        },
+        {
+          "description": "Updated"
+        },
+        {
+          "description": "Updated"
+        }
+      ]
+    },
+    "category_attributes": {
+      "rowCount": 18,
+      "sensitiveColumns": [],
+      "sensitiveRows": []
+    },
+    "centers": {
+      "rowCount": 10,
+      "sensitiveColumns": [
+        "latitude",
+        "longitude",
+        "geo_hash",
+        "blockchain_contract_id",
+        "blockchain_deploy_tx",
+        "blockchain_init_tx"
+      ],
+      "sensitiveRows": [
+        {
+          "latitude": "-34.5708000",
+          "longitude": "-58.4370000",
+          "geo_hash": "7b82f5560a766e4a9dbb869020c6968d50449032ef713f1f82acf4403bed5235",
+          "blockchain_contract_id": "CC2ZNKOZRL7I5QTHSGBOJZDHTSNWVH5SKBUPQB7QYYYMWMYL42ZUHRRT",
+          "blockchain_deploy_tx": "d257ea0d0d7c3f24716e394048007fa41b8e1c27a5c2a60d77b3de12afc6dcb3",
+          "blockchain_init_tx": "0f0f6fbb76185cdae18c0f3f656bb2508070fa440b26cc8d0dd3a0dabe55d0c4"
+        },
+        {
+          "latitude": "-34.6500000",
+          "longitude": "-58.5100000",
+          "geo_hash": "9556fc685d389d959c124cdbd8acef60331d5f538170dabf107b55779088596a",
+          "blockchain_contract_id": "CBKK45URSLBRTD5FUCJTZ3277TO5QLSW222Y65XXEM2E5E4XIGSE6GEY",
+          "blockchain_deploy_tx": "053a80d5cb2ad394137ec6e698591b3086d7205332b38862ce3144899a9e3dbe",
+          "blockchain_init_tx": "26f347080efeacc8af9fe888f8d340488745be7349767c2deb01719fb01b73e6"
+        },
+        {
+          "latitude": "-34.5708000",
+          "longitude": "-58.4370000",
+          "geo_hash": "7b82f5560a766e4a9dbb869020c6968d50449032ef713f1f82acf4403bed5235",
+          "blockchain_contract_id": "CBR37OY2ETLZI4A7IG2BZFZUL4QE5VXKTNKYP77VUTKOWVJX6VANSU46",
+          "blockchain_deploy_tx": "44a7a8d5489dad1ffceba8de4ccfdedb68cb91b755f38e856fd6d5813ce1f504",
+          "blockchain_init_tx": "60e97d2be7fd504c206318ffbd3b94dfeeb454cc003fee10faef2caa089e866f"
+        },
+        {
+          "latitude": "-34.6500000",
+          "longitude": "-58.5100000",
+          "geo_hash": "9556fc685d389d959c124cdbd8acef60331d5f538170dabf107b55779088596a",
+          "blockchain_contract_id": "CDMB3ZLBVLCPWZLARNLGK7FSPBLVYPYA5ZCHEGTIBFPU2S6U6NICLNL2",
+          "blockchain_deploy_tx": "a31e18024d19b446ff8bf7497aa14cf5afd4c9236a93a55a49aa226bbac6980c",
+          "blockchain_init_tx": "dee3c7077d13ba206a85195468c095bd06f8e3e19ddddd45f0b118f8fe0a2e7b"
+        },
+        {
+          "latitude": "-34.6037000",
+          "longitude": "-58.3816000",
+          "geo_hash": "aebc379c717de688d512d714e5abd877949b8928439bda2561a2fb5268a731d7",
+          "blockchain_contract_id": "CAUTSAVGHSMFBQU3RWEEO5AHZNC33UIEVIJAAJ27K6G4HHVH4YHFBJ5D",
+          "blockchain_deploy_tx": "cde0173790e51c5c51538ca293944caa3a7a3e20bef17be4427565b1772c9801",
+          "blockchain_init_tx": "11f1faaf90d23a962d1006c9c13a26b2198e33b538499b88f6a7d3524035075b"
+        },
+        {
+          "latitude": "-34.6200000",
+          "longitude": "-58.4500000",
+          "geo_hash": "e6c2fa859b56f6a7762dd4340c4f7eb4de9bbf7f17e4c955aef31ddfc1520a30",
+          "blockchain_contract_id": "CABYLFSKQOWBKK22O6IRAQTLU2K2SW266DSE33KX4SSCWWXRYXUCYS3M",
+          "blockchain_deploy_tx": "02b0315deaed25fa9324be87b47583f7ffc771032f0c388c101d186b934e3b86",
+          "blockchain_init_tx": "c0ec8b8b5cbd99583d2837520a364419940f5e6bbaa4eb48a82655fb6f977fba"
+        },
+        {
+          "latitude": "-34.6037000",
+          "longitude": "-58.3816000",
+          "geo_hash": "aebc379c717de688d512d714e5abd877949b8928439bda2561a2fb5268a731d7",
+          "blockchain_contract_id": "CB63MEPV5LG4XJDQ5XT3KVRH34LMH3DWAEBUW3PXOV37XX2VUCDLCNGR",
+          "blockchain_deploy_tx": "7e1b18d30ce8ce9f83080455367c0f3c579579d6fd52817929a5f40acb72a99b",
+          "blockchain_init_tx": "467f6d6792f1493a61010d819d5ba4af960c0b9ba326709c789bc46d93b2ccf1"
+        },
+        {
+          "latitude": "-34.6200000",
+          "longitude": "-58.4500000",
+          "geo_hash": "e6c2fa859b56f6a7762dd4340c4f7eb4de9bbf7f17e4c955aef31ddfc1520a30",
+          "blockchain_contract_id": "CC33YCR7VKXRNDCZKYTXL42F5W3CKABWBCPFKRMOHU3L7EGR4DLBEQDA",
+          "blockchain_deploy_tx": "fc9bdf0917fd63d9cb4853eb750e5816c7a042f6d90d32436de07de1a9bb7b37",
+          "blockchain_init_tx": "0a23707d9972a341e44f35546adc470a92fd975261cc6ad144475a0415f554b5"
+        },
+        {
+          "latitude": "-34.6037000",
+          "longitude": "-58.3816000",
+          "geo_hash": "aebc379c717de688d512d714e5abd877949b8928439bda2561a2fb5268a731d7",
+          "blockchain_contract_id": "CBMX3CHJYP5B2T7T3CQY7SI7T2LMASNCYD5IDWCFQPG4JJJUBSW3M23L",
+          "blockchain_deploy_tx": "03ee6e4f6a4f55705bc87c176ecb2b1f4e00da5910e42f811f4f504e4593ac2a",
+          "blockchain_init_tx": "e53a3745627b4117ee21528948c5e9e977ba8fd55c622582122c8ad61bac531c"
+        },
+        {
+          "latitude": "-34.6200000",
+          "longitude": "-58.4500000",
+          "geo_hash": "e6c2fa859b56f6a7762dd4340c4f7eb4de9bbf7f17e4c955aef31ddfc1520a30",
+          "blockchain_contract_id": "CASKOVKN4T4UZKYIJLPZZIHBLVC5TYUB3UDTUBINKJKCT62BGJZEB63B",
+          "blockchain_deploy_tx": "ca5ef0ada7c101a3384419e9bfdeca24b5994471768b36fbb02e42354ea5d3ab",
+          "blockchain_init_tx": "b4d9fab23a20bebfb26256104af20b5512914878b06c6bf7c0da9d827b4a3801"
+        }
+      ]
+    },
+    "distributions": {
+      "rowCount": 15,
+      "sensitiveColumns": [
+        "receiver_identifier",
+        "receiver_hash",
+        "blockchain_hash",
+        "nonce",
+        "recipient_commitment",
+        "recipient_salt",
+        "signature_data",
+        "signature_mime",
+        "signature_hash",
+        "receipt_payload",
+        "receipt_hash",
+        "blockchain_tx_id",
+        "capture_ip",
+        "capture_device",
+        "center_latitude",
+        "center_longitude"
+      ],
+      "sensitiveRows": [
+        {
+          "receiver_identifier": "DNI-12345678",
+          "receiver_hash": "8fa378329e738e59b3f9c6a09751fe58bb5f6c8c299add26de4cc88785afbeba"
+        },
+        {
+          "receiver_identifier": "DNI-99887766",
+          "receiver_hash": "6bfef26d90aa649bd6ca05ca39288ebeb39a5f8fe78824b24c45152c432102f3",
+          "blockchain_hash": "6f6a854d3670e760b827fa93f8cecc14a5d0d991da214795057c104b73625e29"
+        },
+        {
+          "receiver_identifier": "30111222",
+          "blockchain_hash": "1662682cdfe311d7e691043814e29c8b1ee53a84e64dab677d21fd6c21b2c990",
+          "nonce": "4a10a6f1d01e26fdb632364ad59c3b3a",
+          "recipient_commitment": "d0666dae7740c877b10e5c4ff1838e7c7f3bcd182b3c2968b6a5974947e8d5b7",
+          "recipient_salt": "2ae6edd034ff166b10ae4269e2e61511",
+          "signature_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBgLJrVN4AAAAASUVORK5CYII=",
+          "signature_mime": "image/png",
+          "signature_hash": "ab61885e77fb525d1506da3c5714f7ee7e7142c43cb7f09cf287801c2102697d",
+          "receipt_payload": {
+            "notes": "E2E distribution flow",
+            "center": {
+              "name": "Centro E2E",
+              "latitude": "-34.6037220",
+              "longitude": "-58.3815920"
+            },
+            "item_id": 16,
+            "quantity": 1,
+            "item_name": "Alimentos - { - \" - e - 2 - e - \" - : - \" - x - \" - }",
+            "timestamp": "2026-03-27T02:03:10.143Z",
+            "operator_id": 1,
+            "signature_hash": "ab61885e77fb525d1506da3c5714f7ee7e7142c43cb7f09cf287801c2102697d",
+            "assurance_level": "MANUAL_VERIFIED",
+            "distribution_id": 3,
+            "recipient_commitment": "d0666dae7740c877b10e5c4ff1838e7c7f3bcd182b3c2968b6a5974947e8d5b7",
+            "identity_capture_method": "manual"
+          },
+          "receipt_hash": "f1dda034a3142bef6a7684b3eb03e90460b02135edb642ecf1ed330c1e439ba0",
+          "blockchain_tx_id": "3cc3ed2703ec495e2d9f341cf5c60d81e699f969a7fe2133f87958c0e25c51fe",
+          "capture_ip": "::ffff:127.0.0.1",
+          "capture_device": "node",
+          "center_latitude": "-34.6037220",
+          "center_longitude": "-58.3815920"
+        },
+        {
+          "receiver_identifier": "30111222",
+          "blockchain_hash": "ef3fe95bbf4571e15d532e4ba804d2adc8293e7bc89dc0a13a6e9089d85f461f",
+          "nonce": "3e1a596c3ca7a63ba7cd15572257177b",
+          "recipient_commitment": "307305f420e2860631f61a03453149f4b4686b34311d2229a4df2eebf89e9a98",
+          "recipient_salt": "d265195ce325fd4d2908d5dc924832bd",
+          "signature_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBgLJrVN4AAAAASUVORK5CYII=",
+          "signature_mime": "image/png",
+          "signature_hash": "ab61885e77fb525d1506da3c5714f7ee7e7142c43cb7f09cf287801c2102697d",
+          "receipt_payload": {
+            "notes": "E2E distribution flow",
+            "center": {
+              "name": "Centro E2E",
+              "latitude": "-34.6037220",
+              "longitude": "-58.3815920"
+            },
+            "item_id": 16,
+            "quantity": 1,
+            "item_name": "Alimentos - { - \" - e - 2 - e - \" - : - \" - x - \" - }",
+            "timestamp": "2026-03-27T02:04:19.400Z",
+            "operator_id": 1,
+            "signature_hash": "ab61885e77fb525d1506da3c5714f7ee7e7142c43cb7f09cf287801c2102697d",
+            "assurance_level": "MANUAL_VERIFIED",
+            "distribution_id": 4,
+            "recipient_commitment": "307305f420e2860631f61a03453149f4b4686b34311d2229a4df2eebf89e9a98",
+            "identity_capture_method": "manual"
+          },
+          "receipt_hash": "14ef77a072afca8a49e72b7e4d75426d625de902cce34ee1372885183d45a9ee",
+          "blockchain_tx_id": "414fb745b9d801e9bd6de335dd8b8ed7c22126ce4eb94e2f5792c8b985d780ac",
+          "capture_ip": "::ffff:127.0.0.1",
+          "capture_device": "node",
+          "center_latitude": "-34.6037220",
+          "center_longitude": "-58.3815920"
+        },
+        {
+          "receiver_identifier": "30555444",
+          "blockchain_hash": "fbf59eb479a74233296739935fa8122b1954f88c09cc67881b0b9264e0a9b81c",
+          "nonce": "b8548c12ed30132e3dbde0ffd2e382ca",
+          "recipient_commitment": "0f21bed7752132b4f99a08b71bba45433a1f67b05dcb41ffd9490a2918da0e5c",
+          "recipient_salt": "64dbc963857732bf5adbca2a829b5ee7",
+          "signature_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBgLJrVN4AAAAASUVORK5CYII=",
+          "signature_mime": "image/png",
+          "signature_hash": "ab61885e77fb525d1506da3c5714f7ee7e7142c43cb7f09cf287801c2102697d",
+          "receipt_payload": {
+            "notes": "Test distribución completa",
+            "center": {
+              "name": "Centro Test Dist",
+              "latitude": "-34.6037220",
+              "longitude": "-58.3815920"
+            },
+            "item_id": 17,
+            "quantity": 1,
+            "item_name": "Alimentos - { - \" - t - e - s - t - \" - : - \" - a - p - i - t - e - s - t - \" - }",
+            "timestamp": "2026-03-27T02:11:44.885Z",
+            "operator_id": 1,
+            "signature_hash": "ab61885e77fb525d1506da3c5714f7ee7e7142c43cb7f09cf287801c2102697d",
+            "assurance_level": "MANUAL_VERIFIED",
+            "distribution_id": 5,
+            "recipient_commitment": "0f21bed7752132b4f99a08b71bba45433a1f67b05dcb41ffd9490a2918da0e5c",
+            "identity_capture_method": "manual"
+          },
+          "receipt_hash": "40e56dd24313adc7bcc13a7ce1f3f0de6f161f2b286fe6962dfcc0b779783e25",
+          "blockchain_tx_id": "f964f74aa722f75333241f147d0a8797740c03a92339788f47881b85ebea7996",
+          "capture_ip": "::ffff:127.0.0.1",
+          "capture_device": "node",
+          "center_latitude": "-34.6037220",
+          "center_longitude": "-58.3815920"
+        },
+        {
+          "nonce": "586324eac678aaa336fe4e7ed44a8f3c",
+          "capture_ip": "::ffff:127.0.0.1",
+          "capture_device": "node",
+          "center_latitude": "0.0000000",
+          "center_longitude": "0.0000000"
+        },
+        {
+          "nonce": "0956f8ce550a48d7880f363ec8e8cd41",
+          "capture_ip": "::ffff:127.0.0.1",
+          "capture_device": "node",
+          "center_latitude": "0.0000000",
+          "center_longitude": "0.0000000"
+        },
+        {
+          "receiver_identifier": "30555444",
+          "blockchain_hash": "25da12a542fd660b482a3a74fdabc35231bae870908a27f3b440e9564d0414ad",
+          "nonce": "14cea4cd177aae240856b4ed2e4882f9",
+          "recipient_commitment": "6c5fa4d4160982dd21a0fec51b7152eb23977184c69b79b64b16be9011173016",
+          "recipient_salt": "a7bd019b5317508d3d0398d386a825b2",
+          "signature_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/w8AAgMBgLJrVN4AAAAASUVORK5CYII=",
+          "signature_mime": "image/png",
+          "signature_hash": "ab61885e77fb525d1506da3c5714f7ee7e7142c43cb7f09cf287801c2102697d",
+          "receipt_payload": {
+            "notes": "Test distribución completa",
+            "center": {
+              "name": "Centro Test Dist",
+              "latitude": "-34.6037220",
+              "longitude": "-58.3815920"
+            },
+            "item_id": 17,
+            "quantity": 1,
+            "item_name": "Alimentos - { - \" - t - e - s - t - \" - : - \" - a - p - i - t - e - s - t - \" - }",
+            "timestamp": "2026-03-27T02:12:29.843Z",
+            "operator_id": 1,
+            "signature_hash": "ab61885e77fb525d1506da3c5714f7ee7e7142c43cb7f09cf287801c2102697d",
+            "assurance_level": "MANUAL_VERIFIED",
+            "distribution_id": 8,
+            "recipient_commitment": "6c5fa4d4160982dd21a0fec51b7152eb23977184c69b79b64b16be9011173016",
+            "identity_capture_method": "manual"
+          },
+          "receipt_hash": "6865864db7c1f099121b887a5d27d2d2d5a32c7a84d7c2394ed9fb32848081da",
+          "blockchain_tx_id": "8d56e01fa5f373a6d10632ca6fd719bfc4405b0b8f9aa8cd1c8efc62b2b2fe4e",
+          "capture_ip": "::ffff:127.0.0.1",
+          "capture_device": "node",
+          "center_latitude": "-34.6037220",
+          "center_longitude": "-58.3815920"
+        },
+        {
+          "nonce": "afaa84625528422b76ea51a383442f6f",
+          "capture_ip": "::ffff:127.0.0.1",
+          "capture_device": "node",
+          "center_latitude": "0.0000000",
+          "center_longitude": "0.0000000"
+        },
+        {
+          "nonce": "2a11507b0af5f2d8ff39812701f62d53",
+          "capture_ip": "::ffff:127.0.0.1",
+          "capture_device": "node",
+          "center_latitude": "0.0000000",
+          "center_longitude": "0.0000000"
+        },
+        {
+          "receiver_identifier": "12345678",
+          "blockchain_hash": "066e7f273bdff1e73d7f0b08214becdaac84259a34446b0ac6f95849ef305c2e",
+          "nonce": "56d641aa9d7ca8ff9af45ddb69df80eb",
+          "recipient_commitment": "2f94d2365805832eff1940c0b4b73eef98cfae21c90666f4ec06d2dfe04dd757",
+          "recipient_salt": "ef06f7f7ff07feb1f4bf8259d94981ef",
+          "signature_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          "signature_mime": "image/png",
+          "signature_hash": "6b7fa434f92a8b80aab02d9bf1a12e49ffcae424e4013a1c4f68b67e3d2bbcd0",
+          "receipt_payload": {
+            "notes": "Entrega test multi-contrato",
+            "center": {
+              "name": "Centro Distribución Sur",
+              "latitude": "-34.6500000",
+              "longitude": "-58.5100000"
+            },
+            "item_id": 18,
+            "quantity": 5,
+            "item_name": "Test Multi-Contrato - alimento - arroz",
+            "timestamp": "2026-03-27T03:56:17.508Z",
+            "operator_id": 1,
+            "signature_hash": "6b7fa434f92a8b80aab02d9bf1a12e49ffcae424e4013a1c4f68b67e3d2bbcd0",
+            "assurance_level": "MANUAL_VERIFIED",
+            "distribution_id": 11,
+            "recipient_commitment": "2f94d2365805832eff1940c0b4b73eef98cfae21c90666f4ec06d2dfe04dd757",
+            "identity_capture_method": "manual"
+          },
+          "receipt_hash": "b043a66eb5f9b17863d04d958d969665084bd505ff45426e510d96c5f8dbe2b7",
+          "blockchain_tx_id": "457b1c1cefc1b5897fa388688bb2ecf7ccece5da33ddc9dec5616eddf508e97c",
+          "capture_ip": "::ffff:127.0.0.1",
+          "capture_device": "node",
+          "center_latitude": "-34.6500000",
+          "center_longitude": "-58.5100000"
+        },
+        {
+          "receiver_identifier": "12345678",
+          "blockchain_hash": "9c93b5d0e7702f7310830965665e553b7b43e8fbf1faa50598f78cbc8d91d8eb",
+          "nonce": "d94fa41fea67760015d8aca54ab75ca3",
+          "recipient_commitment": "a47f046d585eead13b4aca1595e94327d72e2a3ef6d397a8366e10e137ecbb31",
+          "recipient_salt": "9a4aabe2d294045802014320645330b1",
+          "signature_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          "signature_mime": "image/png",
+          "signature_hash": "6b7fa434f92a8b80aab02d9bf1a12e49ffcae424e4013a1c4f68b67e3d2bbcd0",
+          "receipt_payload": {
+            "notes": "Entrega test multi-contrato",
+            "center": {
+              "name": "Centro Distribución Sur",
+              "latitude": "-34.6500000",
+              "longitude": "-58.5100000"
+            },
+            "item_id": 19,
+            "quantity": 5,
+            "item_name": "Test Multi-Contrato - alimento - arroz",
+            "timestamp": "2026-03-27T03:57:33.474Z",
+            "operator_id": 1,
+            "signature_hash": "6b7fa434f92a8b80aab02d9bf1a12e49ffcae424e4013a1c4f68b67e3d2bbcd0",
+            "assurance_level": "MANUAL_VERIFIED",
+            "distribution_id": 12,
+            "recipient_commitment": "a47f046d585eead13b4aca1595e94327d72e2a3ef6d397a8366e10e137ecbb31",
+            "identity_capture_method": "manual"
+          },
+          "receipt_hash": "a20bc8ef55ed99b2f4f49484fb296827d02113fcea88d73623a71cf8b52b46f6",
+          "blockchain_tx_id": "bc5a96cb185f18ebbd9aafc9feefc1e62b6c409e8e4f6d0c5a4c7aab0542eb7a",
+          "capture_ip": "::ffff:127.0.0.1",
+          "capture_device": "node",
+          "center_latitude": "-34.6500000",
+          "center_longitude": "-58.5100000"
+        },
+        {
+          "nonce": "0951adb9ca0d34f0f52c2477c2565a4f",
+          "capture_ip": "::1",
+          "capture_device": "curl/8.5.0",
+          "center_latitude": "-34.6200000",
+          "center_longitude": "-58.4500000"
+        },
+        {
+          "receiver_identifier": "12345678",
+          "blockchain_hash": "db6abc7d7d4b18620382bf78053d02e454c51f35cd9aa1207867bc9f83802b60",
+          "nonce": "4238a838530f429118df12971281f40e",
+          "recipient_commitment": "4999d251314255ba9c88a6e047e7f07fb403db660a37168addab1d98bb588b8b",
+          "recipient_salt": "9837354562fc4cb09c3daefbc6032678",
+          "signature_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          "signature_mime": "image/png",
+          "signature_hash": "6b7fa434f92a8b80aab02d9bf1a12e49ffcae424e4013a1c4f68b67e3d2bbcd0",
+          "receipt_payload": {
+            "notes": "Entrega a beneficiario final - prueba exhaustiva",
+            "center": {
+              "name": "Centro Local Flores",
+              "latitude": "-34.6200000",
+              "longitude": "-58.4500000"
+            },
+            "item_id": 20,
+            "quantity": 5,
+            "item_name": "Alimentos - no_perecedible - TestBrand",
+            "timestamp": "2026-03-27T10:41:11.958Z",
+            "operator_id": 1,
+            "signature_hash": "6b7fa434f92a8b80aab02d9bf1a12e49ffcae424e4013a1c4f68b67e3d2bbcd0",
+            "assurance_level": "MANUAL_VERIFIED",
+            "distribution_id": 14,
+            "recipient_commitment": "4999d251314255ba9c88a6e047e7f07fb403db660a37168addab1d98bb588b8b",
+            "identity_capture_method": "manual"
+          },
+          "receipt_hash": "55b5b88113ced2f09ed2632e26ccca290eb9e8be5234c729840ff5f9f5e61bf7",
+          "blockchain_tx_id": "c1ef70e1585c210f960a4119fb87ee3e5e17d810b4844588288a02b086c8455d",
+          "capture_ip": "::1",
+          "capture_device": "curl/8.5.0",
+          "center_latitude": "-34.6200000",
+          "center_longitude": "-58.4500000"
+        },
+        {
+          "receiver_identifier": "87654321",
+          "blockchain_hash": "25794de7297d605ac70084727b9f47f2445eba732173108b3957c1c1c39a5a69",
+          "nonce": "0a92383bd445cf5d20e9cc06b6a46c55",
+          "recipient_commitment": "611c1c92898a4710e265e7f0b35243771d3c7c6b679d752e2219894908229b25",
+          "recipient_salt": "1583684a0d386880ae84a0a7531753b6",
+          "signature_data": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          "signature_mime": "image/png",
+          "signature_hash": "6b7fa434f92a8b80aab02d9bf1a12e49ffcae424e4013a1c4f68b67e3d2bbcd0",
+          "receipt_payload": {
+            "notes": "Entrega test final",
+            "center": {
+              "name": "Centro de Entrega",
+              "latitude": "-34.6200000",
+              "longitude": "-58.4500000"
+            },
+            "item_id": 21,
+            "quantity": 10,
+            "item_name": "Alimentos - perecedero - TestFinal",
+            "timestamp": "2026-03-27T10:43:26.565Z",
+            "operator_id": 1,
+            "signature_hash": "6b7fa434f92a8b80aab02d9bf1a12e49ffcae424e4013a1c4f68b67e3d2bbcd0",
+            "assurance_level": "MANUAL_VERIFIED",
+            "distribution_id": 15,
+            "recipient_commitment": "611c1c92898a4710e265e7f0b35243771d3c7c6b679d752e2219894908229b25",
+            "identity_capture_method": "manual"
+          },
+          "receipt_hash": "2a2ce3b3c377f02810bb70ee9c4c1f68b731450a7b03f6e7221cc3b5093e1b10",
+          "blockchain_tx_id": "0a7c9937505e635747fe47254c6f19716f1c5c0e95b96acd02b1699637d8eb5c",
+          "capture_ip": "::1",
+          "capture_device": "curl/8.5.0",
+          "center_latitude": "-34.6200000",
+          "center_longitude": "-58.4500000"
+        }
+      ]
+    },
+    "donation_reception_details": {
+      "rowCount": 0,
+      "sensitiveColumns": [],
+      "sensitiveRows": []
+    },
+    "donation_receptions": {
+      "rowCount": 0,
+      "sensitiveColumns": [
+        "public_token_qr",
+        "donor_email",
+        "donor_email_salt",
+        "donor_email_hash",
+        "anchored_tx_id",
+        "anchored_hash"
+      ],
+      "sensitiveRows": []
+    },
+    "donations": {
+      "rowCount": 38,
+      "sensitiveColumns": [
+        "center_latitude",
+        "center_longitude",
+        "center_geo_hash",
+        "blockchain_hash",
+        "blockchain_tx_id"
+      ],
+      "sensitiveRows": [
+        {
+          "center_latitude": "-34.6037220",
+          "center_longitude": "-58.3815920",
+          "center_geo_hash": "907144d84e19b289c7754b122668a6ce2f8714585b6e3b6d75539ae510884a9e"
+        },
+        {
+          "center_latitude": "-34.6037220",
+          "center_longitude": "-58.3815920",
+          "center_geo_hash": "907144d84e19b289c7754b122668a6ce2f8714585b6e3b6d75539ae510884a9e"
+        },
+        {
+          "center_latitude": "-34.6037220",
+          "center_longitude": "-58.3815920",
+          "center_geo_hash": "907144d84e19b289c7754b122668a6ce2f8714585b6e3b6d75539ae510884a9e",
+          "blockchain_hash": "e723995e823c4ed28ef3f75506dd7e0e193c2f34ffb2f9423436919cb2f97629",
+          "blockchain_tx_id": "a8c5ef8f64e9c31c36c0fe17220d73fd1edcddf7de7fc923619355ef564ec49b"
+        },
+        {
+          "center_latitude": "-34.6037220",
+          "center_longitude": "-58.3815920",
+          "center_geo_hash": "907144d84e19b289c7754b122668a6ce2f8714585b6e3b6d75539ae510884a9e",
+          "blockchain_hash": "3b3a95002642e56eaba82f494be42db3abaab3cc9d75ce01fd062512442c1f6e",
+          "blockchain_tx_id": "26064bf39f7bfa5ef80fb860607642f5d171a5dca2945c93a3d2f91ca018755c"
+        },
+        {
+          "center_latitude": "-34.6037220",
+          "center_longitude": "-58.3815920",
+          "center_geo_hash": "907144d84e19b289c7754b122668a6ce2f8714585b6e3b6d75539ae510884a9e",
+          "blockchain_hash": "f260ea134ea0fb0fd525545399ba674fb1ea68047e5c6e814683883b4f48a292",
+          "blockchain_tx_id": "2b83a3cf384f747cb2cd505cb43371ebf6bcf480c677f96362c71bb577ed10ea"
+        },
+        {
+          "center_latitude": "-34.6037220",
+          "center_longitude": "-58.3815920",
+          "center_geo_hash": "407de2ace1f739f4327303ce4a21419aa773fff66b4d96d5949387e89b2b8693",
+          "blockchain_hash": "91683dcfff48b61c1a1c4f458d42146f22250cbfdb32aa9795d32e7e53c89b0e",
+          "blockchain_tx_id": "fd182e5530b798e88bf797dc61cd4aaed9a5b830fe5ce293d6211175472fc73f"
+        },
+        {
+          "center_latitude": "-34.6037220",
+          "center_longitude": "-58.3815920",
+          "center_geo_hash": "407de2ace1f739f4327303ce4a21419aa773fff66b4d96d5949387e89b2b8693",
+          "blockchain_hash": "01a6b7f4a4fd99efec02cb9c22ee8718570455a6b46b65f94b7aaa73c747fa09",
+          "blockchain_tx_id": "0ca45a41ebe40a21703892d8268331327975a9d257c73e8e2beee996f6a2e163"
+        },
+        {
+          "center_latitude": "-34.5708000",
+          "center_longitude": "-58.4370000",
+          "center_geo_hash": "2158ea77d7864a1cca3152dee0439282fea4806148a0379e3ccd92e48f2444da",
+          "blockchain_hash": "873222cb6608dd75c450f26b0450aab4541df0081614d1647c92182b5eef954d",
+          "blockchain_tx_id": "818977f8d48395f285bcd90e0fea8f984828db0b8e80c4950b1482d3f7e07bb3"
+        },
+        {
+          "center_latitude": "-34.5708000",
+          "center_longitude": "-58.4370000",
+          "center_geo_hash": "2158ea77d7864a1cca3152dee0439282fea4806148a0379e3ccd92e48f2444da",
+          "blockchain_hash": "6293858593040deb487245b7cbd012662fcc062e657f88386c5dd9da5e3c2ab8",
+          "blockchain_tx_id": "412c23c53f080235a05e5f3cd07a89df8ac601383ac82dc7851367db1bdb5694"
+        },
+        {
+          "center_latitude": "-34.6037000",
+          "center_longitude": "-58.3816000",
+          "center_geo_hash": "837ad02911c7f32ee93fede711d713b2cf8e271bc9a1eb6db64f789fe45ed033",
+          "blockchain_hash": "61dced91dbd27e5685078e305ca9f69bf1e66353dfe7f671c73d2e39736f9057",
+          "blockchain_tx_id": "c96459570ece060c67a6e49a57976e65991809bf88ef6a122e9447bc9266e778"
+        },
+        {
+          "center_latitude": "-34.6037000",
+          "center_longitude": "-58.3816000",
+          "center_geo_hash": "837ad02911c7f32ee93fede711d713b2cf8e271bc9a1eb6db64f789fe45ed033",
+          "blockchain_hash": "5edbd60cc7043db786e4198d77b0f424384c65ed3cdef77931a428553ecd904d",
+          "blockchain_tx_id": "8a57f93dd38c409060fb02666214b6b3c37b0225f2bc8ae620b7df93d8884409"
+        },
+        {
+          "center_latitude": "-34.6037000",
+          "center_longitude": "-58.3816000",
+          "center_geo_hash": "837ad02911c7f32ee93fede711d713b2cf8e271bc9a1eb6db64f789fe45ed033",
+          "blockchain_hash": "027897a3a04094fc8c564bfea2afd9c0fcc7d3d27bf8e4d020f6c53a3961a4cf",
+          "blockchain_tx_id": "d70d2ae1966d6391346020e8cadefbe607a0d0d8a60cd05248d7e86c99906328"
+        },
+        {
+          "center_latitude": "-34.6037000",
+          "center_longitude": "-58.3816000",
+          "center_geo_hash": "80725f728bc74029fc7dd0f616aa060b2db90eb9cd9f88f7ff05e6cadd101e40",
+          "blockchain_hash": "2b18b0129c52f38d2c71b7d509e5d872b7743a635b104035730670761d25c71e",
+          "blockchain_tx_id": "5a315d2eebbb2c291e121e5f430ab46a1cd538caa1d3dbf445fc5b9be4a122ed"
+        },
+        {
+          "center_latitude": "-34.6037000",
+          "center_longitude": "-58.3816000",
+          "center_geo_hash": "9ac2e5faf1c42ab129e963e522176b0a4eb24ba6635b8906e811f612e4afbe0b",
+          "blockchain_hash": "9ceda0f16d317eeb02f1adc3cb21e60c3c3718f1171157f16ec0fdbc2a3bed88",
+          "blockchain_tx_id": "76fa20bfed5258c668ef0b5c3372cc31f147dc67971d4b41b07797bbcb8a7142"
+        },
+        {
+          "center_latitude": "-34.6037000",
+          "center_longitude": "-58.3816000",
+          "center_geo_hash": "9ac2e5faf1c42ab129e963e522176b0a4eb24ba6635b8906e811f612e4afbe0b",
+          "blockchain_hash": "4d413489faa850c915f05519b2b53be96971f380447204a2781ae221fb7aed3b",
+          "blockchain_tx_id": "2ee1898c538e8933835ac4e125b0f5ccb288868e897e06c0973d82570db109b8"
+        },
+        {
+          "center_latitude": "-34.6037000",
+          "center_longitude": "-58.3816000",
+          "center_geo_hash": "9ac2e5faf1c42ab129e963e522176b0a4eb24ba6635b8906e811f612e4afbe0b",
+          "blockchain_hash": "70a1973dfa84f974abddc85ffab0483468d4aa5f7859958308b7f0ecc3ce5223",
+          "blockchain_tx_id": "129b8ce9b6defb7422aa236d364265b92e5155ba82f8cf086d2e5d82abc912b0"
+        },
+        {
+          "center_latitude": "-34.6037000",
+          "center_longitude": "-58.3816000",
+          "center_geo_hash": "b71cbc62d33e5a5ca4d651ba0efa66367b82ff729a334c356b7614cf01b61bec",
+          "blockchain_hash": "5832f50c7924cea27af44a0c984f8abf06754432a4c67effbace1cf820ed3ac8",
+          "blockchain_tx_id": "3cab2312fbd5bd6bf5d1f6fb39fce7f52ddd3e9d2d99e27e136c68515b321d87"
+        },
+        {
+          "center_latitude": "-34.6037000",
+          "center_longitude": "-58.3816000",
+          "center_geo_hash": "802304bf33b5ccb5e412aaf1cc4bfc6eb6d59cf2cb42dd258a5cd20ea755376a",
+          "blockchain_hash": "7cec68cd102a9cd3347ef02e9a8c915809fc9341742313f251aadb459cba3d0f",
+          "blockchain_tx_id": "21b626bf4d52aa6b0b483ff6896f0555877bf9f939d6b1e8b7ad0a7fd3eb66e1"
+        },
+        {
+          "center_latitude": "-34.6037000",
+          "center_longitude": "-58.3816000",
+          "center_geo_hash": "922d855f91ccc5cd7a6d317147e577967d2654ab03e2cf1ef6a67d3be520d9ed",
+          "blockchain_hash": "0d4153293fc0da8cbfe63f75059692ab15b0bc9f32723b871dd5c80ea798fb49",
+          "blockchain_tx_id": "4382647aaf0f99bfc6132d1a71ec84e579e661ac7d6bbe3db6baab627ea7bd53"
+        },
+        {
+          "center_latitude": "-34.6037000",
+          "center_longitude": "-58.3816000",
+          "center_geo_hash": "0539316abbb58fd155d1fd53634e9475ab08ad87ef6d3213e5f9f51eea1c3a34",
+          "blockchain_hash": "9b19bb0ee737f58bcf03d1d0eb0c3e17c22893d148c6b36da81b61192a38f6d3",
+          "blockchain_tx_id": "d63afdced0d618e23eea2a106aaa9cfc4cd5c44fb1cab1d1988ef1534ae3e085"
+        },
+        {
+          "center_latitude": "-34.6037000",
+          "center_longitude": "-58.3816000",
+          "center_geo_hash": "4f0e496acbeb958774b4ab0b53f898b3d90c7c4dbf39b90be480d8321013d133",
+          "blockchain_hash": "e31f1366ebee1771950674765c6ea192d01c4215ee37f2ec69c0ff22937b6d87",
+          "blockchain_tx_id": "12de90ddbfbdce4d74cca77f7eb420581b846b5eee04a6f7ee8a8ea695b547bf"
+        }
+      ]
+    },
+    "items": {
+      "rowCount": 27,
+      "sensitiveColumns": [
+        "blockchain_hash",
+        "blockchain_tx_id",
+        "token_status"
+      ],
+      "sensitiveRows": [
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "pending"
+        },
+        {
+          "token_status": "failed"
+        },
+        {
+          "blockchain_hash": "dac7d9b9457c308b2ea185c05a46ff43d20a6d9aed9f941dd88d1143ae114e29",
+          "blockchain_tx_id": "9c46cee5fd00dda0ba7b41def9203b73523a593c596c58d18a7a01f3f059e699",
+          "token_status": "minted"
+        },
+        {
+          "blockchain_hash": "f260ea134ea0fb0fd525545399ba674fb1ea68047e5c6e814683883b4f48a292",
+          "blockchain_tx_id": "2b83a3cf384f747cb2cd505cb43371ebf6bcf480c677f96362c71bb577ed10ea",
+          "token_status": "minted"
+        },
+        {
+          "blockchain_hash": "01a6b7f4a4fd99efec02cb9c22ee8718570455a6b46b65f94b7aaa73c747fa09",
+          "blockchain_tx_id": "0ca45a41ebe40a21703892d8268331327975a9d257c73e8e2beee996f6a2e163",
+          "token_status": "minted"
+        },
+        {
+          "blockchain_hash": "873222cb6608dd75c450f26b0450aab4541df0081614d1647c92182b5eef954d",
+          "blockchain_tx_id": "818977f8d48395f285bcd90e0fea8f984828db0b8e80c4950b1482d3f7e07bb3",
+          "token_status": "minted"
+        },
+        {
+          "blockchain_hash": "6293858593040deb487245b7cbd012662fcc062e657f88386c5dd9da5e3c2ab8",
+          "blockchain_tx_id": "412c23c53f080235a05e5f3cd07a89df8ac601383ac82dc7851367db1bdb5694",
+          "token_status": "minted"
+        },
+        {
+          "blockchain_hash": "027897a3a04094fc8c564bfea2afd9c0fcc7d3d27bf8e4d020f6c53a3961a4cf",
+          "blockchain_tx_id": "d70d2ae1966d6391346020e8cadefbe607a0d0d8a60cd05248d7e86c99906328",
+          "token_status": "minted"
+        },
+        {
+          "blockchain_hash": "2b18b0129c52f38d2c71b7d509e5d872b7743a635b104035730670761d25c71e",
+          "blockchain_tx_id": "5a315d2eebbb2c291e121e5f430ab46a1cd538caa1d3dbf445fc5b9be4a122ed",
+          "token_status": "minted"
+        },
+        {
+          "blockchain_hash": "70a1973dfa84f974abddc85ffab0483468d4aa5f7859958308b7f0ecc3ce5223",
+          "blockchain_tx_id": "129b8ce9b6defb7422aa236d364265b92e5155ba82f8cf086d2e5d82abc912b0",
+          "token_status": "minted"
+        },
+        {
+          "blockchain_hash": "5832f50c7924cea27af44a0c984f8abf06754432a4c67effbace1cf820ed3ac8",
+          "blockchain_tx_id": "3cab2312fbd5bd6bf5d1f6fb39fce7f52ddd3e9d2d99e27e136c68515b321d87",
+          "token_status": "minted"
+        },
+        {
+          "blockchain_hash": "7cec68cd102a9cd3347ef02e9a8c915809fc9341742313f251aadb459cba3d0f",
+          "blockchain_tx_id": "21b626bf4d52aa6b0b483ff6896f0555877bf9f939d6b1e8b7ad0a7fd3eb66e1",
+          "token_status": "minted"
+        },
+        {
+          "blockchain_hash": "0d4153293fc0da8cbfe63f75059692ab15b0bc9f32723b871dd5c80ea798fb49",
+          "blockchain_tx_id": "4382647aaf0f99bfc6132d1a71ec84e579e661ac7d6bbe3db6baab627ea7bd53",
+          "token_status": "minted"
+        },
+        {
+          "blockchain_hash": "9b19bb0ee737f58bcf03d1d0eb0c3e17c22893d148c6b36da81b61192a38f6d3",
+          "blockchain_tx_id": "d63afdced0d618e23eea2a106aaa9cfc4cd5c44fb1cab1d1988ef1534ae3e085",
+          "token_status": "minted"
+        },
+        {
+          "blockchain_hash": "e31f1366ebee1771950674765c6ea192d01c4215ee37f2ec69c0ff22937b6d87",
+          "blockchain_tx_id": "12de90ddbfbdce4d74cca77f7eb420581b846b5eee04a6f7ee8a8ea695b547bf",
+          "token_status": "minted"
+        }
+      ]
+    },
+    "token_transfers": {
+      "rowCount": 12,
+      "sensitiveColumns": [
+        "egreso_blockchain_hash",
+        "egreso_blockchain_tx",
+        "ingreso_blockchain_hash",
+        "ingreso_blockchain_tx"
+      ],
+      "sensitiveRows": [
+        {
+          "egreso_blockchain_hash": "a29a85648b1eb03b736f7ed75db66403fa136ea423891efbbce11d7f317a0cac",
+          "egreso_blockchain_tx": "55c4129577ffd577719db84bae2f7b7b97e9d54274feec47562d86ac452a0083",
+          "ingreso_blockchain_hash": "ca0e4c3278fcf9d4211de21d67b8486c9cd48a8349c872867b5c30080533a93e",
+          "ingreso_blockchain_tx": "6477e0b3586d1d27e0d92c58f6bcd1895b3afbc5b7a9c0fd3fbb6589b37d9eda"
+        },
+        {
+          "egreso_blockchain_hash": "b9853c85c77a59bb95fc0eb25c4f5f34e3fe608f8e532009ccc12ea4426b2170",
+          "egreso_blockchain_tx": "87ba059f0fe324c2d28a120a92b90497d7fff703fdb4bcf59d617ea63c7c8efe",
+          "ingreso_blockchain_hash": "36c7207b285fb2869cff051e4ee690837a2e19198d14536435c48c65f62b58be",
+          "ingreso_blockchain_tx": "93fb547f2b4093acf59bbf4a585556499d821ada523cf9789627a796c5314169"
+        }
+      ]
+    },
+    "users": {
+      "rowCount": 1,
+      "sensitiveColumns": [
+        "email",
+        "password_hash"
+      ],
+      "sensitiveRows": [
+        {
+          "email": "admin@acciondelsur.org",
+          "password_hash": "$2b$10$vMhcNV5BlBbB39CgHY3BaOj5mATm5e.VDeAJRE47WpLZf1vyWeWem"
+        }
+      ]
+    }
+  }
+}

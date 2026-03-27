@@ -1,7 +1,6 @@
 const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 const { Donation, Item, Category, User, sequelize } = require('../models');
-const stellarService = require('../services/blockchain/stellarService');
 const { buildCenterGeoHash } = require('../utils/cryptoEvidence');
 
 exports.create = async (req, res, next) => {
@@ -84,34 +83,9 @@ exports.create = async (req, res, next) => {
 
     await t.commit();
 
-    // Blockchain (graceful degradation) — persiste hash si el minteo tiene éxito
-    try {
-      const blockchainResult = await stellarService.mintDonationToken({
-        item,
-        donation,
-        center_name,
-        center_latitude,
-        center_longitude,
-        center_geo_hash: centerGeoHash,
-      });
-      if (blockchainResult?.hash) {
-        await item.update({
-          blockchain_hash: blockchainResult.hash,
-          blockchain_tx_id: blockchainResult.txId,
-          token_status: 'minted',
-        });
-
-        await donation.update({
-          blockchain_hash: blockchainResult.hash,
-          blockchain_tx_id: blockchainResult.txId,
-          status: 'anchored',
-        });
-      }
-    } catch (blockchainError) {
-      console.error('[Stellar] Error en minteo:', blockchainError.message);
-      await item.update({ token_status: 'failed' }).catch(() => {});
-      await donation.update({ status: 'failed' }).catch(() => {});
-    }
+    // El minteo del token ocurre en donationReceptionController.finalizeInternal,
+    // cuando el ítem es físicamente recibido y contado. Aquí solo registramos la intención.
+    await donation.update({ status: 'anchored' });
 
     const result = await Donation.findByPk(donation.id, {
       include: [

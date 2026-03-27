@@ -22,6 +22,7 @@ const tableColumnDefinitions = {
     center_name: 'VARCHAR(120) NULL',
     center_latitude: 'DECIMAL(10,7) NULL',
     center_longitude: 'DECIMAL(10,7) NULL',
+    center_id: 'INT NULL',
   },
   donations: {
     center_name: 'VARCHAR(120) NULL',
@@ -31,6 +32,10 @@ const tableColumnDefinitions = {
     blockchain_hash: 'VARCHAR(255) NULL',
     blockchain_tx_id: 'VARCHAR(255) NULL',
     status: "ENUM('pending','anchored','failed') NOT NULL DEFAULT 'pending'",
+    center_id: 'INT NULL',
+  },
+  items: {
+    current_center_id: 'INT NULL',
   },
 };
 
@@ -106,6 +111,53 @@ const ensureDonationReceptionTables = async () => {
   `);
 };
 
+const ensureCenterTables = async () => {
+  await sequelize.query(`
+    CREATE TABLE IF NOT EXISTS centers (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      name VARCHAR(120) NOT NULL,
+      latitude DECIMAL(10,7) NOT NULL,
+      longitude DECIMAL(10,7) NOT NULL,
+      geo_hash VARCHAR(64) NULL,
+      blockchain_contract_id VARCHAR(255) NULL,
+      blockchain_deploy_tx VARCHAR(255) NULL,
+      blockchain_init_tx VARCHAR(255) NULL,
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      created_by INT NOT NULL,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME NULL,
+      INDEX idx_center_active (is_active),
+      INDEX idx_center_contract (blockchain_contract_id),
+      CONSTRAINT fk_center_created_by FOREIGN KEY (created_by) REFERENCES users(id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  await sequelize.query(`
+    CREATE TABLE IF NOT EXISTS token_transfers (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      item_id INT NOT NULL,
+      from_center_id INT NOT NULL,
+      to_center_id INT NOT NULL,
+      quantity INT NOT NULL,
+      reason VARCHAR(500) NULL,
+      egreso_blockchain_hash VARCHAR(255) NULL,
+      egreso_blockchain_tx VARCHAR(255) NULL,
+      ingreso_blockchain_hash VARCHAR(255) NULL,
+      ingreso_blockchain_tx VARCHAR(255) NULL,
+      status ENUM('pending','anchored','failed') NOT NULL DEFAULT 'pending',
+      transferred_by INT NOT NULL,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_transfer_item (item_id),
+      INDEX idx_transfer_from (from_center_id),
+      INDEX idx_transfer_to (to_center_id),
+      CONSTRAINT fk_transfer_item FOREIGN KEY (item_id) REFERENCES items(id),
+      CONSTRAINT fk_transfer_from FOREIGN KEY (from_center_id) REFERENCES centers(id),
+      CONSTRAINT fk_transfer_to FOREIGN KEY (to_center_id) REFERENCES centers(id),
+      CONSTRAINT fk_transfer_by FOREIGN KEY (transferred_by) REFERENCES users(id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+};
+
 const ensureColumnNullable = async (table, column) => {
   const [rows] = await sequelize.query(
     `SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column`,
@@ -124,7 +176,6 @@ const ensureColumnNullable = async (table, column) => {
 const ensureSchema = async () => {
   for (const [table, columns] of Object.entries(tableColumnDefinitions)) {
     for (const [column, definition] of Object.entries(columns)) {
-      // eslint-disable-next-line no-await-in-loop
       await ensureColumn(table, column, definition);
     }
   }
@@ -132,6 +183,7 @@ const ensureSchema = async () => {
   await ensureColumnNullable('distributions', 'receiver_identifier');
   await ensureAuditAccessLogTable();
   await ensureDonationReceptionTables();
+  await ensureCenterTables();
 };
 
 module.exports = { ensureSchema };
