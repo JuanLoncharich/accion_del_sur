@@ -10,6 +10,8 @@ import NuevaDistribucion from './pages/NuevaDistribucion';
 import Distribuciones from './pages/Distribuciones';
 import AdminCategorias from './pages/AdminCategorias';
 import AdminUsuarios from './pages/AdminUsuarios';
+import RecepcionesDonaciones from './pages/RecepcionesDonaciones';
+import ConfirmacionDonacionQR from './pages/ConfirmacionDonacionQR';
 
 const PrivateRoute = ({ children, adminOnly = false }) => {
   const { user } = useAuth();
@@ -28,9 +30,11 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/confirmacion-donacion/:token" element={<ConfirmacionDonacionQR />} />
 
       <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/donaciones/nueva" element={<PrivateRoute><NuevaDonacion /></PrivateRoute>} />
+      <Route path="/donaciones/recepciones" element={<PrivateRoute><RecepcionesDonaciones /></PrivateRoute>} />
       <Route path="/inventario" element={<PrivateRoute><Inventario /></PrivateRoute>} />
       <Route path="/distribuciones/nueva" element={<PrivateRoute><NuevaDistribucion /></PrivateRoute>} />
       <Route path="/distribuciones" element={<PrivateRoute><Distribuciones /></PrivateRoute>} />

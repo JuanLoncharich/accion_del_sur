@@ -13,11 +13,13 @@ import {
   Users,
   X,
   Boxes,
+  QrCode,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { to: '/donaciones/nueva', label: 'Registrar Donación', icon: Gift },
+  { to: '/donaciones/recepciones', label: 'Recepciones con QR', icon: QrCode },
   { to: '/inventario', label: 'Inventario', icon: Boxes },
   { to: '/distribuciones/nueva', label: 'Distribuir', icon: Handshake },
   { to: '/distribuciones', label: 'Historial Distribuciones', icon: ClipboardList },

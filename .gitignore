@@ -1,4 +1,25 @@
+# Dependencies
+node_modules/
 package-lock.json
-backend/.env
-frontend/node_modules
-backend/node_modules
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Rust build artifacts
+**/target/
+**/*.wasm
+**/*.rlib
+**/*.rmeta
+**/*.d
+**/*.a
+
+# Frontend build artifacts
+frontend/dist/assets/
+!frontend/dist/.gitkeep
+
+# Misc
+*.log
+*.bak
+*.txt

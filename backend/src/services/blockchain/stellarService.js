@@ -224,6 +224,50 @@ class StellarService {
     return { verified: result.returnValue === true };
   }
 
+  async anchorDonationReception({
+    receptionId,
+    donorEmailHash,
+    anchorHash,
+    signatureHash,
+    operatorId,
+    itemId = 1,
+    totalAcceptedQuantity = 0,
+    centerLat = -34.6037,
+    centerLng = -58.3816,
+  }) {
+    if (!this.isEnabled) {
+      return { hash: null, txId: null, status: 'pending' };
+    }
+
+    if (!this.contractId) {
+      return { hash: null, txId: null, status: 'pending' };
+    }
+
+    const args = [
+      StellarSdk.nativeToScVal(Number(receptionId), { type: 'u64' }),
+      StellarSdk.nativeToScVal(Number(itemId), { type: 'u64' }),
+      StellarSdk.nativeToScVal(Number(totalAcceptedQuantity), { type: 'u64' }),
+      this._hexToBytesScVal(donorEmailHash),
+      this._hexToBytesScVal(signatureHash),
+      this._hexToBytesScVal(anchorHash),
+      StellarSdk.nativeToScVal(Number(operatorId), { type: 'u64' }),
+      StellarSdk.nativeToScVal('DONATION_RECEPTION', { type: 'string' }),
+      StellarSdk.nativeToScVal(this._scaleCoordinate(centerLat), { type: 'i64' }),
+      StellarSdk.nativeToScVal(this._scaleCoordinate(centerLng), { type: 'i64' }),
+    ];
+
+    const result = await this._invocarContrato('registrar_entrega_verificada', args);
+    return { hash: result.hash, txId: result.txId, status: 'anchored' };
+  }
+
+  async verifyDonationReceptionAnchor({ receptionId, signatureHash, anchorHash }) {
+    if (!this.isEnabled || !this.contractId) {
+      return { verified: false, reason: 'Blockchain no habilitada' };
+    }
+
+    return this.verifyDeliveryHashes(receptionId, signatureHash, anchorHash);
+  }
+
   /**
    * Verifica si un ítem tiene token registrado en el contrato.
    *
