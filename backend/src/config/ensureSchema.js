@@ -65,6 +65,47 @@ const ensureAuditAccessLogTable = async () => {
   `);
 };
 
+const ensureDonationReceptionTables = async () => {
+  await sequelize.query(`
+    CREATE TABLE IF NOT EXISTS donation_receptions (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      public_token_qr VARCHAR(128) NOT NULL UNIQUE,
+      donor_email VARCHAR(255) NOT NULL,
+      donor_email_salt VARCHAR(64) NOT NULL,
+      donor_email_hash VARCHAR(64) NOT NULL,
+      status ENUM('processing', 'completed', 'partially_rejected', 'rejected', 'failed_anchor') NOT NULL DEFAULT 'processing',
+      rejection_reason TEXT NULL,
+      anchored_tx_id VARCHAR(255) NULL,
+      anchored_hash VARCHAR(64) NULL,
+      created_by INT NOT NULL,
+      finalized_by INT NULL,
+      finalized_at DATETIME NULL,
+      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      INDEX idx_reception_status (status),
+      INDEX idx_reception_public_token (public_token_qr),
+      INDEX idx_reception_created_by (created_by),
+      CONSTRAINT fk_reception_created_by FOREIGN KEY (created_by) REFERENCES users(id),
+      CONSTRAINT fk_reception_finalized_by FOREIGN KEY (finalized_by) REFERENCES users(id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  await sequelize.query(`
+    CREATE TABLE IF NOT EXISTS donation_reception_details (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      reception_id INT NOT NULL,
+      item_id INT NOT NULL,
+      quantity_received INT NOT NULL,
+      quantity_accepted INT NOT NULL,
+      quantity_rejected INT NOT NULL DEFAULT 0,
+      rejection_reason_item TEXT NULL,
+      INDEX idx_detail_reception (reception_id),
+      INDEX idx_detail_item (item_id),
+      CONSTRAINT fk_detail_reception FOREIGN KEY (reception_id) REFERENCES donation_receptions(id),
+      CONSTRAINT fk_detail_item FOREIGN KEY (item_id) REFERENCES items(id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+};
+
 const ensureColumnNullable = async (table, column) => {
   const [rows] = await sequelize.query(
     `SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column`,
@@ -90,6 +131,7 @@ const ensureSchema = async () => {
 
   await ensureColumnNullable('distributions', 'receiver_identifier');
   await ensureAuditAccessLogTable();
+  await ensureDonationReceptionTables();
 };
 
 module.exports = { ensureSchema };

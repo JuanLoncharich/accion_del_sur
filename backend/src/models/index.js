@@ -6,6 +6,8 @@ const Item = require('./Item');
 const Donation = require('./Donation');
 const Distribution = require('./Distribution');
 const AuditAccessLog = require('./AuditAccessLog');
+const DonationReception = require('./DonationReception');
+const DonationReceptionDetail = require('./DonationReceptionDetail');
 
 // Category <-> CategoryAttribute
 Category.hasMany(CategoryAttribute, { foreignKey: 'category_id', as: 'attributes' });
@@ -31,6 +33,18 @@ Donation.belongsTo(User, { foreignKey: 'registered_by', as: 'registeredBy' });
 User.hasMany(Distribution, { foreignKey: 'registered_by', as: 'distributions' });
 Distribution.belongsTo(User, { foreignKey: 'registered_by', as: 'registeredBy' });
 
+User.hasMany(DonationReception, { foreignKey: 'created_by', as: 'createdReceptions' });
+DonationReception.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
+
+User.hasMany(DonationReception, { foreignKey: 'finalized_by', as: 'finalizedReceptions' });
+DonationReception.belongsTo(User, { foreignKey: 'finalized_by', as: 'finalizedBy' });
+
+DonationReception.hasMany(DonationReceptionDetail, { foreignKey: 'reception_id', as: 'details' });
+DonationReceptionDetail.belongsTo(DonationReception, { foreignKey: 'reception_id', as: 'reception' });
+
+Item.hasMany(DonationReceptionDetail, { foreignKey: 'item_id', as: 'receptionDetails' });
+DonationReceptionDetail.belongsTo(Item, { foreignKey: 'item_id', as: 'item' });
+
 Distribution.hasMany(AuditAccessLog, { foreignKey: 'distribution_id', as: 'auditAccessLogs' });
 AuditAccessLog.belongsTo(Distribution, { foreignKey: 'distribution_id', as: 'distribution' });
 
@@ -46,4 +60,6 @@ module.exports = {
   Donation,
   Distribution,
   AuditAccessLog,
+  DonationReception,
+  DonationReceptionDetail,
 };

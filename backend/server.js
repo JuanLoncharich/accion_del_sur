@@ -15,6 +15,7 @@ const distributionRoutes = require('./src/routes/distributions');
 const auditRoutes = require('./src/routes/audit');
 const userRoutes = require('./src/routes/users');
 const dashboardRoutes = require('./src/routes/dashboard');
+const donationReceptionRoutes = require('./src/routes/donationReceptions');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -41,6 +42,7 @@ app.use('/api/distributions', distributionRoutes);
 app.use('/api/audit', auditRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/donation-receptions', donationReceptionRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));

@@ -1,1 +1,0 @@
-/home/shared/proyecto_cgic/accion-del-sur/backend/src/services/blockchain/contrato_donaciones/target/wasm32-unknown-unknown/release/contrato_donaciones.wasm: /home/shared/proyecto_cgic/accion-del-sur/backend/src/services/blockchain/contrato_donaciones/src/lib.rs

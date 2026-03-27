@@ -5,6 +5,7 @@ const sha256Hex = (input) => crypto.createHash('sha256').update(input).digest('h
 const generateSaltHex = (bytes = 16) => crypto.randomBytes(bytes).toString('hex');
 
 const normalizeDoc = (value) => (value || '').toString().trim().toUpperCase();
+const normalizeEmail = (value) => (value || '').toString().trim().toLowerCase();
 
 const buildRecipientCommitment = ({ docType, docNumber, salt, distributionId }) => {
   const payload = [
@@ -64,13 +65,60 @@ const buildCenterGeoHash = ({ centerName, latitude, longitude }) => {
   return sha256Hex(payload);
 };
 
+const buildDonorEmailCommitment = ({ email, salt, receptionId }) => {
+  const payload = [
+    salt,
+    normalizeEmail(email),
+    String(receptionId),
+  ].join('||');
+
+  return sha256Hex(payload);
+};
+
+const buildReceptionAnchorHash = ({
+  receptionId,
+  donorEmailHash,
+  status,
+  details,
+  rejectionReason,
+}) => {
+  const normalizedDetails = (details || []).map((detail) => ({
+    item_id: Number(detail.item_id),
+    quantity_accepted: Number(detail.quantity_accepted || 0),
+    quantity_received: Number(detail.quantity_received || 0),
+    quantity_rejected: Number(detail.quantity_rejected || 0),
+    rejection_reason_item: detail.rejection_reason_item || null,
+  }));
+
+  return sha256Hex(buildCanonicalReceipt({
+    reception_id: receptionId,
+    donor_email_hash: donorEmailHash,
+    status,
+    rejection_reason: rejectionReason || null,
+    details: normalizedDetails,
+  }));
+};
+
+const buildReceptionSignatureHash = ({ receptionId, donorEmailHash, anchorHash }) => {
+  return sha256Hex([
+    'RECEPTION_V1',
+    String(receptionId),
+    donorEmailHash,
+    anchorHash,
+  ].join('||'));
+};
+
 module.exports = {
   sha256Hex,
   generateSaltHex,
+  normalizeEmail,
   buildRecipientCommitment,
   normalizeSignatureBinary,
   buildSignatureHash,
   buildCanonicalReceipt,
   buildReceiptHash,
   buildCenterGeoHash,
+  buildDonorEmailCommitment,
+  buildReceptionAnchorHash,
+  buildReceptionSignatureHash,
 };
