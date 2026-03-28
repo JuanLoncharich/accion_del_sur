@@ -49,6 +49,14 @@ const FLOW_STEPS = [
   { title: 'Llega y se confirma', description: 'La entrega se marca como completada y queda guardada para siempre como una huella digital.', icon: Home },
 ];
 
+const DEFAULT_INTERNAL_TX_FEE_STROOPS = 100000;
+const ESTIMATED_BLOCKCHAIN_ACTIONS_PER_DONATION = 3; // recepción (mint) + entrega verificada + burn final
+const ESTIMATION_UNITS = 1000;
+const STROOPS_PER_XLM = 10000000;
+const ESTIMATED_UNIT_FLOW_STROOPS = DEFAULT_INTERNAL_TX_FEE_STROOPS * ESTIMATED_BLOCKCHAIN_ACTIONS_PER_DONATION;
+const ESTIMATED_TOTAL_STROOPS = ESTIMATED_UNIT_FLOW_STROOPS * ESTIMATION_UNITS;
+const ESTIMATED_TOTAL_XLM = ESTIMATED_TOTAL_STROOPS / STROOPS_PER_XLM;
+
 const buildHeroSlides = (summary) => HERO_TEMPLATES.map((slide) => ({
   ...slide,
   tag: slide.tag(summary),
@@ -319,6 +327,25 @@ function DonationJourney() {
         <p className="text-xl text-[#2E4053]/60 mt-3 max-w-xl font-bold">
           Un recorrido simple, de principio a fin, visible para cualquier persona.
         </p>
+
+        <div className="mt-8 rounded-2xl border border-[#E34E26]/20 bg-white/90 p-5 sm:p-6 shadow-sm">
+          <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-[#E34E26]">Estimación de costo blockchain</p>
+          <h3 className="mt-2 text-2xl font-black text-[#1B2631]">
+            Donar {ESTIMATION_UNITS.toLocaleString('es-AR')} unidades (recepción → donación final)
+          </h3>
+          <p className="mt-2 text-base sm:text-lg text-[#2E4053]/70 font-semibold">
+            Acciones estimadas: {ESTIMATED_BLOCKCHAIN_ACTIONS_PER_DONATION} transacciones on-chain
+            {' '}× {ESTIMATION_UNITS.toLocaleString('es-AR')} unidades
+            {' '}× {DEFAULT_INTERNAL_TX_FEE_STROOPS.toLocaleString('es-AR')} stroops por transacción estimada.
+          </p>
+          <p className="mt-3 text-3xl sm:text-4xl font-black text-[#E34E26] tabular-nums">
+            ≈ {ESTIMATED_TOTAL_XLM.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} XLM
+          </p>
+          <p className="mt-2 text-sm sm:text-base text-[#1B2631]/55 font-semibold">
+            Referencia interna usada: 1 mint en recepción + 1 anclaje de entrega + 1 burn de distribución por unidad.
+            Si el sistema procesa operaciones por lote, el costo real puede ser menor.
+          </p>
+        </div>
 
         {/* ═══ DESKTOP: Alternating Winding Timeline ═══ */}
         <div className="hidden md:block mt-20 relative">
