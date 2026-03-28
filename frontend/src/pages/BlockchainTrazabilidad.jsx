@@ -49,6 +49,11 @@ const FLOW_STEPS = [
   { title: 'Llega y se confirma', description: 'La entrega se marca como completada y queda guardada para siempre como una huella digital.', icon: Home },
 ];
 
+const DEFAULT_STELLAR_TX_FEE_STROOPS = 100000;
+const ESTIMATED_BLOCKCHAIN_ACTIONS_PER_DONATION = 3; // recepción (mint) + entrega verificada + burn final
+const ESTIMATION_UNITS = 1000;
+const STROOPS_PER_XLM = 10000000;
+
 const buildHeroSlides = (summary) => HERO_TEMPLATES.map((slide) => ({
   ...slide,
   tag: slide.tag(summary),
@@ -279,6 +284,8 @@ function SectionLabel({ children }) {
 function DonationJourney() {
   const sectionRef = useRef(null);
   const [visibleSteps, setVisibleSteps] = useState(new Set());
+  const estimatedTotalStroops = DEFAULT_STELLAR_TX_FEE_STROOPS * ESTIMATED_BLOCKCHAIN_ACTIONS_PER_DONATION;
+  const estimatedTotalXlm = estimatedTotalStroops / STROOPS_PER_XLM;
 
   useEffect(() => {
     const cards = sectionRef.current?.querySelectorAll('[data-step]');
@@ -319,6 +326,23 @@ function DonationJourney() {
         <p className="text-xl text-[#2E4053]/60 mt-3 max-w-xl font-bold">
           Un recorrido simple, de principio a fin, visible para cualquier persona.
         </p>
+
+        <div className="mt-8 rounded-2xl border border-[#E34E26]/20 bg-white/90 p-5 sm:p-6 shadow-sm">
+          <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-[#E34E26]">Estimación de precio blockchain</p>
+          <h3 className="mt-2 text-2xl font-black text-[#1B2631]">
+            Donar {ESTIMATION_UNITS.toLocaleString('es-AR')} unidades (recepción → donación final)
+          </h3>
+          <p className="mt-2 text-base sm:text-lg text-[#2E4053]/70 font-semibold">
+            Acciones estimadas: {ESTIMATED_BLOCKCHAIN_ACTIONS_PER_DONATION} transacciones on-chain
+            {' '}× {DEFAULT_STELLAR_TX_FEE_STROOPS.toLocaleString('es-AR')} stroops c/u.
+          </p>
+          <p className="mt-3 text-3xl sm:text-4xl font-black text-[#E34E26] tabular-nums">
+            ≈ {estimatedTotalXlm.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} XLM
+          </p>
+          <p className="mt-2 text-sm sm:text-base text-[#1B2631]/55 font-semibold">
+            Referencia interna usada: 1 mint en recepción + 1 anclaje de entrega + 1 burn de distribución.
+          </p>
+        </div>
 
         {/* ═══ DESKTOP: Alternating Winding Timeline ═══ */}
         <div className="hidden md:block mt-20 relative">
