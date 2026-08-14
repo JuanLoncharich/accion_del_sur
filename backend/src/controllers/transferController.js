@@ -1,248 +1,119 @@
 const crypto = require('crypto');
-const { TokenTransfer, Center, Item, Category, User, sequelize } = require('../models');
+const { TokenTransfer, Item, Center, Category, User, sequelize } = require('../models');
 const sftService = require('../services/blockchain/sftService');
 
-const isSftEnabled = () =>
-  process.env.STELLAR_ENABLED === 'true' && Boolean(process.env.SOROBAN_CONTRACT_SFT);
+const include = [
+  { model: Item, as: 'item', include: [{ model: Category, as: 'category' }] },
+  { model: Center, as: 'fromCenter' },
+  { model: Center, as: 'toCenter' },
+  { model: User, as: 'transferredBy', attributes: ['id', 'email'] },
+];
 
-const isValidTokenIdHex = (value) => /^[a-f0-9]{64}$/i.test(String(value || '').trim());
-
-const resolveTokenIdFromItem = (item) => {
-  if (isValidTokenIdHex(item?.blockchain_hash)) {
-    return String(item.blockchain_hash).trim().toLowerCase();
-  }
-  return sftService.computeTokenId(item.id);
-};
-
-exports.create = async (req, res, next) => {
-  try {
-    const { item_id, from_center_id, to_center_id, quantity, reason } = req.body;
-
-    if (!item_id || !from_center_id || !to_center_id) {
-      return res.status(400).json({ error: 'Se requiere item_id, from_center_id y to_center_id' });
-    }
-    if (from_center_id === to_center_id) {
-      return res.status(400).json({ error: 'Origen y destino no pueden ser iguales' });
-    }
-
-    // ── 1. Validaciones previas al blockchain ─────────────────────────────────
-    const [fromCenter, toCenter, item] = await Promise.all([
-      Center.findByPk(from_center_id),
-      Center.findByPk(to_center_id),
-      Item.findByPk(item_id),
-    ]);
-
-    if (!fromCenter || !fromCenter.is_active) {
-      return res.status(404).json({ error: 'Centro origen no encontrado o inactivo' });
-    }
-    if (!toCenter || !toCenter.is_active) {
-      return res.status(404).json({ error: 'Centro destino no encontrado o inactivo' });
-    }
-    if (!item || !item.is_active) {
-      return res.status(404).json({ error: 'Ítem no encontrado' });
-    }
-    if (isSftEnabled() && item.token_status !== 'minted') {
-      return res.status(409).json({
-        error: 'El ítem todavía no está tokenizado. Finalizá primero la recepción QR para mintear en blockchain.',
-      });
-    }
-    if (item.current_center_id !== from_center_id) {
-      return res.status(409).json({
-        error: `El ítem no está en el centro origen. Centro actual: ${item.current_center_id}`,
-      });
-    }
-
-    const transferQty = quantity == null ? 1 : Number(quantity);
-
-    if (!Number.isInteger(transferQty) || transferQty <= 0 || transferQty > item.quantity) {
-      return res.status(400).json({
-        error: `Cantidad inválida. Disponible: ${item.quantity}, solicitado: ${transferQty}`,
-      });
-    }
-
-    if (isSftEnabled()) {
-      if (!fromCenter.blockchain_contract_id) {
-        return res.status(400).json({
-          error: `El centro origen "${fromCenter.name}" no tiene contrato blockchain`,
-        });
-      }
-      if (!toCenter.blockchain_contract_id) {
-        return res.status(400).json({
-          error: `El centro destino "${toCenter.name}" no tiene contrato blockchain`,
-        });
-      }
-    }
-
-    // ── 2. Blockchain primero (SFT transfer) ──────────────────────────────────
-    let transferResult = null;
-    if (isSftEnabled()) {
-      const tokenId = resolveTokenIdFromItem(item);
-      const motivoHash = crypto.createHash('sha256')
-        .update(reason || `Transferencia ${fromCenter.name} → ${toCenter.name}`)
-        .digest('hex');
-
-      try {
-        transferResult = await sftService.transferBetweenCenters({
-          fromAddress: fromCenter.blockchain_contract_id,
-          toAddress: toCenter.blockchain_contract_id,
-          tokenId,
-          cantidad: transferQty,
-          motivoHash,
-        });
-      } catch (blockchainError) {
-        console.error('[SFT] Error en transfer:', blockchainError.message);
-        return res.status(503).json({
-          error: 'Error al registrar en blockchain. La transferencia no fue procesada.',
-          detail: blockchainError.message,
-        });
-      }
-    }
-
-    // ── 3. MySQL (solo si blockchain confirmó) ────────────────────────────────
-    const t = await sequelize.transaction();
-    try {
-      const itemLocked = await Item.findByPk(item_id, {
-        transaction: t,
-        lock: t.LOCK.UPDATE,
-      });
-
-      if (itemLocked.current_center_id !== from_center_id) {
-        await t.rollback();
-        return res.status(409).json({ error: 'El ítem cambió de ubicación durante la operación' });
-      }
-
-      if (transferQty > itemLocked.quantity) {
-        await t.rollback();
-        return res.status(409).json({ error: 'Stock cambió durante la operación. Reintentá.' });
-      }
-
-      const transfer = await TokenTransfer.create({
-        item_id,
-        from_center_id,
-        to_center_id,
-        quantity: transferQty,
-        reason: reason || null,
-        status: 'anchored',
-        transferred_by: req.user.id,
-        egreso_blockchain_hash: transferResult?.hash || null,
-        egreso_blockchain_tx: transferResult?.txId || null,
-        ingreso_blockchain_hash: transferResult?.hash || null,
-        ingreso_blockchain_tx: transferResult?.txId || null,
-      }, { transaction: t });
-
-      if (transferQty === itemLocked.quantity) {
-        await itemLocked.update({ current_center_id: to_center_id }, { transaction: t });
-      } else {
-        const destinationLot = await Item.findOne({
-          where: {
-            is_active: true,
-            current_center_id: to_center_id,
-            blockchain_hash: itemLocked.blockchain_hash,
-            token_status: itemLocked.token_status,
-            category_id: itemLocked.category_id,
-          },
-          transaction: t,
-          lock: t.LOCK.UPDATE,
-        });
-
-        await itemLocked.update(
-          { quantity: itemLocked.quantity - transferQty },
-          { transaction: t }
-        );
-
-        if (destinationLot) {
-          await destinationLot.update(
-            { quantity: destinationLot.quantity + transferQty },
-            { transaction: t }
-          );
-        } else {
-          await Item.create({
-            category_id: itemLocked.category_id,
-            name: itemLocked.name,
-            quantity: transferQty,
-            attributes: itemLocked.attributes,
-            image_url: itemLocked.image_url,
-            blockchain_hash: itemLocked.blockchain_hash,
-            blockchain_tx_id: itemLocked.blockchain_tx_id,
-            token_status: itemLocked.token_status,
-            current_center_id: to_center_id,
-            is_active: true,
-          }, { transaction: t });
-        }
-      }
-
-      await t.commit();
-
-      const result = await TokenTransfer.findByPk(transfer.id, {
-        include: [
-          { model: Item, as: 'item', include: [{ model: Category, as: 'category' }] },
-          { model: Center, as: 'fromCenter' },
-          { model: Center, as: 'toCenter' },
-          { model: User, as: 'transferredBy', attributes: ['id', 'username'] },
-        ],
-      });
-
-      return res.status(201).json(result);
-    } catch (dbError) {
-      await t.rollback();
-      throw dbError;
-    }
-  } catch (error) {
-    next(error);
-  }
-};
-
+// GET /api/transfers
 exports.list = async (req, res, next) => {
   try {
-    const { item_id, center_id, page = 1, limit = 20 } = req.query;
-    const offset = (page - 1) * limit;
-
-    const where = {};
-    if (item_id) where.item_id = item_id;
-    if (center_id) {
-      const { Op } = require('sequelize');
-      where[Op.or] = [
-        { from_center_id: center_id },
-        { to_center_id: center_id },
-      ];
-    }
-
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Number(req.query.limit) || 20, 500);
     const { count, rows } = await TokenTransfer.findAndCountAll({
-      where,
-      include: [
-        { model: Item, as: 'item', include: [{ model: Category, as: 'category' }] },
-        { model: Center, as: 'fromCenter' },
-        { model: Center, as: 'toCenter' },
-        { model: User, as: 'transferredBy', attributes: ['id', 'username'] },
-      ],
-      order: [['created_at', 'DESC']],
-      limit: parseInt(limit),
-      offset: parseInt(offset),
+      include, order: [['created_at', 'DESC']], limit, offset: (page - 1) * limit,
     });
-
-    res.json({ total: count, page: parseInt(page), data: rows });
-  } catch (error) {
-    next(error);
-  }
+    const data = rows.map((t) => {
+      const base = t.toJSON();
+      return {
+        ...base,
+        item_name: base.item && base.item.name,
+        from_center_name: base.fromCenter && base.fromCenter.name,
+        to_center_name: base.toCenter && base.toCenter.name,
+        created_at: base.created_at,
+      };
+    });
+    res.json({ total: count, page, data });
+  } catch (error) { next(error); }
 };
 
+// GET /api/transfers/:id
 exports.getById = async (req, res, next) => {
   try {
-    const transfer = await TokenTransfer.findByPk(req.params.id, {
-      include: [
-        { model: Item, as: 'item', include: [{ model: Category, as: 'category' }] },
-        { model: Center, as: 'fromCenter' },
-        { model: Center, as: 'toCenter' },
-        { model: User, as: 'transferredBy', attributes: ['id', 'username'] },
-      ],
-    });
+    const transfer = await TokenTransfer.findByPk(req.params.id, { include });
+    if (!transfer) return res.status(404).json({ error: 'Transferencia no encontrada' });
+    res.json(transfer);
+  } catch (error) { next(error); }
+};
 
-    if (!transfer) {
-      return res.status(404).json({ error: 'Transferencia no encontrada' });
+// POST /api/transfers  { item_id, from_center_id, to_center_id, quantity, reason }
+exports.create = async (req, res, next) => {
+  const t = await sequelize.transaction();
+  try {
+    const { item_id, from_center_id, to_center_id, quantity, reason } = req.body;
+    if (!item_id || !from_center_id || !to_center_id) {
+      await t.rollback(); return res.status(400).json({ error: 'Se requiere item_id, from_center_id y to_center_id' });
+    }
+    if (Number(from_center_id) === Number(to_center_id)) {
+      await t.rollback(); return res.status(400).json({ error: 'Origen y destino no pueden ser iguales' });
+    }
+    const qty = Number(quantity);
+    if (!Number.isInteger(qty) || qty < 1) {
+      await t.rollback(); return res.status(400).json({ error: 'Cantidad inválida' });
     }
 
-    res.json(transfer);
+    const fromCenter = await Center.findByPk(from_center_id, { transaction: t });
+    const toCenter = await Center.findByPk(to_center_id, { transaction: t });
+    if (!fromCenter || !toCenter) { await t.rollback(); return res.status(404).json({ error: 'Centro no encontrado' }); }
+
+    const item = await Item.findByPk(item_id, { transaction: t, lock: t.LOCK.UPDATE });
+    if (!item) { await t.rollback(); return res.status(404).json({ error: 'Item no encontrado' }); }
+    if (item.current_center_id !== Number(from_center_id)) {
+      await t.rollback();
+      return res.status(409).json({ error: `El item no está en el centro origen (centro actual: ${item.current_center_id})` });
+    }
+    if (Number(item.available_quantity) < qty) {
+      await t.rollback(); return res.status(409).json({ error: `Stock insuficiente. Disponible: ${item.available_quantity}` });
+    }
+
+    const tokenId = item.token_id || sftService.computeTokenId(item.id);
+    const transfer = await TokenTransfer.create({
+      item_id, from_center_id, to_center_id, quantity: qty,
+      reason: reason || null, status: 'pending', transferred_by: req.user.id, token_id: tokenId,
+    }, { transaction: t });
+
+    // Mover la ubicación del insumo al centro destino.
+    item.current_center_id = Number(to_center_id);
+    await item.save({ transaction: t });
+
+    await t.commit();
+
+    // Blockchain SFT transfer (degradación graceful).
+    await tryBlockchainTransfer(transfer, fromCenter, toCenter, qty, reason);
+
+    const result = await TokenTransfer.findByPk(transfer.id, { include });
+    res.status(201).json(result);
   } catch (error) {
+    if (t && !t.finished) await t.rollback();
     next(error);
   }
 };
+
+async function tryBlockchainTransfer(transfer, fromCenter, toCenter, qty, reason) {
+  try {
+    if (!sftService.isEnabled) return; // sin blockchain → queda 'pending' en local
+    if (!fromCenter.blockchain_contract_id || !toCenter.blockchain_contract_id) return; // Fase 5
+    const motivoHash = crypto.createHash('sha256').update(reason || `transfer-${transfer.id}`).digest('hex');
+    const r = await sftService.transferBetweenCenters({
+      fromAddress: fromCenter.blockchain_contract_id,
+      toAddress: toCenter.blockchain_contract_id,
+      tokenId: transfer.token_id,
+      cantidad: qty,
+      motivoHash,
+    });
+    transfer.egreso_blockchain_hash = r.hash;
+    transfer.egreso_blockchain_tx = r.txId;
+    transfer.ingreso_blockchain_hash = r.hash;
+    transfer.ingreso_blockchain_tx = r.txId;
+    transfer.status = 'anchored';
+    await transfer.save();
+  } catch (error) {
+    console.error('[Transfer] blockchain error (queda en local):', error.message);
+    transfer.status = 'local';
+    await transfer.save().catch(() => {});
+  }
+}

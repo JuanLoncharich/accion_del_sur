@@ -1,174 +1,64 @@
 const { Op } = require('sequelize');
-const crypto = require('crypto');
-const { Item, Category, Donation, Distribution, Center, sequelize } = require('../models');
-const sftService = require('../services/blockchain/sftService');
+const { Item, Category } = require('../models');
 
-const isSftEnabled = () =>
-  process.env.STELLAR_ENABLED === 'true' && Boolean(process.env.SOROBAN_CONTRACT_SFT);
-
-const isValidTokenIdHex = (value) => /^[a-f0-9]{64}$/i.test(String(value || '').trim());
-
-const resolveTokenIdFromItem = (item) => {
-  if (isValidTokenIdHex(item?.blockchain_hash)) {
-    return String(item.blockchain_hash).trim().toLowerCase();
-  }
-  return sftService.computeTokenId(item.id);
-};
+const serialize = (item) => ({
+  ...item.toJSON(),
+  quantity: item.available_quantity,
+  is_active: item.is_active === false ? false : true,
+  token_status: item.token_id ? 'minted' : 'pending',
+  attributes: null,
+  category: item.category,
+});
+const include = [{ model: Category, as: 'category' }];
 
 exports.list = async (req, res, next) => {
   try {
-    const { page = 1, limit = 20, category_id, search } = req.query;
-    const offset = (page - 1) * limit;
-
-    const where = { is_active: true };
-    if (category_id) where.category_id = category_id;
-    if (search) where.name = { [Op.like]: `%${search}%` };
-
-    const { count, rows } = await Item.findAndCountAll({
-      where,
-      include: [{ model: Category, as: 'category' }],
-      order: [['updated_at', 'DESC']],
-      limit: parseInt(limit),
-      offset: parseInt(offset),
-    });
-
-    res.json({ total: count, page: parseInt(page), data: rows });
-  } catch (error) {
-    next(error);
-  }
+    const page = Math.max(Number(req.query.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 500);
+    const where = {};
+    if (req.query.search) where.name = { [Op.like]: `%${req.query.search}%` };
+    if (req.query.category_id) where.category_id = req.query.category_id;
+    const { count, rows } = await Item.findAndCountAll({ where, include, order: [['name', 'ASC']], limit, offset: (page - 1) * limit });
+    res.json({ total: count, page, data: rows.map(serialize) });
+  } catch (error) { next(error); }
 };
-
 exports.getOne = async (req, res, next) => {
   try {
-    const item = await Item.findByPk(req.params.id, {
-      include: [
-        { model: Category, as: 'category' },
-        { model: Donation, as: 'donations', limit: 10, order: [['created_at', 'DESC']] },
-        { model: Distribution, as: 'distributions', limit: 10, order: [['created_at', 'DESC']] },
-      ],
-    });
-
-    if (!item || !item.is_active) return res.status(404).json({ error: 'Ítem no encontrado' });
-
-    res.json(item);
-  } catch (error) {
-    next(error);
-  }
+    const item = await Item.findByPk(req.params.id, { include });
+    return item ? res.json(serialize(item)) : res.status(404).json({ error: 'Insumo no encontrado' });
+  } catch (error) { return next(error); }
 };
-
 exports.update = async (req, res, next) => {
-  const t = await sequelize.transaction();
   try {
-    const item = await Item.findByPk(req.params.id, { transaction: t });
-    if (!item || !item.is_active) {
-      await t.rollback();
-      return res.status(404).json({ error: 'Ítem no encontrado' });
-    }
-
-    // Verificar si se está actualizando el centro
-    const newCenterId = req.body.current_center_id;
-    const oldCenterId = item.current_center_id;
-
-    // Actualizar el item
-    await item.update(req.body, { transaction: t });
-
-    // Si el centro cambió, intentar reflejar movimiento en SFT si aplica.
-    if (newCenterId && newCenterId !== oldCenterId && isSftEnabled()) {
-      try {
-        const [fromCenter, toCenter] = await Promise.all([
-          oldCenterId ? Center.findByPk(oldCenterId, { transaction: t }) : Promise.resolve(null),
-          Center.findByPk(newCenterId, { transaction: t }),
-        ]);
-
-        const canTransferOnChain =
-          oldCenterId
-          && fromCenter?.is_active
-          && toCenter?.is_active
-          && fromCenter?.blockchain_contract_id
-          && toCenter?.blockchain_contract_id
-          && item.token_status === 'minted'
-          && Number(item.quantity) > 0;
-
-        if (canTransferOnChain) {
-          await sftService.transferBetweenCenters({
-            fromAddress: fromCenter.blockchain_contract_id,
-            toAddress: toCenter.blockchain_contract_id,
-            tokenId: resolveTokenIdFromItem(item),
-            cantidad: Number(item.quantity),
-            motivoHash: crypto.createHash('sha256')
-              .update(`item.update center ${oldCenterId} -> ${newCenterId} (${new Date().toISOString()})`)
-              .digest('hex'),
-          });
-        }
-      } catch (blockchainError) {
-        console.error('[Item] Error reflejando cambio de centro en SFT:', blockchainError.message);
-        // Graceful degradation: no revertimos cambios en MySQL por error on-chain.
-      }
-    }
-
-    await t.commit();
-
-    // Recargar el item actualizado para devolverlo
-    const updatedItem = await Item.findByPk(req.params.id, {
-      include: [{ model: Category, as: 'category' }],
-    });
-
-    res.json(updatedItem);
-  } catch (error) {
-    if (!t.finished) await t.rollback();
-    next(error);
-  }
+    const item = await Item.findByPk(req.params.id);
+    if (!item) return res.status(404).json({ error: 'Insumo no encontrado' });
+    const updates = {};
+    if (req.body.name !== undefined) updates.name = req.body.name;
+    if (req.body.category_id !== undefined) updates.category_id = req.body.category_id;
+    if (req.body.available_quantity !== undefined || req.body.quantity !== undefined) updates.available_quantity = Number(req.body.available_quantity ?? req.body.quantity);
+    await item.update(updates);
+    return res.json(serialize(await Item.findByPk(item.id, { include })));
+  } catch (error) { return next(error); }
 };
-
 exports.deactivate = async (req, res, next) => {
   try {
     const item = await Item.findByPk(req.params.id);
-    if (!item) return res.status(404).json({ error: 'Ítem no encontrado' });
-
-    await item.update({ is_active: false });
-    res.json({ message: 'Ítem eliminado' });
-  } catch (error) {
-    next(error);
-  }
+    if (!item) return res.status(404).json({ error: 'Insumo no encontrado' });
+    await item.destroy(); return res.json({ message: 'Insumo eliminado' });
+  } catch (error) { return next(error); }
 };
-
-exports.exportCSV = async (req, res, next) => {
-  try {
-    const items = await Item.findAll({
-      where: { is_active: true },
-      include: [{ model: Category, as: 'category' }],
-      order: [['category_id', 'ASC'], ['name', 'ASC']],
-    });
-
-    const header = 'ID,Categoría,Nombre,Cantidad,Estado Blockchain,Última Actualización\n';
-    const rows = items.map((item) => {
-      const attrs = item.attributes ? JSON.stringify(item.attributes).replace(/"/g, '""') : '';
-      return `${item.id},"${item.category?.name || ''}","${item.name}",${item.quantity},${item.token_status},"${item.updated_at}"`;
-    });
-
-    const csv = header + rows.join('\n');
-
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename="inventario.csv"');
-    res.send('\ufeff' + csv); // BOM para Excel con UTF-8
-  } catch (error) {
-    next(error);
-  }
-};
-
 exports.stockByCategory = async (req, res, next) => {
   try {
-    const result = await sequelize.query(
-      `SELECT c.name as category, SUM(i.quantity) as total
-       FROM items i
-       JOIN categories c ON i.category_id = c.id
-       WHERE i.is_active = 1 AND c.is_active = 1
-       GROUP BY c.id, c.name
-       ORDER BY total DESC`,
-      { type: sequelize.constructor.QueryTypes.SELECT }
-    );
-    res.json(result);
-  } catch (error) {
-    next(error);
-  }
+    const items = await Item.findAll({ include });
+    const totals = new Map();
+    for (const item of items) totals.set(item.category?.name || 'Sin categoría', (totals.get(item.category?.name || 'Sin categoría') || 0) + Number(item.available_quantity));
+    res.json(Array.from(totals, ([category, total]) => ({ category, total })));
+  } catch (error) { next(error); }
+};
+exports.exportCSV = async (req, res, next) => {
+  try {
+    const items = await Item.findAll({ include });
+    const lines = ['id,categoria,nombre,cantidad', ...items.map((i) => `${i.id},"${i.category?.name || ''}","${i.name}",${i.available_quantity}`)];
+    res.type('text/csv').send(lines.join('\n'));
+  } catch (error) { next(error); }
 };

@@ -6,5 +6,4 @@ module.exports = sequelize.define('Donacion', {
   date: { type: DataTypes.DATEONLY, allowNull: false },
   donor_id: { type: DataTypes.INTEGER, allowNull: false },
   registered_by: { type: DataTypes.INTEGER, allowNull: false },
-  status: { type: DataTypes.STRING(40), allowNull: false, defaultValue: 'confirmada' },
 }, { tableName: 'donaciones', timestamps: false });

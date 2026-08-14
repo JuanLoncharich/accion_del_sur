@@ -1,193 +1,70 @@
 const { sequelize } = require('../models');
+const { QueryTypes } = require('sequelize');
 
-const tableColumnDefinitions = {
-  distributions: {
-    status: "ENUM('draft','identified','signed','pending_anchor','anchored','failed') NOT NULL DEFAULT 'draft'",
-    nonce: 'VARCHAR(120) NULL',
-    expires_at: 'DATETIME NULL',
-    identity_capture_method: "ENUM('manual') NULL",
-    assurance_level: "ENUM('MANUAL_VERIFIED') NULL",
-    recipient_commitment: 'VARCHAR(64) NULL',
-    recipient_salt: 'VARCHAR(128) NULL',
-    signature_data: 'LONGTEXT NULL',
-    signature_mime: 'VARCHAR(100) NULL',
-    signature_hash: 'VARCHAR(64) NULL',
-    receipt_payload: 'JSON NULL',
-    receipt_hash: 'VARCHAR(64) NULL',
-    blockchain_tx_id: 'VARCHAR(255) NULL',
-    finalized_at: 'DATETIME NULL',
-    capture_terminal: 'VARCHAR(120) NULL',
-    capture_ip: 'VARCHAR(120) NULL',
-    capture_device: 'VARCHAR(255) NULL',
-    center_name: 'VARCHAR(120) NULL',
-    center_latitude: 'DECIMAL(10,7) NULL',
-    center_longitude: 'DECIMAL(10,7) NULL',
-    center_id: 'INT NULL',
-  },
-  donations: {
-    center_name: 'VARCHAR(120) NULL',
-    center_latitude: 'DECIMAL(10,7) NULL',
-    center_longitude: 'DECIMAL(10,7) NULL',
-    center_geo_hash: 'VARCHAR(64) NULL',
-    donor_email: 'VARCHAR(255) NULL',
-    donation_reception_id: 'INT NULL',
-    blockchain_hash: 'VARCHAR(255) NULL',
-    blockchain_tx_id: 'VARCHAR(255) NULL',
-    status: "ENUM('pending','anchored','failed') NOT NULL DEFAULT 'pending'",
-    center_id: 'INT NULL',
-  },
-  items: {
-    current_center_id: 'INT NULL',
-  },
-};
+/**
+ * ensureSchema.js
+ *
+ * - sequelize.sync({ alter: false }) crea las tablas NUEVAS (transfers, recepciones,
+ *   recepciones_detalles) con CREATE TABLE IF NOT EXISTS, pero NO modifica tablas existentes.
+ * - Para añadir columnas a tablas existentes (insumos, centros_recepcion, donaciones,
+ *   donaciones_insumos) usamos ALTER TABLE idempotente: se comprueba information_schema
+ *   antes, y se ignora el error "Duplicate column" por si dos instancias backend corren a la vez.
+ * - Los backfills dejan datos históricos coherentes (is_active=1, current_center_id por defecto).
+ */
 
-const ensureColumn = async (table, column, definition) => {
-  const [rows] = await sequelize.query(`SHOW COLUMNS FROM ${table} LIKE :column`, {
-    replacements: { column },
-  });
-
-  if (rows.length === 0) {
-    await sequelize.query(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
-    console.log(`[DB] Columna agregada: ${table}.${column}`);
-  }
-};
-
-const ensureAuditAccessLogTable = async () => {
-  await sequelize.query(`
-    CREATE TABLE IF NOT EXISTS audit_access_log (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      distribution_id INT NOT NULL,
-      access_type ENUM('public','internal') NOT NULL,
-      accessed_by INT NULL,
-      purpose VARCHAR(255) NULL,
-      requester_ip VARCHAR(120) NULL,
-      requester_device VARCHAR(255) NULL,
-      external_reference VARCHAR(255) NULL,
-      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      INDEX idx_audit_distribution (distribution_id),
-      INDEX idx_audit_accessed_by (accessed_by),
-      CONSTRAINT fk_audit_distribution FOREIGN KEY (distribution_id) REFERENCES distributions(id),
-      CONSTRAINT fk_audit_accessed_by FOREIGN KEY (accessed_by) REFERENCES users(id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  `);
-};
-
-const ensureDonationReceptionTables = async () => {
-  await sequelize.query(`
-    CREATE TABLE IF NOT EXISTS donation_receptions (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      public_token_qr VARCHAR(128) NOT NULL UNIQUE,
-      donor_email VARCHAR(255) NOT NULL,
-      donor_email_salt VARCHAR(64) NOT NULL,
-      donor_email_hash VARCHAR(64) NOT NULL,
-      status ENUM('processing', 'completed', 'partially_rejected', 'rejected', 'failed_anchor') NOT NULL DEFAULT 'processing',
-      rejection_reason TEXT NULL,
-      anchored_tx_id VARCHAR(255) NULL,
-      anchored_hash VARCHAR(64) NULL,
-      created_by INT NOT NULL,
-      finalized_by INT NULL,
-      finalized_at DATETIME NULL,
-      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      INDEX idx_reception_status (status),
-      INDEX idx_reception_public_token (public_token_qr),
-      INDEX idx_reception_created_by (created_by),
-      CONSTRAINT fk_reception_created_by FOREIGN KEY (created_by) REFERENCES users(id),
-      CONSTRAINT fk_reception_finalized_by FOREIGN KEY (finalized_by) REFERENCES users(id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  `);
-
-  await sequelize.query(`
-    CREATE TABLE IF NOT EXISTS donation_reception_details (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      reception_id INT NOT NULL,
-      item_id INT NOT NULL,
-      quantity_received INT NOT NULL,
-      quantity_accepted INT NOT NULL,
-      quantity_rejected INT NOT NULL DEFAULT 0,
-      rejection_reason_item TEXT NULL,
-      INDEX idx_detail_reception (reception_id),
-      INDEX idx_detail_item (item_id),
-      CONSTRAINT fk_detail_reception FOREIGN KEY (reception_id) REFERENCES donation_receptions(id),
-      CONSTRAINT fk_detail_item FOREIGN KEY (item_id) REFERENCES items(id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  `);
-};
-
-const ensureCenterTables = async () => {
-  await sequelize.query(`
-    CREATE TABLE IF NOT EXISTS centers (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      name VARCHAR(120) NOT NULL,
-      latitude DECIMAL(10,7) NULL,
-      longitude DECIMAL(10,7) NULL,
-      geo_hash VARCHAR(64) NULL,
-      blockchain_contract_id VARCHAR(255) NULL,
-      blockchain_deploy_tx VARCHAR(255) NULL,
-      blockchain_init_tx VARCHAR(255) NULL,
-      is_active BOOLEAN NOT NULL DEFAULT TRUE,
-      created_by INT NOT NULL,
-      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME NULL,
-      INDEX idx_center_active (is_active),
-      INDEX idx_center_contract (blockchain_contract_id),
-      CONSTRAINT fk_center_created_by FOREIGN KEY (created_by) REFERENCES users(id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  `);
-
-  await sequelize.query(`
-    CREATE TABLE IF NOT EXISTS token_transfers (
-      id INT AUTO_INCREMENT PRIMARY KEY,
-      item_id INT NOT NULL,
-      from_center_id INT NOT NULL,
-      to_center_id INT NOT NULL,
-      quantity INT NOT NULL,
-      reason VARCHAR(500) NULL,
-      egreso_blockchain_hash VARCHAR(255) NULL,
-      egreso_blockchain_tx VARCHAR(255) NULL,
-      ingreso_blockchain_hash VARCHAR(255) NULL,
-      ingreso_blockchain_tx VARCHAR(255) NULL,
-      status ENUM('pending','anchored','failed') NOT NULL DEFAULT 'pending',
-      transferred_by INT NOT NULL,
-      created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      INDEX idx_transfer_item (item_id),
-      INDEX idx_transfer_from (from_center_id),
-      INDEX idx_transfer_to (to_center_id),
-      CONSTRAINT fk_transfer_item FOREIGN KEY (item_id) REFERENCES items(id),
-      CONSTRAINT fk_transfer_from FOREIGN KEY (from_center_id) REFERENCES centers(id),
-      CONSTRAINT fk_transfer_to FOREIGN KEY (to_center_id) REFERENCES centers(id),
-      CONSTRAINT fk_transfer_by FOREIGN KEY (transferred_by) REFERENCES users(id)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
-  `);
-};
-
-const ensureColumnNullable = async (table, column) => {
-  const [rows] = await sequelize.query(
-    `SELECT IS_NULLABLE FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table AND COLUMN_NAME = :column`,
-    { replacements: { table, column } }
+const hasColumn = async (tableName, columnName) => {
+  const rows = await sequelize.query(
+    `SELECT COLUMN_NAME FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+    { replacements: [tableName, columnName], type: QueryTypes.SELECT }
   );
-  if (rows.length > 0 && rows[0].IS_NULLABLE === 'NO') {
-    const [colDef] = await sequelize.query(`SHOW COLUMNS FROM ${table} LIKE :column`, { replacements: { column } });
-    if (colDef.length > 0) {
-      const type = colDef[0].Type;
-      await sequelize.query(`ALTER TABLE ${table} MODIFY COLUMN ${column} ${type} NULL`);
-      console.log(`[DB] Columna hecha nullable: ${table}.${column}`);
-    }
+  return Array.isArray(rows) && rows.length > 0;
+};
+
+const addColumnIfMissing = async (tableName, columnName, columnDef) => {
+  if (await hasColumn(tableName, columnName)) return false;
+  try {
+    await sequelize.query(`ALTER TABLE \`${tableName}\` ADD COLUMN ${columnDef}`);
+    console.log(`[DB] Columna añadida: ${tableName}.${columnName}`);
+    return true;
+  } catch (error) {
+    if (/Duplicate column/i.test(error.message || '')) return false;
+    throw error;
   }
+};
+
+const runMigrations = async () => {
+  // insumos
+  await addColumnIfMissing('insumos', 'current_center_id', '`current_center_id` INT NULL');
+  await addColumnIfMissing('insumos', 'is_active', '`is_active` TINYINT(1) NOT NULL DEFAULT 1');
+  await addColumnIfMissing('insumos', 'token_id', '`token_id` VARCHAR(64) NULL');
+  await addColumnIfMissing('insumos', 'attributes_hash', '`attributes_hash` VARCHAR(64) NULL');
+
+  // centros_recepcion
+  await addColumnIfMissing('centros_recepcion', 'is_active', '`is_active` TINYINT(1) NOT NULL DEFAULT 1');
+  await addColumnIfMissing('centros_recepcion', 'blockchain_contract_id', '`blockchain_contract_id` VARCHAR(120) NULL');
+
+  // donaciones_insumos
+  await addColumnIfMissing('donaciones_insumos', 'quantity', '`quantity` INT NOT NULL DEFAULT 1');
+
+  // donaciones
+  await addColumnIfMissing('donaciones', 'status', "`status` VARCHAR(40) NOT NULL DEFAULT 'confirmada'");
+
+  // Backfills (solo actualizan NULLs / incoherencias; nunca sobrescriben datos válidos).
+  await sequelize.query('UPDATE insumos SET is_active = 1 WHERE is_active IS NULL');
+  await sequelize.query('UPDATE centros_recepcion SET is_active = 1 WHERE is_active IS NULL');
+  await sequelize.query(
+    'UPDATE donaciones_insumos SET quantity = 1 WHERE quantity IS NULL OR quantity < 1'
+  );
+  // Ítems sin centro asignado → se asignan al primer centro para que sean transferibles.
+  await sequelize.query(
+    'UPDATE insumos SET current_center_id = (SELECT MIN(id) FROM centros_recepcion) WHERE current_center_id IS NULL'
+  );
 };
 
 const ensureSchema = async () => {
-  for (const [table, columns] of Object.entries(tableColumnDefinitions)) {
-    for (const [column, definition] of Object.entries(columns)) {
-      await ensureColumn(table, column, definition);
-    }
-  }
-
-  await ensureColumnNullable('distributions', 'receiver_identifier');
-  await ensureColumnNullable('centers', 'latitude');
-  await ensureColumnNullable('centers', 'longitude');
-  await ensureAuditAccessLogTable();
-  await ensureDonationReceptionTables();
-  await ensureCenterTables();
+  await sequelize.sync({ alter: false });
+  await runMigrations();
 };
 
-module.exports = { ensureSchema };
+module.exports = { ensureSchema, addColumnIfMissing, hasColumn };

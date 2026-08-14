@@ -6,6 +6,7 @@ const centerController = require('../controllers/centerController');
 router.get('/', authenticate, centerController.list);
 router.get('/:id', authenticate, centerController.getById);
 router.post('/', authenticate, centerController.create);
+router.put('/:id', authenticate, centerController.update);
 router.delete('/:id', authenticate, centerController.deactivate);
 router.get('/:id/inventory', authenticate, centerController.getInventory);
 

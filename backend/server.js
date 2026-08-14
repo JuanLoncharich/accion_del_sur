@@ -20,6 +20,7 @@ const centerRoutes = require('./src/routes/centers');
 const transferRoutes = require('./src/routes/transfers');
 const llmRoutes = require('./src/routes/llm');
 const landingRoutes = require('./src/routes/landing');
+const donorRoutes = require('./src/routes/donors');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -51,6 +52,7 @@ app.use('/api/centers', centerRoutes);
 app.use('/api/transfers', transferRoutes);
 app.use('/api/llm', llmRoutes);
 app.use('/api/landing', landingRoutes);
+app.use('/api/donors', donorRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));

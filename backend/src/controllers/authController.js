@@ -2,76 +2,36 @@ const jwt = require('jsonwebtoken');
 const { validationResult } = require('express-validator');
 const { User } = require('../models');
 
-const generateToken = (user) => {
-  return jwt.sign(
-    { id: user.id, username: user.username, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  );
-};
+const publicUser = ({ id, email, role }) => ({ id, email, role });
+const generateToken = (user) => jwt.sign(
+  { id: user.id, email: user.email, role: user.role },
+  process.env.JWT_SECRET,
+  { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+);
 
 exports.login = async (req, res, next) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: 'Datos inválidos', details: errors.array() });
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Datos inválidos', details: errors.array() });
+    const { password } = req.body;
+    const identifier = req.body.email || req.body.username;
+    const email = identifier === 'admin' ? 'admin@acciondelsur.org' : identifier;
+    const user = await User.findOne({ where: { email } });
+    if (!user || !(await user.iniciarSesion(password))) {
+      return res.status(401).json({ error: 'Email o contraseña incorrectos' });
     }
-
-    const { username, password } = req.body;
-
-    const user = await User.findOne({
-      where: { username },
-    });
-
-    if (!user || !(await user.validatePassword(password))) {
-      return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
-    }
-
-    const token = generateToken(user);
-
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
+    return res.json({ token: generateToken(user), user: publicUser(user) });
+  } catch (error) { return next(error); }
 };
 
-exports.me = async (req, res) => {
-  res.json({
-    id: req.user.id,
-    username: req.user.username,
-    email: req.user.email,
-    role: req.user.role,
-  });
-};
+exports.me = (req, res) => res.json(publicUser(req.user));
 
 exports.register = async (req, res, next) => {
   try {
     const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ error: 'Datos inválidos', details: errors.array() });
-    }
-
-    const { username, email, password, role } = req.body;
-
-    const password_hash = await User.hashPassword(password);
-
-    const user = await User.create({ username, email, password_hash, role: role || 'logistica' });
-
-    res.status(201).json({
-      id: user.id,
-      username: user.username,
-      email: user.email,
-      role: user.role,
-    });
-  } catch (error) {
-    next(error);
-  }
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Datos inválidos', details: errors.array() });
+    const { email, password, role = 'VOLUNTARIO' } = req.body;
+    const user = await User.create({ email, password, role });
+    return res.status(201).json(publicUser(user));
+  } catch (error) { return next(error); }
 };

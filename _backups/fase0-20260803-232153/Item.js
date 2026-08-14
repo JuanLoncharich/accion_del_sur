@@ -9,12 +9,6 @@ const Item = sequelize.define('Insumo', {
     validate: { min: 0 },
   },
   category_id: { type: DataTypes.INTEGER, allowNull: false },
-  // Ubicación actual del insumo (centro que lo posee). NULL hasta que ingresa a un centro.
-  current_center_id: { type: DataTypes.INTEGER, allowNull: true },
-  is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
-  // Trazabilidad blockchain (SFT). token_id = SHA256(item_id); se completa al mintear.
-  token_id: { type: DataTypes.STRING(64), allowNull: true },
-  attributes_hash: { type: DataTypes.STRING(64), allowNull: true },
 }, { tableName: 'insumos', timestamps: false });
 
 Item.prototype.actualizarStock = async function actualizarStock(quantity, options = {}) {

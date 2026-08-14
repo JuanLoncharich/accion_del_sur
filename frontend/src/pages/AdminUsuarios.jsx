@@ -11,8 +11,11 @@ import {
   Shield,
   Trash2,
   UserCog,
-  Wrench,
+  User,
 } from 'lucide-react';
+
+const ROLE_LABEL = (role) => (role === 'ADMINISTRADOR' ? 'Administrador' : 'Voluntario');
+const initialForm = { email: '', password: '', role: 'VOLUNTARIO' };
 
 export default function AdminUsuarios() {
   const addToast = useContext(ToastContext);
@@ -21,7 +24,7 @@ export default function AdminUsuarios() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  const [form, setForm] = useState({ username: '', email: '', password: '', role: 'logistica' });
+  const [form, setForm] = useState(initialForm);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -39,26 +42,31 @@ export default function AdminUsuarios() {
 
   const handleOpenCreate = () => {
     setEditingUser(null);
-    setForm({ username: '', email: '', password: '', role: 'logistica' });
+    setForm(initialForm);
     setShowForm(true);
   };
 
   const handleOpenEdit = (user) => {
     setEditingUser(user);
-    setForm({ username: user.username, email: user.email, password: '', role: user.role });
+    setForm({ email: user.email || '', password: '', role: user.role || 'VOLUNTARIO' });
     setShowForm(true);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const payload = { ...form };
+      const payload = { email: form.email.trim(), role: form.role };
+      if (form.password) payload.password = form.password;
       if (editingUser && !payload.password) delete payload.password;
 
       if (editingUser) {
         await api.put(`/users/${editingUser.id}`, payload);
         addToast('Usuario actualizado', 'success');
       } else {
+        if (!form.password) {
+          addToast('Ingresá una contraseña (mín. 6 caracteres)', 'error');
+          return;
+        }
         await api.post('/users', payload);
         addToast('Usuario creado', 'success');
       }
@@ -71,7 +79,7 @@ export default function AdminUsuarios() {
   };
 
   const handleDelete = async (user) => {
-    if (!confirm(`¿Eliminar el usuario "${user.username}"?`)) return;
+    if (!confirm(`¿Eliminar el usuario "${user.email}"?`)) return;
     try {
       await api.delete(`/users/${user.id}`);
       addToast('Usuario eliminado', 'success');
@@ -108,17 +116,7 @@ export default function AdminUsuarios() {
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Usuario</label>
-                <input
-                  type="text"
-                  value={form.username}
-                  onChange={(e) => setForm({ ...form, username: e.target.value })}
-                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-slate-700 mb-1">Email</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-1">Email (identificador)</label>
                 <input
                   type="email"
                   value={form.email}
@@ -147,8 +145,8 @@ export default function AdminUsuarios() {
                   onChange={(e) => setForm({ ...form, role: e.target.value })}
                   className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="logistica">Logística</option>
-                  <option value="admin">Administrador</option>
+                  <option value="VOLUNTARIO">Voluntario</option>
+                  <option value="ADMINISTRADOR">Administrador</option>
                 </select>
               </div>
               <div className="flex gap-3 pt-2">
@@ -178,7 +176,6 @@ export default function AdminUsuarios() {
                 <th className="text-left px-6 py-3 text-xs font-semibold text-slate-500 uppercase">Usuario</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase hidden md:table-cell">Email</th>
                 <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase">Rol</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase hidden lg:table-cell">Creado</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
@@ -187,28 +184,26 @@ export default function AdminUsuarios() {
                 <tr key={user.id} className="border-b border-slate-100 hover:bg-slate-50">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                        {user.username[0].toUpperCase()}
+                      <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center text-white font-bold text-sm uppercase">
+                        {(user.email || '?')[0]}
                       </div>
-                      <span className="font-semibold text-slate-800">{user.username}</span>
-                      {user.id === currentUser.id && (
-                        <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">Vos</span>
-                      )}
+                      <span className="font-semibold text-slate-800">{user.email || '—'}
+                        {user.id === currentUser.id && (
+                          <span className="ml-2 text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">Vos</span>
+                        )}
+                      </span>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-sm text-slate-600 hidden md:table-cell">{user.email}</td>
+                  <td className="px-4 py-4 text-sm text-slate-600 hidden md:table-cell">{user.email || '—'}</td>
                   <td className="px-4 py-4 text-center">
                     <span className={`text-xs font-semibold px-3 py-1 rounded-full ${
-                      user.role === 'admin' ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-600'
+                      user.role === 'ADMINISTRADOR' ? 'bg-violet-100 text-violet-700' : 'bg-slate-100 text-slate-600'
                     }`}>
                       <span className="inline-flex items-center gap-1">
-                        {user.role === 'admin' ? <Crown size={13} /> : <Wrench size={13} />}
-                        {user.role === 'admin' ? 'Admin' : 'Logística'}
+                        {user.role === 'ADMINISTRADOR' ? <Crown size={13} /> : <User size={13} />}
+                        {ROLE_LABEL(user.role)}
                       </span>
                     </span>
-                  </td>
-                  <td className="px-4 py-4 text-sm text-slate-400 hidden lg:table-cell">
-                    {new Date(user.created_at).toLocaleDateString('es-AR')}
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2 justify-end">
