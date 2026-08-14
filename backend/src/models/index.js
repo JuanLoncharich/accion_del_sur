@@ -1,96 +1,96 @@
 const sequelize = require('../config/database');
 const User = require('./User');
-const Category = require('./Category');
-const CategoryAttribute = require('./CategoryAttribute');
-const Item = require('./Item');
+const Donor = require('./Donor');
 const Donation = require('./Donation');
-const Distribution = require('./Distribution');
-const AuditAccessLog = require('./AuditAccessLog');
-const DonationReception = require('./DonationReception');
-const DonationReceptionDetail = require('./DonationReceptionDetail');
+const Category = require('./Category');
+const Item = require('./Item');
 const Center = require('./Center');
+const Shipment = require('./Shipment');
+const ShipmentDetail = require('./ShipmentDetail');
+const DonationSupply = require('./DonationSupply');
 const TokenTransfer = require('./TokenTransfer');
+const Reception = require('./Reception');
+const ReceptionDetail = require('./ReceptionDetail');
 
-// Category <-> CategoryAttribute
-Category.hasMany(CategoryAttribute, { foreignKey: 'category_id', as: 'attributes' });
-CategoryAttribute.belongsTo(Category, { foreignKey: 'category_id', as: 'category' });
+User.hasMany(Center, { foreignKey: 'managed_by', as: 'managedCenters' });
+Center.belongsTo(User, { foreignKey: 'managed_by', as: 'manager' });
 
-// Category <-> Item
-Category.hasMany(Item, { foreignKey: 'category_id', as: 'items' });
+User.hasMany(Donor, { foreignKey: 'registered_by', as: 'registeredDonors' });
+Donor.belongsTo(User, { foreignKey: 'registered_by', as: 'registeredBy' });
+
+User.hasMany(Donation, { foreignKey: 'registered_by', as: 'registeredDonations' });
+Donation.belongsTo(User, { foreignKey: 'registered_by', as: 'registeredBy' });
+Donor.hasMany(Donation, { foreignKey: 'donor_id', as: 'donations' });
+Donation.belongsTo(Donor, { foreignKey: 'donor_id', as: 'donor' });
+
+Category.hasMany(Category, { foreignKey: 'parent_category_id', as: 'subcategories' });
+Category.belongsTo(Category, { foreignKey: 'parent_category_id', as: 'parentCategory' });
+Category.hasMany(Item, { foreignKey: 'category_id', as: 'supplies' });
 Item.belongsTo(Category, { foreignKey: 'category_id', as: 'category' });
 
-// Item <-> Donation
-Item.hasMany(Donation, { foreignKey: 'item_id', as: 'donations' });
-Donation.belongsTo(Item, { foreignKey: 'item_id', as: 'item' });
+Donation.belongsToMany(Item, {
+  through: DonationSupply, foreignKey: 'donation_id', otherKey: 'supply_id', as: 'supplies',
+});
+Item.belongsToMany(Donation, {
+  through: DonationSupply, foreignKey: 'supply_id', otherKey: 'donation_id', as: 'donations',
+});
 
-// Item <-> Distribution
-Item.hasMany(Distribution, { foreignKey: 'item_id', as: 'distributions' });
-Distribution.belongsTo(Item, { foreignKey: 'item_id', as: 'item' });
+User.hasMany(Shipment, { foreignKey: 'registered_by', as: 'registeredShipments' });
+Shipment.belongsTo(User, { foreignKey: 'registered_by', as: 'registeredBy' });
+Center.hasMany(Shipment, { foreignKey: 'reception_center_id', as: 'shipments' });
+Shipment.belongsTo(Center, { foreignKey: 'reception_center_id', as: 'destination' });
+Shipment.hasMany(ShipmentDetail, { foreignKey: 'shipment_id', as: 'details' });
+ShipmentDetail.belongsTo(Shipment, { foreignKey: 'shipment_id', as: 'shipment' });
+Item.hasMany(ShipmentDetail, { foreignKey: 'supply_id', as: 'shipmentDetails' });
+ShipmentDetail.belongsTo(Item, { foreignKey: 'supply_id', as: 'supply' });
 
-// User <-> Donation
-User.hasMany(Donation, { foreignKey: 'registered_by', as: 'donations' });
-Donation.belongsTo(User, { foreignKey: 'registered_by', as: 'registeredBy' });
-
-// User <-> Distribution
-User.hasMany(Distribution, { foreignKey: 'registered_by', as: 'distributions' });
-Distribution.belongsTo(User, { foreignKey: 'registered_by', as: 'registeredBy' });
-
-// DonationReception
-User.hasMany(DonationReception, { foreignKey: 'created_by', as: 'createdReceptions' });
-DonationReception.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
-
-User.hasMany(DonationReception, { foreignKey: 'finalized_by', as: 'finalizedReceptions' });
-DonationReception.belongsTo(User, { foreignKey: 'finalized_by', as: 'finalizedBy' });
-
-DonationReception.hasMany(DonationReceptionDetail, { foreignKey: 'reception_id', as: 'details' });
-DonationReceptionDetail.belongsTo(DonationReception, { foreignKey: 'reception_id', as: 'reception' });
-
-Item.hasMany(DonationReceptionDetail, { foreignKey: 'item_id', as: 'receptionDetails' });
-DonationReceptionDetail.belongsTo(Item, { foreignKey: 'item_id', as: 'item' });
-
-// AuditAccessLog
-Distribution.hasMany(AuditAccessLog, { foreignKey: 'distribution_id', as: 'auditAccessLogs' });
-AuditAccessLog.belongsTo(Distribution, { foreignKey: 'distribution_id', as: 'distribution' });
-
-User.hasMany(AuditAccessLog, { foreignKey: 'accessed_by', as: 'auditAccesses' });
-AuditAccessLog.belongsTo(User, { foreignKey: 'accessed_by', as: 'accessedBy' });
-
-// Center
-User.hasMany(Center, { foreignKey: 'created_by', as: 'centers' });
-Center.belongsTo(User, { foreignKey: 'created_by', as: 'createdBy' });
-
-// Item <-> Center (current location)
+// Ubicación actual del insumo en un centro.
 Center.hasMany(Item, { foreignKey: 'current_center_id', as: 'items' });
 Item.belongsTo(Center, { foreignKey: 'current_center_id', as: 'currentCenter' });
 
-// Donation <-> Center
-Center.hasMany(Donation, { foreignKey: 'center_id', as: 'donations' });
-Donation.belongsTo(Center, { foreignKey: 'center_id', as: 'center' });
-
-// TokenTransfer
+// Transferencias de tokens entre centros.
 Item.hasMany(TokenTransfer, { foreignKey: 'item_id', as: 'transfers' });
 TokenTransfer.belongsTo(Item, { foreignKey: 'item_id', as: 'item' });
-
 Center.hasMany(TokenTransfer, { foreignKey: 'from_center_id', as: 'outgoingTransfers' });
-TokenTransfer.belongsTo(Center, { foreignKey: 'from_center_id', as: 'fromCenter' });
-
 Center.hasMany(TokenTransfer, { foreignKey: 'to_center_id', as: 'incomingTransfers' });
+TokenTransfer.belongsTo(Center, { foreignKey: 'from_center_id', as: 'fromCenter' });
 TokenTransfer.belongsTo(Center, { foreignKey: 'to_center_id', as: 'toCenter' });
-
-User.hasMany(TokenTransfer, { foreignKey: 'transferred_by', as: 'transfers' });
+User.hasMany(TokenTransfer, { foreignKey: 'transferred_by', as: 'registeredTransfers' });
 TokenTransfer.belongsTo(User, { foreignKey: 'transferred_by', as: 'transferredBy' });
+
+// Recepciones de donación con QR + anclaje.
+Center.hasMany(Reception, { foreignKey: 'reception_center_id', as: 'receptions' });
+Reception.belongsTo(Center, { foreignKey: 'reception_center_id', as: 'center' });
+User.hasMany(Reception, { foreignKey: 'operator_id', as: 'operatedReceptions' });
+Reception.belongsTo(User, { foreignKey: 'operator_id', as: 'operator' });
+Reception.hasMany(ReceptionDetail, { foreignKey: 'reception_id', as: 'details' });
+ReceptionDetail.belongsTo(Reception, { foreignKey: 'reception_id', as: 'reception' });
+Item.hasMany(ReceptionDetail, { foreignKey: 'item_id', as: 'receptionDetails' });
+ReceptionDetail.belongsTo(Item, { foreignKey: 'item_id', as: 'item' });
 
 module.exports = {
   sequelize,
   User,
-  Category,
-  CategoryAttribute,
-  Item,
+  Usuario: User,
+  Donor,
+  Donante: Donor,
   Donation,
-  Distribution,
-  AuditAccessLog,
-  DonationReception,
-  DonationReceptionDetail,
+  Donacion: Donation,
+  Category,
+  Categoria: Category,
+  Item,
+  Insumo: Item,
   Center,
+  CentroRecepcion: Center,
+  Shipment,
+  Envio: Shipment,
+  ShipmentDetail,
+  DetalleEnvio: ShipmentDetail,
+  DonationSupply,
   TokenTransfer,
+  TransferenciaToken: TokenTransfer,
+  Reception,
+  Recepcion: Reception,
+  ReceptionDetail,
+  RecepcionDetalle: ReceptionDetail,
 };

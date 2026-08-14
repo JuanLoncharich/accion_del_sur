@@ -1,53 +1,13 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
-const Center = sequelize.define('Center', {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  name: {
-    type: DataTypes.STRING(120),
-    allowNull: false,
-  },
-  latitude: {
-    type: DataTypes.DECIMAL(10, 7),
-    allowNull: true,
-  },
-  longitude: {
-    type: DataTypes.DECIMAL(10, 7),
-    allowNull: true,
-  },
-  geo_hash: {
-    type: DataTypes.STRING(64),
-    allowNull: true,
-  },
-  blockchain_contract_id: {
-    type: DataTypes.STRING(255),
-    allowNull: true,
-  },
-  blockchain_deploy_tx: {
-    type: DataTypes.STRING(255),
-    allowNull: true,
-  },
-  blockchain_init_tx: {
-    type: DataTypes.STRING(255),
-    allowNull: true,
-  },
-  is_active: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
-  },
-  created_by: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-}, {
-  tableName: 'centers',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: 'updated_at',
-});
-
-module.exports = Center;
+module.exports = sequelize.define('CentroRecepcion', {
+  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+  name: { type: DataTypes.STRING(120), allowNull: false },
+  location: { type: DataTypes.STRING(255), allowNull: false },
+  operational_status: { type: DataTypes.STRING(100), allowNull: false },
+  managed_by: { type: DataTypes.INTEGER, allowNull: false },
+  is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+  // Dirección del contrato Soroban del centro (se completa en la activación on-chain).
+  blockchain_contract_id: { type: DataTypes.STRING(120), allowNull: true },
+}, { tableName: 'centros_recepcion', timestamps: false });

@@ -17,11 +17,12 @@ import ConfirmacionDonacionQR from './pages/ConfirmacionDonacionQR';
 import BlockchainTrazabilidad from './pages/BlockchainTrazabilidad';
 import HistorialTransacciones from './pages/HistorialTransacciones';
 import ConsultaAsistente from './pages/ConsultaAsistente';
+import Landing from './pages/Landing';
 
 const PrivateRoute = ({ children, adminOnly = false }) => {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  if (adminOnly && user.role !== 'admin') return <Navigate to="/dashboard" replace />;
+  if (adminOnly && user.role !== 'ADMINISTRADOR') return <Navigate to="/dashboard" replace />;
   return <Layout>{children}</Layout>;
 };
 
@@ -34,7 +35,7 @@ const PublicRoute = ({ children }) => {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<BlockchainTrazabilidad />} />
+      <Route path="/" element={<Landing />} />
       <Route path="/trazabilidad" element={<BlockchainTrazabilidad />} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/confirmacion-donacion/:token" element={<ConfirmacionDonacionQR />} />

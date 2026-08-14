@@ -1,46 +1,38 @@
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
 const bcrypt = require('bcryptjs');
+const sequelize = require('../config/database');
 
-const User = sequelize.define('User', {
-  id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
-    primaryKey: true,
-  },
-  username: {
-    type: DataTypes.STRING(100),
-    allowNull: false,
-    unique: true,
-  },
+const ROLES = ['VOLUNTARIO', 'ADMINISTRADOR'];
+
+const User = sequelize.define('Usuario', {
+  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   email: {
-    type: DataTypes.STRING(255),
-    allowNull: false,
-    unique: true,
+    type: DataTypes.STRING(255), allowNull: false, unique: true,
     validate: { isEmail: true },
   },
-  password_hash: {
-    type: DataTypes.STRING(255),
-    allowNull: false,
-  },
+  password: { type: DataTypes.STRING(255), allowNull: false },
   role: {
-    type: DataTypes.ENUM('admin', 'logistica'),
-    allowNull: false,
-    defaultValue: 'logistica',
+    type: DataTypes.ENUM(...ROLES), allowNull: false, defaultValue: 'VOLUNTARIO',
   },
 }, {
-  tableName: 'users',
-  timestamps: true,
-  createdAt: 'created_at',
-  updatedAt: false,
+  tableName: 'usuarios',
+  timestamps: false,
+  hooks: {
+    beforeCreate: async (user) => { user.password = await User.hashPassword(user.password); },
+    beforeUpdate: async (user) => {
+      if (user.changed('password')) user.password = await User.hashPassword(user.password);
+    },
+  },
 });
 
-User.prototype.validatePassword = async function (password) {
-  return bcrypt.compare(password, this.password_hash);
+User.ROLES = ROLES;
+User.hashPassword = (password) => bcrypt.hash(password, 10);
+User.prototype.validatePassword = function validatePassword(password) {
+  return bcrypt.compare(password, this.password);
 };
-
-User.hashPassword = async (password) => {
-  return bcrypt.hash(password, 10);
+User.prototype.iniciarSesion = function iniciarSesion(password) {
+  return this.validatePassword(password);
 };
+User.prototype.cerrarSesion = function cerrarSesion() { return true; };
 
 module.exports = User;

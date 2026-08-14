@@ -20,40 +20,23 @@ if echo "$SQL_LOWER" | grep -Eq '(^|[^a-z])(insert|update|delete|drop|alter|trun
   exit 3
 fi
 
+if echo "$SQL_LOWER" | grep -Eq '(^|[^a-z_])(email|password|contact)([^a-z_]|$)'; then
+  echo "Error: consulta bloqueada por solicitar columnas sensibles." >&2
+  exit 4
+fi
+
+if echo "$SQL_LOWER" | grep -Eq '^select[[:space:]]+([a-z0-9_]+\.)?\*'; then
+  echo "Error: SELECT * no está permitido; especifica columnas no sensibles." >&2
+  exit 5
+fi
+
+if echo "$SQL_LOWER" | grep -Eq '(^|[^a-z_])(users|donations|items|distributions|centers|token_transfers|donation_receptions)([^a-z_]|$)'; then
+  echo "Error: consulta bloqueada por referenciar una tabla del esquema antiguo." >&2
+  exit 6
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CHATLLM_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
-BACKEND_DIR="$(cd "$CHATLLM_DIR/.." && pwd)"
 
-if [[ -f "$BACKEND_DIR/.env" ]]; then
-  set -a
-  source "$BACKEND_DIR/.env"
-  set +a
-fi
-
-if [[ -f "$CHATLLM_DIR/.env" ]]; then
-  set -a
-  source "$CHATLLM_DIR/.env"
-  set +a
-fi
-
-DB_HOST="${LLM_DB_HOST:-${DB_HOST:-localhost}}"
-DB_PORT="${LLM_DB_PORT:-${DB_PORT:-3306}}"
-DB_USER="${LLM_DB_USER:-${DB_USER:-llm_reader}}"
-DB_PASSWORD="${LLM_DB_PASSWORD:-${DB_PASSWORD:-}}"
-DB_NAME="${LLM_DB_NAME:-${DB_NAME:-accion_del_sur}}"
-
-if command -v mysql >/dev/null 2>&1; then
-  mysql \
-    --protocol=TCP \
-    --host="$DB_HOST" \
-    --port="$DB_PORT" \
-    --user="$DB_USER" \
-    --password="$DB_PASSWORD" \
-    --database="$DB_NAME" \
-    --table \
-    --raw \
-    --batch \
-    --execute "$SQL_TRIMMED"
-else
-  node "$SCRIPT_DIR/mysql_readonly_query_node.js" "$SQL_TRIMMED"
-fi
+# El helper Node carga los .env con dotenv. No se usa `source`: los archivos
+# dotenv no son scripts de shell y pueden contener valores que Bash interpreta.
+node "$SCRIPT_DIR/mysql_readonly_query_v2.js" "$SQL_TRIMMED"

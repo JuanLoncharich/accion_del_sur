@@ -86,7 +86,7 @@ export default function Sidebar() {
           </NavLink>
         ))}
 
-        {user?.role === 'admin' && (
+        {user?.role === "ADMINISTRADOR" && (
           <>
             <p className="text-slate-500 text-xs uppercase font-semibold px-4 mt-4 mb-2">
               Administración
@@ -110,11 +110,11 @@ export default function Sidebar() {
       <div className="px-3 py-4 border-t border-slate-800">
         <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-800">
           <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-            {user?.username?.[0]?.toUpperCase()}
+            {(user?.email || "?")[0].toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-sm font-medium truncate">{user?.username}</p>
-            <p className="text-slate-400 text-xs capitalize">{user?.role}</p>
+            <p className="text-white text-sm font-medium truncate">{user?.email || "Usuario"}</p>
+            <p className="text-slate-400 text-xs">{user?.role === "ADMINISTRADOR" ? "Administrador" : "Voluntario"}</p>
           </div>
           <button
             onClick={handleLogout}

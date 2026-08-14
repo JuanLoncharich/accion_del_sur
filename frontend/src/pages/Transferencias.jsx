@@ -40,7 +40,7 @@ export default function Transferencias() {
   });
 
   const transferableItems = items.filter(
-    (item) => item.quantity > 0 && item.current_center_id && item.token_status === 'minted'
+    (item) => item.quantity > 0 && item.current_center_id
   );
 
   useEffect(() => {
