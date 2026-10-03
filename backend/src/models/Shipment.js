@@ -30,6 +30,11 @@ Shipment.lockAndCheckStock = async (lines, transaction) => {
   for (const { supply_id, quantity } of Shipment.aggregateLines(lines)) {
     const item = await Item.findByPk(supply_id, { transaction, lock: transaction.LOCK.UPDATE });
     if (!item) throw httpError(404, `Insumo ${supply_id} no encontrado`, { supply_id });
+    if (item.status !== 'DISPONIBLE') {
+      throw httpError(409, `"${item.name}" no está DISPONIBLE (estado actual: ${item.status}); solo se pueden enviar insumos disponibles`, {
+        supply_id, status: item.status,
+      });
+    }
     if (item.available_quantity < quantity) {
       throw httpError(409, `Stock insuficiente para "${item.name}"`, {
         supply_id, available: item.available_quantity, requested: quantity,

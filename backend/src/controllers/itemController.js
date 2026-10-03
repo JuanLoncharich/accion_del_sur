@@ -1,4 +1,5 @@
 const { Op } = require('sequelize');
+const { validationResult } = require('express-validator');
 const { Item, Category } = require('../models');
 
 const serialize = (item) => ({
@@ -13,11 +14,14 @@ const include = [{ model: Category, as: 'category' }];
 
 exports.list = async (req, res, next) => {
   try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Datos inválidos', details: errors.array() });
     const page = Math.max(Number(req.query.page) || 1, 1);
     const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 500);
     const where = {};
     if (req.query.search) where.name = { [Op.like]: `%${req.query.search}%` };
     if (req.query.category_id) where.category_id = req.query.category_id;
+    if (req.query.status) where.status = req.query.status;
     const { count, rows } = await Item.findAndCountAll({ where, include, order: [['name', 'ASC']], limit, offset: (page - 1) * limit });
     res.json({ total: count, page, data: rows.map(serialize) });
   } catch (error) { next(error); }
@@ -37,6 +41,17 @@ exports.update = async (req, res, next) => {
     if (req.body.category_id !== undefined) updates.category_id = req.body.category_id;
     if (req.body.available_quantity !== undefined || req.body.quantity !== undefined) updates.available_quantity = Number(req.body.available_quantity ?? req.body.quantity);
     await item.update(updates);
+    return res.json(serialize(await Item.findByPk(item.id, { include })));
+  } catch (error) { return next(error); }
+};
+// PATCH /api/items/:id/status  { status: RECIBIDO | PREPARADO | DISPONIBLE }
+exports.updateStatus = async (req, res, next) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ error: 'Datos inválidos', details: errors.array() });
+    const item = await Item.findByPk(req.params.id);
+    if (!item) return res.status(404).json({ error: 'Insumo no encontrado' });
+    await item.update({ status: req.body.status });
     return res.json(serialize(await Item.findByPk(item.id, { include })));
   } catch (error) { return next(error); }
 };
