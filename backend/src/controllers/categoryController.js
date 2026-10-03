@@ -1,4 +1,5 @@
-const { Category } = require('../models');
+const { Category, Item } = require('../models');
+const { destroyIfUnused } = require('../utils/deleteGuard');
 
 const serialize = (category) => ({ ...category.toJSON(), attributes: [], is_active: true });
 
@@ -20,9 +21,17 @@ exports.update = async (req, res, next) => {
 };
 exports.deactivate = async (req, res, next) => {
   try {
-    const category = await Category.findByPk(req.params.id);
-    if (!category) return res.status(404).json({ error: 'Categoría no encontrada' });
-    await category.destroy(); return res.json({ message: 'Categoría eliminada' });
+    return await destroyIfUnused(res, {
+      model: Category,
+      id: req.params.id,
+      entity: 'la categoría',
+      notFound: 'Categoría no encontrada',
+      deleted: 'Categoría eliminada',
+      dependencies: async (category, transaction) => [
+        { label: 'subcategorías', count: await Category.count({ where: { parent_category_id: category.id }, transaction }) },
+        { label: 'insumos', count: await Item.count({ where: { category_id: category.id }, transaction }) },
+      ],
+    });
   } catch (error) { return next(error); }
 };
 exports.getAttributes = (req, res) => res.json([]);

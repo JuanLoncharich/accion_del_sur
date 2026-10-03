@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
-const { Item, Category } = require('../models');
+const { Item, Category, DonationSupply, ShipmentDetail, TokenTransfer, ReceptionDetail } = require('../models');
+const { destroyIfUnused } = require('../utils/deleteGuard');
 
 const serialize = (item) => ({
   ...item.toJSON(),
@@ -57,9 +58,19 @@ exports.updateStatus = async (req, res, next) => {
 };
 exports.deactivate = async (req, res, next) => {
   try {
-    const item = await Item.findByPk(req.params.id);
-    if (!item) return res.status(404).json({ error: 'Insumo no encontrado' });
-    await item.destroy(); return res.json({ message: 'Insumo eliminado' });
+    return await destroyIfUnused(res, {
+      model: Item,
+      id: req.params.id,
+      entity: 'el insumo',
+      notFound: 'Insumo no encontrado',
+      deleted: 'Insumo eliminado',
+      dependencies: async (item, transaction) => [
+        { label: 'líneas de donación', count: await DonationSupply.count({ where: { supply_id: item.id }, transaction }) },
+        { label: 'detalles de envío', count: await ShipmentDetail.count({ where: { supply_id: item.id }, transaction }) },
+        { label: 'transferencias', count: await TokenTransfer.count({ where: { item_id: item.id }, transaction }) },
+        { label: 'detalles de recepción', count: await ReceptionDetail.count({ where: { item_id: item.id }, transaction }) },
+      ],
+    });
   } catch (error) { return next(error); }
 };
 exports.stockByCategory = async (req, res, next) => {

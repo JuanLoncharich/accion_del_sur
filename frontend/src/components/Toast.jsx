@@ -24,7 +24,7 @@ export const ToastContainer = ({ toasts, removeToast }) => {
           return (
         <div
           key={toast.id}
-          className={`${colors[toast.type]} text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-64 animate-fade-in`}
+          className={`${colors[toast.type]} text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-64 max-w-md animate-fade-in`}
         >
           <Icon size={18} className="shrink-0" />
           <span className="flex-1 text-sm font-medium">{toast.message}</span>

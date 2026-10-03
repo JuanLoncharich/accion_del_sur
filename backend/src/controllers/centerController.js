@@ -1,4 +1,6 @@
-const { Center, Item } = require('../models');
+const { Op } = require('sequelize');
+const { Center, Item, Shipment, TokenTransfer } = require('../models');
+const { destroyIfUnused } = require('../utils/deleteGuard');
 
 const serialize = (center) => ({ ...center.toJSON(), is_active: true, center_type: center.operational_status });
 
@@ -37,9 +39,23 @@ exports.update = async (req, res, next) => {
 };
 exports.deactivate = async (req, res, next) => {
   try {
-    const center = await Center.findByPk(req.params.id);
-    if (!center) return res.status(404).json({ error: 'Centro no encontrado' });
-    await center.destroy(); return res.json({ message: 'Centro eliminado' });
+    return await destroyIfUnused(res, {
+      model: Center,
+      id: req.params.id,
+      entity: 'el centro',
+      notFound: 'Centro no encontrado',
+      deleted: 'Centro eliminado',
+      dependencies: async (center, transaction) => [
+        { label: 'envíos', count: await Shipment.count({ where: { reception_center_id: center.id }, transaction }) },
+        { label: 'insumos ubicados en el centro', count: await Item.count({ where: { current_center_id: center.id }, transaction }) },
+        {
+          label: 'transferencias',
+          count: await TokenTransfer.count({
+            where: { [Op.or]: [{ from_center_id: center.id }, { to_center_id: center.id }] }, transaction,
+          }),
+        },
+      ],
+    });
   } catch (error) { return next(error); }
 };
 exports.getInventory = async (req, res, next) => {
