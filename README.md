@@ -1,128 +1,145 @@
 # Acción del Sur — Sistema de Gestión de Donaciones
 
-Sistema web completo para la gestión del ciclo de donaciones de un centro de crisis: entrada de donaciones → inventario → distribución a receptores.
+Sistema web interno para gestionar el ciclo de donaciones de la organización: registro de donantes y donaciones → inventario con estados logísticos → envíos a centros de recepción.
 
-## Stack Tecnológico
+## Stack tecnológico
 
-- **Backend:** Node.js + Express.js + Sequelize + MySQL
-- **Frontend:** React + Vite + Tailwind CSS v4 + Recharts
-- **Auth:** JWT + bcrypt
+- **Backend:** Node.js 22 + Express 5 + Sequelize 6 + MySQL 8
+- **Frontend:** React 19 + Vite 8 + Tailwind CSS 4 + Recharts
+- **Auth:** JWT + bcrypt, roles `VOLUNTARIO` y `ADMINISTRADOR`
+- **Producción:** Nginx + systemd + backup diario con cron (sin Docker) — ver [`deploy/README.md`](deploy/README.md)
 
-## Instalación y Ejecución
+## Puertos
+
+| Entorno | Frontend | Backend (API) |
+|---|---|---|
+| Desarrollo (`start.sh`) | Vite en `:5000` (proxy de `/api` y `/uploads` a `:3012`) | `:3012` |
+| Producción (`deploy/`) | Nginx en `:80` (IPs `10.0.0.195` y `10.147.19.102`) | `127.0.0.1:3012` (systemd) |
+
+## Puesta en marcha (desarrollo)
 
 ### Prerrequisitos
 
-- Node.js >= 18
-- MySQL corriendo localmente
+- Node.js ≥ 18 (probado con 22)
+- MySQL 8 corriendo localmente
 
-### 1. Configurar la base de datos
-
-Crear la base de datos en MySQL:
+### 1. Base de datos
 
 ```sql
-CREATE DATABASE accion_del_sur CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE accion_del_sur_proyecto CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
+
+Las tablas se crean al iniciar el backend (`sequelize.sync` + `src/config/ensureSchema.js`, que agrega columnas faltantes de forma idempotente).
 
 ### 2. Backend
 
 ```bash
 cd backend
-
-# Copiar y editar variables de entorno
-cp .env.example .env
-# Editar .env con tus credenciales de MySQL
-
-# Instalar dependencias
+cp .env.example .env        # completar DB_PASSWORD, JWT_SECRET, SMTP_* (ver comentarios del archivo)
 npm install
-
-# Crear tablas y cargar datos iniciales
-npm run seed
-
-# Iniciar servidor (puerto 3001)
-npm start
+node src/seeders/demo.js    # datos de demostración (usuarios, donantes, categorías, insumos, centros, envíos)
 ```
-
-El seeder crea:
-- Usuario admin: `admin` / `admin123`
-- 6 categorías con atributos predefinidos
 
 ### 3. Frontend
 
 ```bash
 cd frontend
-
-# Instalar dependencias
 npm install
-
-# Iniciar servidor de desarrollo (puerto 5173)
-npm run dev
 ```
 
-Abrir [http://localhost:5173](http://localhost:5173)
+### 4. Levantar y detener
 
-## Credenciales por defecto
+```bash
+./start.sh                  # backend :3012 + frontend :5000 (logs en .logs/)
+./stop.sh
+```
+
+Abrir http://localhost:5000 (o `http://<IP de la máquina>:5000`).
+
+## Credenciales de demostración (seeder `demo.js`)
 
 | Usuario | Contraseña | Rol |
-|---------|------------|-----|
-| admin | admin123 | Administrador |
+|---|---|---|
+| `admin` (= `admin@acciondelsur.org`) | `admin123` | Administrador |
+| `maria.gomez@acciondelsur.org` | `volante123` | Voluntario |
+
+Cambiarlas antes de cualquier uso real.
+
+## Variables de entorno
+
+Todas están documentadas en [`backend/.env.example`](backend/.env.example):
+
+| Grupo | Variables | Obligatorias |
+|---|---|---|
+| Base de datos | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Sí |
+| Autenticación | `JWT_SECRET`, `JWT_EXPIRES_IN` | Sí (`JWT_SECRET`) |
+| Servidor | `PORT`, `NODE_ENV`, `FRONTEND_URL` | Sí |
+| Email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Solo para notificar donantes |
+| Blockchain (opcional) | `STELLAR_ENABLED`, `STELLAR_NETWORK`, `STELLAR_SECRET_KEY`, `SOROBAN_CONTRACT_*`, `CENTRO_WASM_HASH` | No |
+| Asistente LLM (opcional) | `OPENAI_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` | No |
+
+`backend/.env` nunca se versiona.
 
 ## Funcionalidades
 
-### Todos los usuarios
-- Dashboard con gráficos y estadísticas
-- Registrar donaciones (formulario guiado paso a paso)
-- Ver y filtrar el inventario
-- Registrar distribuciones a receptores
-- Ver historial de distribuciones
+### Todos los usuarios autenticados
+- Dashboard: total de donaciones, ítems en stock, envíos realizados, destinos alcanzados, categorías y gráficos (stock por categoría, donaciones de las últimas 8 semanas).
+- Registrar donaciones, eligiendo o creando el donante (nombre, contacto, ciudad).
+- Inventario: búsqueda, filtros por categoría y por estado (`Recibido` / `Preparado` / `Disponible`), cambio de estado, exportación CSV.
+- Envíos: alta con varios insumos hacia un centro de recepción; al confirmar se descuenta el stock en una transacción. Solo se envían insumos `Disponible`.
 
 ### Solo administradores
-- Gestión de categorías y atributos (ABM completo)
-- Gestión de usuarios (ABM completo)
+- Categorías jerárquicas (categoría padre / subcategorías).
+- Usuarios.
+- Centros de recepción.
 
-## Estructura del Proyecto
+Los borrados de usuarios, categorías, centros e insumos se rechazan (409) si tienen registros asociados, indicando cuáles y cuántos.
 
-```
-accion-del-sur/
-├── backend/
-│   ├── src/
-│   │   ├── config/          # Configuración de DB
-│   │   ├── controllers/     # Lógica de negocio
-│   │   ├── middleware/       # Auth JWT, errores
-│   │   ├── models/          # Modelos Sequelize
-│   │   ├── routes/          # Rutas Express
-│   │   ├── seeders/         # Datos iniciales
-│   │   └── services/
-│   │       └── blockchain/  # Stub Stellar (preparado)
-│   ├── uploads/             # Fotos de ítems
-│   ├── .env
-│   └── server.js
-└── frontend/
-    └── src/
-        ├── components/      # Layout, Sidebar, Toast
-        ├── context/         # AuthContext
-        ├── hooks/           # useToast
-        ├── pages/           # Todas las vistas
-        └── services/        # Cliente API (axios)
-```
-
-## Módulo Blockchain (Preparado)
-
-El servicio `backend/src/services/blockchain/stellarService.js` está preparado para la integración futura con Stellar SDK y smart contracts en Rust/Soroban. Actualmente funciona como stub (graceful degradation).
-
-Para activarlo: cambiar `this.isEnabled = true` en el constructor e implementar los métodos con el Stellar SDK.
-
-## API Endpoints
+## API principal
 
 | Método | Ruta | Descripción |
-|--------|------|-------------|
-| POST | /api/auth/login | Login |
-| GET | /api/auth/me | Usuario actual |
-| GET | /api/dashboard/summary | Datos del dashboard |
-| GET/POST | /api/donations | Donaciones |
-| GET | /api/donations/stats | Estadísticas |
-| GET/PUT/DELETE | /api/items/:id | Ítems del inventario |
-| GET | /api/items/export/csv | Exportar CSV |
-| GET/POST | /api/distributions | Distribuciones |
-| GET/POST/PUT/DELETE | /api/categories | Categorías |
-| GET/POST/PUT/DELETE | /api/categories/:id/attributes | Atributos |
-| GET/POST/PUT/DELETE | /api/users | Usuarios (admin) |
+|---|---|---|
+| POST | `/api/auth/login` | Login (`username` o `email` + `password`) → JWT |
+| GET | `/api/auth/me` | Usuario actual |
+| GET | `/api/dashboard/summary` | Métricas del dashboard |
+| GET/POST | `/api/donations` | Donaciones |
+| GET/POST | `/api/donors` | Donantes |
+| GET | `/api/items` | Inventario (`?search=`, `?category_id=`, `?status=`) |
+| GET/PUT/DELETE | `/api/items/:id` | Insumo |
+| PATCH | `/api/items/:id/status` | Cambiar estado (`RECIBIDO`, `PREPARADO`, `DISPONIBLE`) |
+| GET | `/api/items/export/csv` | Exportar CSV |
+| GET/POST | `/api/shipments` | Envíos (`POST { reception_center_id, date?, confirm?, details: [{ supply_id, quantity_sent }] }`) |
+| GET/DELETE | `/api/shipments/:id` | Envío (solo se eliminan pendientes) |
+| POST | `/api/shipments/:id/confirm` | Confirmar envío y descontar stock |
+| GET/POST/PUT/DELETE | `/api/categories` | Categorías (escritura: admin) |
+| GET/POST/PUT/DELETE | `/api/centers` | Centros de recepción |
+| GET/POST/PUT/DELETE | `/api/users` | Usuarios (admin) |
+| GET | `/api/health` | Estado del servidor |
+
+## Estructura del proyecto
+
+```
+accion_del_sur_proyecto/
+├── backend/
+│   ├── server.js
+│   ├── src/
+│   │   ├── config/        # conexión a MySQL y ensureSchema (migraciones idempotentes)
+│   │   ├── controllers/   # lógica de negocio
+│   │   ├── middleware/    # auth JWT, errores, rate limit público
+│   │   ├── models/        # modelos Sequelize
+│   │   ├── routes/        # rutas Express
+│   │   ├── seeders/       # demo.js
+│   │   ├── services/      # email, LLM, blockchain (opcional)
+│   │   └── utils/
+│   └── uploads/           # imágenes subidas (no versionadas)
+├── frontend/src/          # React: pages, components, context, services
+├── deploy/                # Nginx, systemd, backup — ver deploy/README.md
+├── start.sh / stop.sh     # entorno de desarrollo
+├── INFORME_TECNICO.md     # relevamiento técnico
+├── PLAN_CIERRE.md         # plan de cierre del MVP
+└── CAMBIOS_CIERRE.md      # cambios realizados en el cierre
+```
+
+## Módulos fuera del alcance del acta
+
+El código conserva módulos heredados que no forman parte del MVP: blockchain Stellar/Soroban (se desactiva con `STELLAR_ENABLED=false`), transferencias entre centros, recepciones con QR y asistente de consultas LLM. No son necesarios para el flujo donación → inventario → envío.

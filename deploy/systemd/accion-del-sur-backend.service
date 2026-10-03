@@ -1,0 +1,25 @@
+# Acción del Sur — backend Node/Express (API en 127.0.0.1:3012)
+# Instalar en /etc/systemd/system/accion-del-sur-backend.service
+[Unit]
+Description=Accion del Sur - backend API (Express, :3012)
+After=network-online.target mysql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=juanloncha
+Group=sharedusers
+WorkingDirectory=/home/shared/proyecto_cgic/accion_del_sur_proyecto/backend
+# dotenv no pisa variables ya definidas: NODE_ENV=production gana sobre el
+# NODE_ENV=development de backend/.env (sin logs de SQL). El resto de la
+# configuración (DB, JWT_SECRET, SMTP, ...) se sigue leyendo de backend/.env.
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+# Endurecimiento básico
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
