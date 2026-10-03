@@ -1,5 +1,5 @@
 # Dependencies
-node_modules/
+node_modules
 package-lock.json
 
 # Environment
@@ -23,3 +23,9 @@ frontend/dist/assets/
 *.log
 *.bak
 *.txt
+
+# Runtime / local artifacts
+backend/uploads/*
+!backend/uploads/.gitkeep
+.logs/
+frontend/dist/
