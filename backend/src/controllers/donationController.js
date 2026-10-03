@@ -27,8 +27,9 @@ exports.create = async (req, res, next) => {
 
     let item = await Item.findOne({ where: { category_id: category.id, name: itemName }, transaction, lock: transaction.LOCK.UPDATE });
     if (!item) {
+      // Insumo nuevo: entra como RECIBIDO. Si ya existía, su estado no cambia.
       item = await Item.create(
-        { category_id: category.id, name: itemName, available_quantity: 0, current_center_id: centerId, is_active: true },
+        { category_id: category.id, name: itemName, available_quantity: 0, current_center_id: centerId, is_active: true, status: 'RECIBIDO' },
         { transaction }
       );
     } else if (centerId && item.current_center_id !== centerId) {

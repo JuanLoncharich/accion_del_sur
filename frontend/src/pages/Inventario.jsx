@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import api from '../services/api';
 import { ToastContext } from '../components/Layout';
-import { Boxes, CheckCircle2, Clock3, Download, ExternalLink, PackageX, Search, XCircle } from 'lucide-react';
+import { Boxes, Clock3, Download, ExternalLink, PackageX, Search } from 'lucide-react';
 import { getCategoryIcon } from '../utils/icons';
 
-const TOKEN_STATUS = {
-  pending: { label: 'Pendiente', color: 'bg-amber-100 text-amber-700', icon: Clock3 },
-  minted: { label: 'Minteado', color: 'bg-emerald-100 text-emerald-700', icon: CheckCircle2 },
-  failed: { label: 'Error', color: 'bg-rose-100 text-rose-700', icon: XCircle },
+// Estados logísticos del insumo. Solo DISPONIBLE puede incluirse en un envío.
+const ITEM_STATUS = {
+  RECIBIDO: { label: 'Recibido', color: 'bg-sky-100 text-sky-700 border-sky-200' },
+  PREPARADO: { label: 'Preparado', color: 'bg-amber-100 text-amber-700 border-amber-200' },
+  DISPONIBLE: { label: 'Disponible', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
 };
 
 const stellarExplorerBase = `https://stellar.expert/explorer/${(import.meta.env.VITE_STELLAR_NETWORK || 'testnet').toLowerCase()}`;
@@ -30,7 +31,8 @@ export default function Inventario() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState(null);
-  const [filters, setFilters] = useState({ category_id: '', search: '', page: 1 });
+  const [filters, setFilters] = useState({ category_id: '', search: '', status: '', page: 1 });
+  const [updatingId, setUpdatingId] = useState(null);
 
   const fetchItems = useCallback(async () => {
     setLoading(true);
@@ -38,6 +40,7 @@ export default function Inventario() {
       const params = { limit: 20, ...filters };
       if (!params.category_id) delete params.category_id;
       if (!params.search) delete params.search;
+      if (!params.status) delete params.status;
       const { data } = await api.get('/items', { params });
       setItems(data.data);
       setTotal(data.total);
@@ -65,9 +68,23 @@ export default function Inventario() {
     }
   };
 
+  const handleStatusChange = async (item, status) => {
+    setUpdatingId(item.id);
+    try {
+      const { data } = await api.patch(`/items/${item.id}/status`, { status });
+      setItems((current) => current.map((i) => (i.id === item.id ? { ...i, status: data.status } : i)));
+      addToast(`"${item.name}" ahora está ${ITEM_STATUS[data.status].label.toLowerCase()}`, 'success');
+      if (filters.status && filters.status !== data.status) fetchItems();
+    } catch (error) {
+      addToast(error.response?.data?.error || 'No se pudo cambiar el estado', 'error');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
   const totalPages = Math.ceil(total / 20);
   const lowStockCount = items.filter((item) => item.quantity > 0 && item.quantity < 5).length;
-  const mintedCount = items.filter((item) => item.token_status === 'minted').length;
+  const availableCount = items.filter((item) => item.status === 'DISPONIBLE').length;
 
   return (
     <div className="space-y-6">
@@ -94,8 +111,8 @@ export default function Inventario() {
           <p className="text-2xl font-bold text-amber-700 mt-1">{lowStockCount}</p>
         </div>
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-200">
-          <p className="text-xs uppercase tracking-wide text-slate-500">Minteados</p>
-          <p className="text-2xl font-bold text-emerald-700 mt-1">{mintedCount}</p>
+          <p className="text-xs uppercase tracking-wide text-slate-500">Disponibles</p>
+          <p className="text-2xl font-bold text-emerald-700 mt-1">{availableCount}</p>
         </div>
       </div>
 
@@ -121,6 +138,16 @@ export default function Inventario() {
             <option key={c.id} value={c.id}>{c.name}</option>
           ))}
         </select>
+        <select
+          value={filters.status}
+          onChange={(e) => setFilters({ ...filters, status: e.target.value, page: 1 })}
+          className="border-2 border-slate-200 rounded-xl px-4 py-2 focus:outline-none focus:border-indigo-500 text-sm"
+        >
+          <option value="">Todos los estados</option>
+          {Object.entries(ITEM_STATUS).map(([value, meta]) => (
+            <option key={value} value={value}>{meta.label}</option>
+          ))}
+        </select>
       </div>
 
       {/* Content */}
@@ -139,7 +166,7 @@ export default function Inventario() {
         ) : (
           <div className="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {items.map((item) => {
-              const statusMeta = TOKEN_STATUS[item.token_status] || TOKEN_STATUS.pending;
+              const statusMeta = ITEM_STATUS[item.status] || ITEM_STATUS.RECIBIDO;
               const txUrl = buildTxUrl(item.blockchain_tx_id);
               const attributes = item.attributes
                 ? Object.entries(item.attributes).filter(([, value]) => value)
@@ -164,9 +191,18 @@ export default function Inventario() {
                           <p className="text-xs text-slate-500 mt-1">{item.category?.name || 'Sin categoría'}</p>
                         </div>
                       </div>
-                      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${statusMeta.color}`}>
-                        {React.createElement(statusMeta.icon, { size: 12 })} {statusMeta.label}
-                      </span>
+                      <select
+                        aria-label={`Estado de ${item.name}`}
+                        value={item.status || 'RECIBIDO'}
+                        disabled={updatingId === item.id}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => handleStatusChange(item, e.target.value)}
+                        className={`shrink-0 px-2 py-1 rounded-lg border text-xs font-semibold focus:outline-none disabled:opacity-50 ${statusMeta.color}`}
+                      >
+                        {Object.entries(ITEM_STATUS).map(([value, meta]) => (
+                          <option key={value} value={value}>{meta.label}</option>
+                        ))}
+                      </select>
                     </div>
 
                     <div className="mt-4 grid grid-cols-2 gap-3 text-sm">

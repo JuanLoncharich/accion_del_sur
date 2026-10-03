@@ -1,6 +1,8 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
+const STATUSES = ['RECIBIDO', 'PREPARADO', 'DISPONIBLE'];
+
 const Item = sequelize.define('Insumo', {
   id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   name: { type: DataTypes.STRING(200), allowNull: false },
@@ -12,6 +14,8 @@ const Item = sequelize.define('Insumo', {
   // Ubicación actual del insumo (centro que lo posee). NULL hasta que ingresa a un centro.
   current_center_id: { type: DataTypes.INTEGER, allowNull: true },
   is_active: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
+  // Estado logístico: RECIBIDO → PREPARADO → DISPONIBLE. Solo DISPONIBLE puede enviarse.
+  status: { type: DataTypes.ENUM(...STATUSES), allowNull: false, defaultValue: 'RECIBIDO' },
   // Trazabilidad blockchain (SFT). token_id = SHA256(item_id); se completa al mintear.
   token_id: { type: DataTypes.STRING(64), allowNull: true },
   attributes_hash: { type: DataTypes.STRING(64), allowNull: true },
@@ -25,5 +29,7 @@ Item.prototype.actualizarStock = async function actualizarStock(quantity, option
   this.available_quantity = nextQuantity;
   return this.save(options);
 };
+
+Item.STATUSES = STATUSES;
 
 module.exports = Item;

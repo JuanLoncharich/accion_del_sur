@@ -102,7 +102,7 @@ export default function NuevoEnvio() {
     <div className="space-y-6 max-w-4xl">
       <div>
         <h1 className="text-2xl font-bold text-slate-800 inline-flex items-center gap-2"><Truck size={24} /> Nuevo envío</h1>
-        <p className="text-slate-500 text-sm">Registrá un envío a un centro de recepción. Al confirmarlo se descuenta el stock.</p>
+        <p className="text-slate-500 text-sm">Registrá un envío a un centro de recepción. Al confirmarlo se descuenta el stock. Solo se pueden enviar insumos en estado Disponible.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -148,8 +148,9 @@ export default function NuevoEnvio() {
                   >
                     <option value="">Seleccioná un insumo</option>
                     {items.map((i) => (
-                      <option key={i.id} value={i.id} disabled={i.available_quantity < 1}>
+                      <option key={i.id} value={i.id} disabled={i.available_quantity < 1 || i.status !== 'DISPONIBLE'}>
                         {i.name} ({i.category?.name || 'Sin categoría'}) — stock {i.available_quantity}
+                        {i.status !== 'DISPONIBLE' ? ` · ${(i.status || '').toLowerCase()}` : ''}
                       </option>
                     ))}
                   </select>

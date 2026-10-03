@@ -39,6 +39,14 @@ const runMigrations = async () => {
   await addColumnIfMissing('insumos', 'is_active', '`is_active` TINYINT(1) NOT NULL DEFAULT 1');
   await addColumnIfMissing('insumos', 'token_id', '`token_id` VARCHAR(64) NULL');
   await addColumnIfMissing('insumos', 'attributes_hash', '`attributes_hash` VARCHAR(64) NULL');
+  // Estado logístico. Solo al crear la columna: los insumos con stock pasan a DISPONIBLE.
+  const statusAdded = await addColumnIfMissing(
+    'insumos', 'status',
+    "`status` ENUM('RECIBIDO','PREPARADO','DISPONIBLE') NOT NULL DEFAULT 'RECIBIDO'"
+  );
+  if (statusAdded) {
+    await sequelize.query("UPDATE insumos SET status = 'DISPONIBLE' WHERE available_quantity > 0");
+  }
 
   // centros_recepcion
   await addColumnIfMissing('centros_recepcion', 'is_active', '`is_active` TINYINT(1) NOT NULL DEFAULT 1');
