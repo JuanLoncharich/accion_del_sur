@@ -10,6 +10,7 @@ import {
   Boxes,
   Clock3,
   Handshake,
+  MapPin,
   Package,
   PieChart as PieChartIcon,
   Tags,
@@ -85,11 +86,12 @@ export default function Dashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
         <StatCard icon={<Package size={34} />} label="Total Donaciones" value={summary.totalDonations} color="border-indigo-500" />
         <StatCard icon={<Boxes size={34} />} label="Ítems en Stock" value={summary.totalItemsInStock} color="border-teal-600" />
-        <StatCard icon={<Handshake size={34} />} label="Distribuciones" value={summary.totalDistributions} color="border-slate-500" />
-        <StatCard icon={<Tags size={34} />} label="Categorías Activas" value={summary.activeCategories} color="border-violet-500" />
+        <StatCard icon={<Handshake size={34} />} label="Envíos realizados" value={summary.totalDistributions} color="border-slate-500" />
+        <StatCard icon={<MapPin size={34} />} label="Destinos alcanzados" value={summary.reachedDestinations} color="border-orange-500" />
+        <StatCard icon={<Tags size={34} />} label="Categorías" value={summary.activeCategories} color="border-violet-500" />
       </div>
 
       {/* Charts */}
@@ -187,7 +189,7 @@ export default function Dashboard() {
 
         {/* Recent distributions */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
-          <h2 className="font-bold text-slate-800 mb-4 inline-flex items-center gap-2"><Handshake size={18} /> Últimas Distribuciones</h2>
+          <h2 className="font-bold text-slate-800 mb-4 inline-flex items-center gap-2"><Handshake size={18} /> Últimos envíos confirmados</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
@@ -199,7 +201,7 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {recentDistributions.length === 0 ? (
-                  <tr><td colSpan={3} className="py-4 text-center text-slate-400">Sin distribuciones aún</td></tr>
+                  <tr><td colSpan={3} className="py-4 text-center text-slate-400">Sin envíos confirmados aún</td></tr>
                 ) : recentDistributions.map((d) => (
                   <tr key={d.id} className="border-b border-slate-50 hover:bg-slate-50">
                     <td className="py-2 pr-4 text-slate-500 whitespace-nowrap">

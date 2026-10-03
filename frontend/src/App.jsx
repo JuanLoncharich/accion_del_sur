@@ -6,7 +6,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import NuevaDonacion from './pages/NuevaDonacion';
 import Inventario from './pages/Inventario';
-import NuevaDistribucion from './pages/NuevaDistribucion';
+import NuevoEnvio from './pages/NuevoEnvio';
 import Distribuciones from './pages/Distribuciones';
 import AdminCategorias from './pages/AdminCategorias';
 import AdminUsuarios from './pages/AdminUsuarios';
@@ -45,8 +45,11 @@ function AppRoutes() {
       <Route path="/donaciones/recepciones" element={<PrivateRoute><RecepcionesDonaciones /></PrivateRoute>} />
       <Route path="/inventario" element={<PrivateRoute><Inventario /></PrivateRoute>} />
       <Route path="/transferencias" element={<PrivateRoute><Transferencias /></PrivateRoute>} />
-      <Route path="/distribuciones/nueva" element={<PrivateRoute><NuevaDistribucion /></PrivateRoute>} />
-      <Route path="/distribuciones" element={<PrivateRoute><Distribuciones /></PrivateRoute>} />
+      <Route path="/envios/nuevo" element={<PrivateRoute><NuevoEnvio /></PrivateRoute>} />
+      <Route path="/envios" element={<PrivateRoute><Distribuciones /></PrivateRoute>} />
+      {/* Rutas anteriores: redirigen a los envíos */}
+      <Route path="/distribuciones/nueva" element={<Navigate to="/envios/nuevo" replace />} />
+      <Route path="/distribuciones" element={<Navigate to="/envios" replace />} />
       <Route path="/analytics/historial" element={<PrivateRoute><HistorialTransacciones /></PrivateRoute>} />
       <Route path="/consultas-asistente" element={<PrivateRoute><ConsultaAsistente /></PrivateRoute>} />
 

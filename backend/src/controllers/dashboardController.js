@@ -62,6 +62,7 @@ const flatRecentDonations = async (limit) => {
 
 const flatRecentDistributions = async (limit) => {
   const shipments = await Shipment.findAll({
+    where: { confirmed: true },
     include: [
       { model: Center, as: 'destination' },
       { model: ShipmentDetail, as: 'details', include: [{ model: Item, as: 'supply', include: [{ model: Category, as: 'category' }] }] },
