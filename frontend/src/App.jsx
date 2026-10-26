@@ -14,15 +14,9 @@ import AdminCentros from './pages/AdminCentros';
 import Transferencias from './pages/Transferencias';
 import RecepcionesDonaciones from './pages/RecepcionesDonaciones';
 import ConfirmacionDonacionQR from './pages/ConfirmacionDonacionQR';
-import BlockchainTrazabilidad from './pages/BlockchainTrazabilidad';
+import Landing from './pages/Landing';
 import HistorialTransacciones from './pages/HistorialTransacciones';
 import PanelApoyo from './pages/PanelApoyo';
-
-// La landing es el sitio institucional estático de CGIC (public/landing/), fuera de React.
-const LandingInstitucional = () => {
-  window.location.replace('/landing/index.html');
-  return null;
-};
 
 const PrivateRoute = ({ children, adminOnly = false }) => {
   const { user } = useAuth();
@@ -40,8 +34,8 @@ const PublicRoute = ({ children }) => {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<LandingInstitucional />} />
-      <Route path="/trazabilidad" element={<BlockchainTrazabilidad />} />
+      <Route path="/" element={<Landing />} />
+      <Route path="/trazabilidad" element={<Navigate to="/#transparencia" replace />} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/confirmacion-donacion/:token" element={<ConfirmacionDonacionQR />} />
 
