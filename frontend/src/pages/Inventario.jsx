@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useContext, useCallback } from 'react';
 import api from '../services/api';
 import { ToastContext } from '../components/Layout';
-import { Boxes, Clock3, Download, ExternalLink, PackageX, Search } from 'lucide-react';
+import { Boxes, Clock3, Download, Link2, PackageX, Search } from 'lucide-react';
 import { getCategoryIcon } from '../utils/icons';
+import TrazabilidadInsumo from '../components/TrazabilidadInsumo';
 
 // Estados logísticos del insumo. Solo DISPONIBLE puede incluirse en un envío.
 const ITEM_STATUS = {
@@ -11,22 +12,10 @@ const ITEM_STATUS = {
   DISPONIBLE: { label: 'Disponible', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
 };
 
-const stellarExplorerBase = `https://stellar.expert/explorer/${(import.meta.env.VITE_STELLAR_NETWORK || 'testnet').toLowerCase()}`;
-
-const buildTxUrl = (txId) => {
-  if (!txId) return null;
-  return `${stellarExplorerBase}/tx/${txId}`;
-};
-
-const buildShort = (value, head = 10, tail = 8) => {
-  if (!value) return '';
-  if (value.length <= head + tail + 3) return value;
-  return `${value.slice(0, head)}...${value.slice(-tail)}`;
-};
-
 export default function Inventario() {
   const addToast = useContext(ToastContext);
   const [items, setItems] = useState([]);
+  const [traceItemId, setTraceItemId] = useState(null);
   const [categories, setCategories] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -167,7 +156,6 @@ export default function Inventario() {
           <div className="p-4 sm:p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {items.map((item) => {
               const statusMeta = ITEM_STATUS[item.status] || ITEM_STATUS.RECIBIDO;
-              const txUrl = buildTxUrl(item.blockchain_tx_id);
               const attributes = item.attributes
                 ? Object.entries(item.attributes).filter(([, value]) => value)
                 : [];
@@ -220,22 +208,13 @@ export default function Inventario() {
                       </div>
                     </div>
 
-                    <div className="mt-3">
-                      <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">Blockchain</p>
-                      {txUrl ? (
-                        <a
-                          href={txUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-2 text-sm text-indigo-700 hover:text-indigo-900 font-medium"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <ExternalLink size={14} /> Ver transacción ({buildShort(item.blockchain_tx_id)})
-                        </a>
-                      ) : (
-                        <p className="text-xs text-slate-500">Sin transacción visible todavía</p>
-                      )}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setTraceItemId(item.id); }}
+                      className="mt-3 inline-flex items-center gap-2 text-sm text-indigo-700 hover:text-indigo-900 font-medium"
+                    >
+                      <Link2 size={14} /> Ver trazabilidad
+                    </button>
                   </div>
 
                   {expandedId === item.id && (
@@ -295,6 +274,8 @@ export default function Inventario() {
           </button>
         </div>
       )}
+
+      {traceItemId && <TrazabilidadInsumo itemId={traceItemId} onClose={() => setTraceItemId(null)} />}
     </div>
   );
 }

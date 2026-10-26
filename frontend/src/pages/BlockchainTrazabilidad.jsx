@@ -21,7 +21,7 @@ const HERO_TEMPLATES = [
     subtitle: 'Trazabilidad Solidaria',
     body: 'Cada donación deja un rastro claro desde el origen hasta quien la recibe. Nada se pierde, nada se borra.',
     accent: '#E34E26',
-    image: '/assets/images/image1.png',
+    image: '/assets/images/image1.jpg',
   },
   {
     tag: (summary) => summary ? `Más de ${Number(summary.totalDonations || 0).toLocaleString('es-AR')} donaciones registradas` : 'Donaciones registradas en tiempo real',
@@ -29,7 +29,7 @@ const HERO_TEMPLATES = [
     subtitle: 'Verificada y visible',
     body: 'Seguí cada movimiento en tiempo real. El sistema registra de forma permanente cada paso, sin intermediarios ocultos.',
     accent: '#2E4053',
-    image: '/assets/images/image2.png',
+    image: '/assets/images/image2.jpg',
   },
   {
     tag: (summary) => summary ? `${Number(summary.activeCenters || 0).toLocaleString('es-AR')} centros activos en la red` : 'Centros activos en la red',
@@ -37,7 +37,7 @@ const HERO_TEMPLATES = [
     subtitle: 'De norte a sur',
     body: 'Centros de donación, comunidades y familias conectados en un mismo sistema que garantiza que la ayuda llegue a destino.',
     accent: '#D5DBDB',
-    image: '/assets/images/image3.png',
+    image: '/assets/images/image3.jpg',
 
   },
 ];

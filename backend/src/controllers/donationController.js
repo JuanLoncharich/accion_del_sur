@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
 const { Donation, Donor, Item, Category, Center, User, sequelize } = require('../models');
+const anclaje = require('../services/blockchain/anclaje');
 
 exports.create = async (req, res, next) => {
   const transaction = await sequelize.transaction();
@@ -47,10 +48,21 @@ exports.create = async (req, res, next) => {
     await donation.addSupply(item, { through: { quantity }, transaction });
 
     await transaction.commit();
+
+    // Mint SFT al centro del insumo (fuera de la transacción; degradación graceful).
+    const anchoredItem = await Item.findByPk(item.id, {
+      include: [{ model: Category, as: 'category' }, { model: Center, as: 'currentCenter' }],
+    });
+    const chain = await anclaje.mintearIngreso({
+      item: anchoredItem, center: anchoredItem.currentCenter, cantidad: quantity,
+    });
+    await donation.update({ blockchain_status: chain.status, blockchain_tx: chain.txId });
+
     res.status(201).json({
       id: donation.id,
       date: donation.date,
       quantity,
+      blockchain: { status: chain.status, tx: chain.txId },
       item: { ...item.toJSON(), quantity: item.available_quantity },
       donor,
     });

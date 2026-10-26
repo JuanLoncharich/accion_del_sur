@@ -2,13 +2,20 @@ import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { ToastContext } from '../components/Layout';
-import { ClipboardList, Clock3, PackageX, Plus, CheckCircle2, Trash2 } from 'lucide-react';
+import { ClipboardList, Clock3, ExternalLink, Link2, PackageX, Plus, CheckCircle2, Trash2 } from 'lucide-react';
 import { getCategoryIcon } from '../utils/icons';
 
 const STATUS = {
   true: { label: 'Confirmado', color: 'bg-emerald-100 text-emerald-700' },
   false: { label: 'Pendiente', color: 'bg-amber-100 text-amber-700' },
 };
+
+// Estado del anclaje en blockchain (burn SFT al confirmar).
+const CHAIN = {
+  anchored: { label: 'En blockchain', color: 'bg-indigo-100 text-indigo-700' },
+  local: { label: 'Solo en base', color: 'bg-slate-100 text-slate-600' },
+};
+const txUrl = (tx) => `https://stellar.expert/explorer/${import.meta.env.VITE_STELLAR_NETWORK || 'testnet'}/tx/${tx}`;
 
 const formatDate = (value) => new Date(`${value}T00:00:00`).toLocaleDateString('es-AR');
 
@@ -159,6 +166,11 @@ export default function Distribuciones() {
                         <td className="px-4 py-4 text-center font-bold text-orange-600">-{units}</td>
                         <td className="px-4 py-4">
                           <span className={`inline-flex px-2 py-1 rounded-lg text-xs font-medium ${status.color}`}>{status.label}</span>
+                          {CHAIN[s.blockchain_status] && (
+                            <span className={`ml-1 inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium ${CHAIN[s.blockchain_status].color}`}>
+                              <Link2 size={12} /> {CHAIN[s.blockchain_status].label}
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-4 text-right whitespace-nowrap" onClick={(e) => e.stopPropagation()}>
                           {!s.confirmed && (
@@ -192,7 +204,14 @@ export default function Distribuciones() {
                                     <span className="font-medium text-slate-800">{d.supply?.name}</span>
                                     <span className="text-xs text-slate-400">{d.supply?.category?.name}</span>
                                   </span>
-                                  <span className="font-semibold text-orange-600">{d.quantity_sent}</span>
+                                  <span className="inline-flex items-center gap-3">
+                                    {d.blockchain_tx && (
+                                      <a href={txUrl(d.blockchain_tx)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800">
+                                        <ExternalLink size={12} /> tx
+                                      </a>
+                                    )}
+                                    <span className="font-semibold text-orange-600">{d.quantity_sent}</span>
+                                  </span>
                                 </div>
                               ))}
                               <p className="text-xs text-slate-500 pt-2">

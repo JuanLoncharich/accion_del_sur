@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const { Center, Item, Shipment, TokenTransfer } = require('../models');
 const { destroyIfUnused } = require('../utils/deleteGuard');
+const anclaje = require('../services/blockchain/anclaje');
 
 const serialize = (center) => ({ ...center.toJSON(), is_active: true, center_type: center.operational_status });
 
@@ -22,7 +23,9 @@ exports.create = async (req, res, next) => {
       operational_status: req.body.operational_status || req.body.center_type || 'OPERATIVO',
       managed_by: req.user.id,
     });
-    res.status(201).json(serialize(center));
+    // Despliega el contrato de identidad del centro (si la blockchain está activa).
+    const chain = await anclaje.desplegarCentro(center);
+    res.status(201).json({ ...serialize(center), blockchain: { status: chain.status, tx: chain.txId } });
   } catch (error) { next(error); }
 };
 exports.update = async (req, res, next) => {

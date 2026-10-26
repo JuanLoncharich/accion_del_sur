@@ -6,4 +6,5 @@ module.exports = sequelize.define('DetalleEnvio', {
   shipment_id: { type: DataTypes.INTEGER, allowNull: false },
   supply_id: { type: DataTypes.INTEGER, allowNull: false },
   quantity_sent: { type: DataTypes.INTEGER, allowNull: false, validate: { min: 1 } },
+  blockchain_tx: { type: DataTypes.STRING(128), allowNull: true },
 }, { tableName: 'detalles_envio', timestamps: false });

@@ -1,18 +1,18 @@
 {
   "name": "accion-del-sur-backend",
   "version": "1.0.0",
-  "description": "Backend para el sistema de gestión de donaciones Acción del Sur",
+  "description": "API de Acción del Sur: gestión de donaciones con trazabilidad en Stellar/Soroban",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "seed": "node src/seeders/index.js",
-    "stellar:cuenta": "node src/services/blockchain/scripts/generar-cuenta.js",
-    "stellar:deploy": "bash src/services/blockchain/scripts/deploy-contrato.sh"
+    "seed": "node src/seeders/demo.js",
+    "stellar:cuenta": "node scripts/stellar/generar-cuenta.js",
+    "stellar:desplegar": "node scripts/stellar/desplegar-contratos.js",
+    "stellar:sincronizar": "node scripts/stellar/sincronizar.js",
+    "test:e2e": "node scripts/e2e/full-api-test.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "license": "UNLICENSED",
   "dependencies": {
     "@stellar/stellar-sdk": "^14.6.1",
     "bcryptjs": "^3.0.3",
@@ -25,5 +25,9 @@
     "mysql2": "^3.20.0",
     "nodemailer": "^8.0.4",
     "sequelize": "^6.37.8"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=20"
   }
 }

@@ -1,7 +1,7 @@
 const crypto = require('crypto');
 const { Reception, ReceptionDetail, Item, Category, Center, sequelize } = require('../models');
 const cryptoEvidence = require('../utils/cryptoEvidence');
-const sftService = require('../services/blockchain/sftService');
+const anclaje = require('../services/blockchain/anclaje');
 const stellarService = require('../services/blockchain/stellarService');
 
 const PUBLIC_BASE = process.env.FRONTEND_URL || 'http://localhost:5173';
@@ -130,26 +130,18 @@ exports.finalizeInternal = async (req, res, next) => {
 
 async function tryBlockchainFinalize(reception, details) {
   try {
-    if (!sftService.isEnabled) return; // sin blockchain configurado → queda en local
+    if (!stellarService.isEnabled) return; // sin blockchain configurada → queda en local
     const center = reception.reception_center_id ? await Center.findByPk(reception.reception_center_id) : null;
-    const toCenterAddress = center && center.blockchain_contract_id;
-    if (!toCenterAddress) return; // el centro aún no tiene contrato desplegado (Fase 5)
 
     let mintedTotal = 0;
     for (const d of details) {
       if (Number(d.quantity_accepted) <= 0) continue;
       const item = await Item.findByPk(d.item_id, { include: [{ model: Category, as: 'category' }] });
       if (!item) continue;
-      const tokenId = sftService.computeTokenId(item.id);
-      const metadata = {
-        item_id: item.id,
-        categoria: item.category ? item.category.name : '',
-        nombre: item.name,
-        attributes_hash: item.attributes_hash || '0'.repeat(64),
-      };
-      await sftService.mintToCenter({ toCenterAddress, tokenId, metadata, cantidad: Number(d.quantity_accepted), firmaHash: reception.signature_hash });
-      mintedTotal += Number(d.quantity_accepted);
-      if (!item.token_id) { item.token_id = tokenId; await item.save(); }
+      const r = await anclaje.mintearIngreso({
+        item, center, cantidad: Number(d.quantity_accepted), firmaHash: reception.signature_hash,
+      });
+      if (r.status === 'anchored') mintedTotal += Number(d.quantity_accepted);
     }
 
     const anchor = await stellarService.anchorDonationReception({

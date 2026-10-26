@@ -10,6 +10,8 @@ const Shipment = sequelize.define('Envio', {
   reception_center_id: { type: DataTypes.INTEGER, allowNull: false },
   registered_by: { type: DataTypes.INTEGER, allowNull: false },
   confirmed: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+  // Anclaje on-chain al confirmar (burn SFT por línea): anchored | local | disabled.
+  blockchain_status: { type: DataTypes.STRING(20), allowNull: true },
 }, { tableName: 'envios', timestamps: false });
 
 // Suma las cantidades por insumo: [{ supply_id, quantity }] ordenado por supply_id.

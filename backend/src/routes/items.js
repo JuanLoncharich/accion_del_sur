@@ -10,6 +10,7 @@ router.get('/stock-by-category', authenticate, itemController.stockByCategory);
 router.get('/', authenticate, [
   query('status').optional({ values: 'falsy' }).isIn(Item.STATUSES).withMessage('Estado inválido'),
 ], itemController.list);
+router.get('/:id/trazabilidad', authenticate, [param('id').isInt({ min: 1 })], itemController.trazabilidad);
 router.get('/:id', authenticate, itemController.getOne);
 router.put('/:id', authenticate, itemController.update);
 router.patch('/:id/status', authenticate, [

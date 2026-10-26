@@ -1,31 +1,26 @@
-# Dependencies
+# Dependencias
 node_modules
-package-lock.json
 
-# Environment
+# Variables de entorno (nunca versionar secretos)
 .env
 .env.*
 !.env.example
 
-# Rust build artifacts
-**/target/
-**/*.wasm
-**/*.rlib
-**/*.rmeta
-**/*.d
-**/*.a
+# Contratos Soroban: artefactos de compilación y snapshots de tests
+contracts/target/
+**/test_snapshots/
 
-# Frontend build artifacts
-frontend/dist/assets/
-!frontend/dist/.gitkeep
+# Frontend: build de producción
+frontend/dist/
 
-# Misc
-*.log
-*.bak
-*.txt
-
-# Runtime / local artifacts
+# Archivos subidos y logs en tiempo de ejecución
 backend/uploads/*
 !backend/uploads/.gitkeep
 .logs/
-frontend/dist/
+*.log
+
+# Editor / sistema
+.DS_Store
+.vscode/
+.idea/
+*.swp

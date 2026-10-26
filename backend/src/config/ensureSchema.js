@@ -51,12 +51,19 @@ const runMigrations = async () => {
   // centros_recepcion
   await addColumnIfMissing('centros_recepcion', 'is_active', '`is_active` TINYINT(1) NOT NULL DEFAULT 1');
   await addColumnIfMissing('centros_recepcion', 'blockchain_contract_id', '`blockchain_contract_id` VARCHAR(120) NULL');
+  await addColumnIfMissing('centros_recepcion', 'blockchain_deploy_tx', '`blockchain_deploy_tx` VARCHAR(128) NULL');
 
   // donaciones_insumos
   await addColumnIfMissing('donaciones_insumos', 'quantity', '`quantity` INT NOT NULL DEFAULT 1');
 
   // donaciones
   await addColumnIfMissing('donaciones', 'status', "`status` VARCHAR(40) NOT NULL DEFAULT 'confirmada'");
+  await addColumnIfMissing('donaciones', 'blockchain_status', '`blockchain_status` VARCHAR(20) NULL');
+  await addColumnIfMissing('donaciones', 'blockchain_tx', '`blockchain_tx` VARCHAR(128) NULL');
+
+  // envios / detalles_envio
+  await addColumnIfMissing('envios', 'blockchain_status', '`blockchain_status` VARCHAR(20) NULL');
+  await addColumnIfMissing('detalles_envio', 'blockchain_tx', '`blockchain_tx` VARCHAR(128) NULL');
 
   // Backfills (solo actualizan NULLs / incoherencias; nunca sobrescriben datos válidos).
   await sequelize.query('UPDATE insumos SET is_active = 1 WHERE is_active IS NULL');

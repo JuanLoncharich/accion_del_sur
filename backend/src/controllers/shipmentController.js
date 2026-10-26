@@ -1,6 +1,7 @@
 const { Op } = require('sequelize');
 const { validationResult } = require('express-validator');
 const { Shipment, ShipmentDetail, Center, Item, Category, User, sequelize } = require('../models');
+const anclaje = require('../services/blockchain/anclaje');
 
 const include = [
   { model: Center, as: 'destination', attributes: ['id', 'name', 'location'] },
@@ -12,6 +13,30 @@ const include = [
 ];
 
 const findFull = (id, options = {}) => Shipment.findByPk(id, { include, ...options });
+
+// Después de confirmar (y commitear) un envío: quema en blockchain las unidades de cada línea
+// en el centro donde estaba el insumo. No falla el request si la blockchain no responde.
+const anclarEnvio = async (shipmentId, operatorId) => {
+  const shipment = await Shipment.findByPk(shipmentId, {
+    include: [{
+      model: ShipmentDetail, as: 'details',
+      include: [{ model: Item, as: 'supply', include: [{ model: Center, as: 'currentCenter' }] }],
+    }],
+  });
+  const resultados = [];
+  for (const detail of shipment.details) {
+    const r = await anclaje.quemarSalida({
+      item: detail.supply,
+      center: detail.supply.currentCenter,
+      cantidad: detail.quantity_sent,
+      referencia: `envio:${shipment.id}:destino:${shipment.reception_center_id}`,
+      operatorId,
+    });
+    if (r.txId) await detail.update({ blockchain_tx: r.txId });
+    resultados.push(r);
+  }
+  await shipment.update({ blockchain_status: anclaje.estadoConjunto(resultados) });
+};
 
 const sendError = (res, next, error) => (error.status
   ? res.status(error.status).json({ error: error.message, ...(error.payload || {}) })
@@ -77,6 +102,7 @@ exports.create = async (req, res, next) => {
     if (confirm) await shipment.confirmarEnvio({ transaction });
 
     await transaction.commit();
+    if (confirm) await anclarEnvio(shipment.id, req.user.id);
     return res.status(201).json(await findFull(shipment.id));
   } catch (error) {
     if (!transaction.finished) await transaction.rollback();
@@ -90,6 +116,7 @@ exports.confirm = async (req, res, next) => {
     const shipment = await Shipment.findByPk(req.params.id);
     if (!shipment) return res.status(404).json({ error: 'Envío no encontrado' });
     await shipment.confirmarEnvio();
+    await anclarEnvio(shipment.id, req.user.id);
     return res.json(await findFull(shipment.id));
   } catch (error) { return sendError(res, next, error); }
 };
