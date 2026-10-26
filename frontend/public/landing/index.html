@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CGIC — Centro de Gestión Integral de Crisis</title>
+  <meta name="description" content="Desarrollamos soluciones innovadoras que brinden respuesta a emergencias climáticas y humanitarias, articulando actores, tecnología y territorio.">
+  <meta property="og:title" content="CGIC — Centro de Gestión Integral de Crisis">
+  <meta property="og:description" content="De la crisis a la resiliencia, impulsamos soluciones desde el territorio.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" type="image/png" href="images/logo-cgic.webp">
+</head>
+<body>
+  <!-- Preloader -->
+  <div class="preloader" id="preloader"><div class="preloader__spinner"></div></div>
+  <div class="mobile-overlay" id="mobile-overlay"></div>
+
+  <!-- ======== NAVBAR ======== -->
+  <nav class="navbar" id="navbar">
+    <div class="container navbar__inner">
+      <a href="index.html" class="navbar__logo">
+        <img loading="eager" fetchpriority="high" decoding="async" src="images/logo-cgic.webp" alt="CGIC — Centro de Gestión Integral de Crisis" class="navbar__logo-img">
+      </a>
+      <div class="navbar__links" id="nav-links">
+        <a href="index.html" class="navbar__link navbar__link--active">Inicio</a>
+        <a href="proyectos.html" class="navbar__link">Proyectos</a>
+        <a href="equipo.html" class="navbar__link">Equipo</a>
+        <a href="trayectoria.html" class="navbar__link">Historia</a>
+        <a href="#contacto" class="btn btn--primary btn--sm navbar__cta">Sumate</a>
+        <a href="/login" class="btn btn--outline btn--sm navbar__cta navbar__cta--login">Ingresar al sistema</a>
+      </div>
+      <button class="navbar__toggle" id="nav-toggle" aria-label="Menú">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ======== HERO ======== -->
+  <section class="hero" id="hero">
+    <!-- Slider de fondo -->
+    <div class="hero__slider" id="hero-slider">
+      <div class="hero__slide hero__slide--active">
+        <img loading="eager" fetchpriority="high" decoding="async" src="images/slider/slider1.webp" alt="CGIC en acción — imagen 1" class="hero__slide-img">
+      </div>
+      <div class="hero__slide">
+        <img loading="lazy" decoding="async" src="images/slider/slider2.webp" alt="CGIC en acción — imagen 2" class="hero__slide-img">
+      </div>
+      <div class="hero__slide">
+        <img loading="lazy" decoding="async" src="images/slider/slider3.webp" alt="CGIC en acción — imagen 3" class="hero__slide-img">
+      </div>
+    </div>
+    <!-- Overlay oscuro -->
+    <div class="hero__mesh"></div>
+    <!-- Contenido superpuesto -->
+    <div class="container hero__content">
+      <h1 class="hero__title">De la crisis a la <span class="highlight">resiliencia</span></h1>
+      <p class="hero__tagline">Impulsamos soluciones desde el territorio</p>
+      <p class="hero__subtitle">Desarrollamos soluciones innovadoras que brinden respuesta a emergencias climáticas y humanitarias, articulando actores, tecnología y territorio.</p>
+      <div class="hero__actions">
+        <a href="#que-es" class="btn btn--primary btn--lg">Conocer más
+          <span class="icon icon--sm" style="color:#fff"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+        </a>
+        <a href="#contacto" class="btn btn--outline btn--lg" style="border-color:rgba(255,255,255,.4);color:#fff;">Sumate</a>
+      </div>
+    </div>
+    <!-- Controles -->
+    <button class="hero__slider-btn hero__slider-btn--prev" id="slider-prev" aria-label="Imagen anterior">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="hero__slider-btn hero__slider-btn--next" id="slider-next" aria-label="Imagen siguiente">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+  </section>
+
+  <!-- ======== ¿QUÉ ES CGIC? ======== -->
+  <section class="section" id="que-es">
+    <div class="container">
+      <div class="about__grid">
+        <div class="about__content reveal-left">
+          <span class="section-label">Sobre nosotros</span>
+          <h2 class="section-title">¿Qué es <span class="accent">CGIC</span>?</h2>
+          <p class="about__text">CGIC impulsa soluciones innovadoras para responder a crisis climáticas y humanitarias, fortaleciendo comunidades desde el territorio.</p>
+          <p class="about__text">Integramos innovación, tecnología y trabajo territorial en un modelo de acción sistemático y replicable, desarrollando soluciones situadas que se adaptan y activan según cada crisis.</p>
+          <a href="proyectos.html" class="btn btn--primary">Ver proyectos
+            <span class="icon icon--sm" style="color:#fff"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+          </a>
+        </div>
+        <div class="about__visual reveal-right">
+          <div class="about__image-wrapper">
+            <img loading="lazy" decoding="async" src="images/losAngeles.jpg" alt="Equipo CGIC en taller territorial">
+          </div>
+          <div class="about__accent-shape"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== ¿POR QUÉ EXISTIMOS? — Compact stats ======== -->
+  <section class="section--compact section--alt" id="por-que">
+    <div class="container">
+      <div class="text-center reveal" style="margin-bottom:var(--space-lg);">
+        <span class="section-label">El contexto</span>
+        <h2 class="section-title mx-auto">¿Por qué <span class="accent">existimos</span>?</h2>
+        <p class="section-subtitle mx-auto">Las crisis climáticas y humanitarias son cada vez más frecuentes, intensas y complejas.</p>
+      </div>
+      <div class="stats-row stagger-children">
+        <div class="stat-card">
+          <div class="stat-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <div class="stat-card__number"><span class="count-up" data-target="350" data-suffix=" M">0</span></div>
+          <p class="stat-card__text">personas al año afectadas por desastres climáticos</p>
+          <div class="stat-card__reference">(OCHA, 2018)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div class="stat-card__number"><span class="count-up" data-target="17" data-suffix=" M">0</span></div>
+          <p class="stat-card__text">migrantes climáticos proyectados en Latinoamérica para 2050</p>
+          <div class="stat-card__reference">(CAF, 2023)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__icon" style="font-family: var(--font-heading); font-size: 1.8rem; line-height: 40px;">
+            $USD
+          </div>
+          <div class="stat-card__number"><span class="count-up" data-target="4" data-prefix="$" data-suffix=" a $15">0</span></div>
+          <p class="stat-card__text">USD ahorra cada dólar invertido en prevención</p>
+          <div class="stat-card__reference">(UNDRR, 2021)</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== PROPÓSITO ======== -->
+  <section class="purpose section--compact" id="proposito">
+    <div class="container reveal">
+      <span class="section-label" style="color:rgba(255,255,255,.5)">Propósito</span>
+      <h2 class="section-title text-center mx-auto" style="color:#fff">Nuestro propósito</h2>
+      <p class="purpose__text">Transformar el paradigma de respuesta hacia uno <strong>proactivo, articulado y territorial</strong>, que impulse la resiliencia climática y evite que las emergencias se conviertan en catástrofes.</p>
+    </div>
+  </section>
+
+  <!-- ======== VALORES — 5 compact cards ======== -->
+  <section class="section--compact" id="valores">
+    <div class="container">
+      <div class="text-center reveal" style="margin-bottom:var(--space-md)">
+        <span class="section-label">Lo que nos guía</span>
+        <h2 class="section-title mx-auto">Nuestros <span class="accent">valores</span></h2>
+      </div>
+      <div class="values-grid stagger-children">
+        <div class="value-card">
+          <div class="value-card__icon value-card__icon--img">
+            <img loading="lazy" decoding="async" src="images/valor-personas.webp" alt="Centrado en las personas">
+          </div>
+          <h3 class="value-card__title">Centrado en las personas</h3>
+          <p class="value-card__text">Tecnología al servicio de experiencias más cercanas y humanas.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-card__icon value-card__icon--img">
+            <img loading="lazy" decoding="async" src="images/valor-territorial.webp" alt="Territorial">
+          </div>
+          <h3 class="value-card__title">Territorial</h3>
+          <p class="value-card__text">Desde las comunidades, adaptando cada solución al contexto local.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-card__icon value-card__icon--img">
+            <img loading="lazy" decoding="async" src="images/valor-vision.webp" alt="Visión de futuro">
+          </div>
+          <h3 class="value-card__title">Visión de futuro</h3>
+          <p class="value-card__text">Soluciones más allá de lo convencional, hacia nuevos paradigmas.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-card__icon value-card__icon--img">
+            <img loading="lazy" decoding="async" src="images/valor-elastico.webp" alt="Elástico">
+          </div>
+          <h3 class="value-card__title">Elástico</h3>
+          <p class="value-card__text">Estrategias flexibles para comunidades que se adaptan y fortalecen.</p>
+        </div>
+        <div class="value-card">
+          <div class="value-card__icon value-card__icon--img">
+              <img loading="lazy" decoding="async" src="images/valor-colaborativo.png" alt="Colaborativo">
+            </div>
+          <h3 class="value-card__title">Colaborativo</h3>
+          <p class="value-card__text">Codiseño que reúne múltiples voces y diversidad de pensamiento.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== ENFOQUE — 3 phases ======== -->
+  <section class="section--compact section--alt" id="enfoque">
+    <div class="container">
+      <div class="text-center reveal" style="margin-bottom:var(--space-md)">
+        <span class="section-label">Enfoque</span>
+        <h2 class="section-title mx-auto">Tres etapas <span class="accent">clave</span></h2>
+      </div>
+      <div class="approach__phases stagger-children">
+        <div class="phase">
+          <div class="phase__icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <h3 class="phase__title">Prevención</h3>
+          <p class="phase__subtitle">Anticipación y preparación</p>
+        </div>
+        <div class="phase">
+          <div class="phase__icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          </div>
+          <h3 class="phase__title">Respuesta</h3>
+          <p class="phase__subtitle">Acción inmediata</p>
+        </div>
+        <div class="phase">
+          <div class="phase__icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12h14"/></svg>
+          </div>
+          <h3 class="phase__title">Recuperación</h3>
+          <p class="phase__subtitle">Reconstrucción resiliente</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== CÓMO ACTUAMOS — 2 plans ======== -->
+  <section class="section--compact" id="como-actuamos">
+    <div class="container">
+      <div class="reveal" style="margin-bottom:var(--space-md)">
+        <span class="section-label">Estrategia</span>
+        <h2 class="section-title">Cómo <span class="accent">actuamos</span></h2>
+        <p class="section-subtitle">Dos planes de acción complementarios:</p>
+      </div>
+      <div class="action-plans stagger-children">
+        <div class="action-plan">
+          <div class="action-plan__header">
+            <div class="action-plan__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <h3 class="action-plan__title">Emergencias climáticas</h3>
+          </div>
+          <p class="action-plan__text">Fortalecemos capacidades locales para prevenir, responder y recuperarse frente a fenómenos climáticos extremos.</p>
+        </div>
+        <div class="action-plan">
+          <div class="action-plan__header">
+            <div class="action-plan__icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <h3 class="action-plan__title">Emergencias humanitarias</h3>
+          </div>
+          <p class="action-plan__text">Gestión de crisis derivadas de dinámicas antrópicas que afectan directamente las condiciones de vida y exposición de las personas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== IMPACTO ======== -->
+  <section class="impact section--compact section--dark" id="impacto">
+    <div class="container">
+      <div class="text-center reveal" style="margin-bottom:var(--space-md)">
+        <span class="section-label">Resultados</span>
+        <h2 class="section-title mx-auto">Impacto en nuestro <span class="accent">primer año</span></h2>
+      </div>
+      <div class="impact-grid stagger-children">
+        <div class="impact-item">
+          <div class="impact-item__number"><span class="count-up" data-target="28">0</span></div>
+          <p class="impact-item__label">instituciones articuladas</p>
+        </div>
+        <div class="impact-item">
+          <div class="impact-item__number"><span class="count-up" data-target="135">0</span></div>
+          <p class="impact-item__label">personas alcanzadas</p>
+        </div>
+        <div class="impact-item">
+          <div class="impact-item__number"><span class="count-up" data-target="15">0</span></div>
+          <p class="impact-item__label">personas en el equipo</p>
+        </div>
+        <div class="impact-item">
+          <div class="impact-item__number">+AR$<span class="count-up" data-target="9">0</span>M</div>
+          <p class="impact-item__label">gestionados</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== DIFERENCIAL ======== -->
+  <section class="differential section--compact" id="diferencial">
+    <div class="container reveal">
+      <h2 class="section-title text-center mx-auto">Nuestro <span style="opacity:.9">diferencial</span></h2>
+      <p class="differential__text">Integramos innovación, tecnología y trabajo territorial en un modelo de acción sistemático y replicable, desarrollando soluciones situadas que se adaptan y <br>activan según cada crisis.</p>
+    </div>
+  </section>
+
+  <!-- ======== SUMATE ======== -->
+  <section class="section--compact" id="sumate">
+    <div class="container container--wide">
+      <!-- Sumate Section -->
+      <div class="text-center reveal" style="margin-bottom:var(--space-md)">
+        <span class="section-label">Unite a nosotros</span>
+        <h2 class="section-title mx-auto"><span class="accent">Sumate</span></h2>
+      </div>
+      <div class="text-center mx-auto" style="max-width:1100px; margin-bottom:var(--space-xl);">
+        <p class="section-subtitle mx-auto" style="max-width:1000px; margin-bottom:var(--space-md);">Articulamos con diversas instituciones porque entendemos que el trabajo en red es clave para abordar desafíos complejos. Promovemos la colaboración entre el sector público, privado, universidades, organismos supranacionales, equipos técnicos y el tercer sector, con el objetivo de generar soluciones integrales en el territorio</p>
+        <p style="font-family:var(--font-heading); font-size:1.4rem; color:var(--color-title);">Podés:</p>
+        <ul style="display:flex; justify-content:center; flex-wrap:wrap; gap:var(--space-md); margin-top:var(--space-xs); font-family:var(--font-body); font-weight:500; font-size:1.05rem; color:var(--color-orange);">
+          <li>✓ Impulsar un proyecto</li>
+          <li>✓ Financiar iniciativas</li>
+          <li>✓ Articular acciones</li>
+          <li>✓ Colaborar con el equipo</li>
+        </ul>
+      </div>
+
+      <!-- Imágenes que Hablan -->
+      <div class="text-center reveal" style="margin-bottom:var(--space-md)">
+        <span class="section-label">Realidad</span>
+        <h2 class="section-title mx-auto">Imágenes que <span class="accent">hablan</span></h2>
+      </div>
+      <div class="images-grid stagger-children" style="margin-bottom:var(--space-xl);">
+        <a href="https://elpais.com/argentina/2026-01-10/incendios-forestales-devastan-la-patagonia-argentina-en-imagenes.html" target="_blank" rel="noopener" class="image-card">
+          <img loading="lazy" decoding="async" src="images/imgHablan3.avif" alt="Incendios forestales en Patagonia">
+          <div class="image-card__overlay">
+            <p class="image-card__caption">Incendios forestales en la Patagonia</p>
+            <p class="image-card__source">Fuente: El País</p>
+          </div>
+        </a>
+        <a href="https://www.bbc.com/mundo/articles/clyrd8zmge9o" target="_blank" rel="noopener" class="image-card">
+          <img loading="lazy" decoding="async" src="images/imgQeHablan2.webp" alt="Emergencias climáticas">
+          <div class="image-card__overlay">
+            <p class="image-card__caption">Emergencias climáticas</p>
+            <p class="image-card__source">Fuente: BBC Mundo</p>
+          </div>
+        </a>
+        <a href="https://www.a24.com/actualidad/ola-polar-ya-son-tres-las-personas-situacion-calle-que-murieron-frio-n1117878" target="_blank" rel="noopener" class="image-card">
+          <img loading="lazy" decoding="async" src="images/frio-polarjpg.webp" alt="Emergencias humanitarias urbanas">
+          <div class="image-card__overlay">
+            <p class="image-card__caption">Emergencias humanitarias urbanas</p>
+            <p class="image-card__source">Fuente: A24</p>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ALLIES -->
+  <section class="section--compact section--alt" style="overflow-x: hidden;">
+    <div class="container">
+      <div class="text-center reveal" style="margin-bottom:var(--space-md)">
+        <span class="section-label">Red</span>
+        <h2 class="section-title mx-auto">Aliados y <span class="accent">articulaciones</span></h2>
+        <p class="section-subtitle mx-auto">Organizaciones, universidades y redes globales que nos acompañaron en 2025:</p>
+      </div>
+    </div>
+    <div class="allies-slider-container">
+        <div class="allies-slider-track">
+          <!-- ORIGINAL SET -->
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-aurora.png" alt="Aurora Humanitarian Initiative" class="ally-card__logo">
+            <span class="ally-card__name">Aurora Humanitarian Initiative</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-uncuyo.png" alt="Universidad Nacional de Cuyo" class="ally-card__logo">
+            <span class="ally-card__name">UNCUYO</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-blok.png" alt="BLOK Design" class="ally-card__logo">
+            <span class="ally-card__name">BLOK Design</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-bloomberg.png" alt="Bloomberg Center for Public Innovation" class="ally-card__logo">
+            <span class="ally-card__name">Bloomberg Center</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-uclg.png" alt="UCLG" class="ally-card__logo">
+            <span class="ally-card__name">UCLG</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-oikos.png" alt="Oikos Red Ambiental" class="ally-card__logo">
+            <span class="ally-card__name">Oikos Red Ambiental</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-lupa.png" alt="Fundación Lupa" class="ally-card__logo">
+            <span class="ally-card__name">Fundación Lupa</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-extrabrut.png" alt="Grupo ExtraBrut" class="ally-card__logo">
+            <span class="ally-card__name">Grupo ExtraBrut</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-steel.png" alt="Escuela de Steel Framing" class="ally-card__logo">
+            <span class="ally-card__name">Escuela de Steel Framing</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-lujan.png" alt="Luján Sustentable" class="ally-card__logo">
+            <span class="ally-card__name">Luján Sustentable</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-asuntos-del-sur.png" alt="Asuntos del Sur" class="ally-card__logo">
+            <span class="ally-card__name">Asuntos del Sur</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-uncongreso.png" alt="Universidad de Congreso" class="ally-card__logo">
+            <span class="ally-card__name">Universidad de Congreso</span>
+          </div>
+          <!-- DUPLICATED SET FOR SEAMLESS SCROLL -->
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-aurora.png" alt="Aurora Humanitarian Initiative" class="ally-card__logo">
+            <span class="ally-card__name">Aurora Humanitarian Initiative</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-uncuyo.png" alt="Universidad Nacional de Cuyo" class="ally-card__logo">
+            <span class="ally-card__name">UNCUYO</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-blok.png" alt="BLOK Design" class="ally-card__logo">
+            <span class="ally-card__name">BLOK Design</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-bloomberg.png" alt="Bloomberg Center for Public Innovation" class="ally-card__logo">
+            <span class="ally-card__name">Bloomberg Center</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-uclg.png" alt="UCLG" class="ally-card__logo">
+            <span class="ally-card__name">UCLG</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-oikos.png" alt="Oikos Red Ambiental" class="ally-card__logo">
+            <span class="ally-card__name">Oikos Red Ambiental</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-lupa.png" alt="Fundación Lupa" class="ally-card__logo">
+            <span class="ally-card__name">Fundación Lupa</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-extrabrut.png" alt="Grupo ExtraBrut" class="ally-card__logo">
+            <span class="ally-card__name">Grupo ExtraBrut</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-steel.png" alt="Escuela de Steel Framing" class="ally-card__logo">
+            <span class="ally-card__name">Escuela de Steel Framing</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-lujan.png" alt="Luján Sustentable" class="ally-card__logo">
+            <span class="ally-card__name">Luján Sustentable</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-asuntos-del-sur.png" alt="Asuntos del Sur" class="ally-card__logo">
+            <span class="ally-card__name">Asuntos del Sur</span>
+          </div>
+          <div class="ally-card">
+            <img loading="lazy" decoding="async" src="images/org-uncongreso.png" alt="Universidad de Congreso" class="ally-card__logo">
+            <span class="ally-card__name">Universidad de Congreso</span>
+          </div>
+        </div>
+      </div>
+  </section>
+
+  <!-- ======== CONTACTO ======== -->
+  <section class="section--compact" id="contacto">
+    <div class="container">
+      <div class="text-center reveal" style="margin-bottom:var(--space-md)">
+        <span class="section-label">Hablemos</span>
+        <h2 class="section-title mx-auto">Contacto</h2>
+      </div>
+      <div class="contact-grid stagger-children">
+        <a href="mailto:cgic.argentina@gmail.com" class="contact-card">
+          <div class="contact-card__icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          </div>
+          <div><div class="contact-card__label">Email</div><div class="contact-card__value">cgic.argentina@gmail.com</div></div>
+        </a>
+        <a href="https://wa.me/5492616327027" target="_blank" rel="noopener" class="contact-card">
+          <div class="contact-card__icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </div>
+          <div><div class="contact-card__label">WhatsApp</div><div class="contact-card__value">+54 9 261 6327027</div></div>
+        </a>
+        <a href="https://www.instagram.com/cgic.argentina/" target="_blank" rel="noopener" class="contact-card">
+          <div class="contact-card__icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </div>
+          <div><div class="contact-card__label">Instagram</div><div class="contact-card__value">@cgic.argentina</div></div>
+        </a>
+        <a href="https://linkedin.com/company/centro-de-gestion-integral-de-crisis-cgic" target="_blank" rel="noopener" class="contact-card">
+          <div class="contact-card__icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          </div>
+          <div><div class="contact-card__label">LinkedIn</div><div class="contact-card__value">CGIC</div></div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======== FOOTER ======== -->
+  <footer class="footer" id="footer">
+    <div class="container">
+      <div class="footer__inner">
+        <div class="footer__brand">
+          <div class="footer__logo"><img loading="lazy" decoding="async" src="images/logo-cgic.webp" alt="CGIC" class="footer__logo-img"></div>
+          <p class="footer__tagline">Soluciones situadas, replicables y con impacto territorial.</p>
+        </div>
+        <div>
+          <h4 class="footer__section-title">Secciones</h4>
+          <div class="footer__links">
+            <a href="index.html" class="footer__link">Inicio</a>
+            <a href="proyectos.html" class="footer__link">Proyectos</a>
+            <a href="equipo.html" class="footer__link">Equipo y aliados</a>
+            <a href="trayectoria.html" class="footer__link">Historia</a>
+          </div>
+        </div>
+        <div>
+          <h4 class="footer__section-title">Contacto</h4>
+          <div class="footer__links">
+            <a href="mailto:cgic.argentina@gmail.com" class="footer__link">cgic.argentina@gmail.com</a>
+            <a href="https://wa.me/5492616327027" class="footer__link">+54 9 261 6327027</a>
+          </div>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p>© 2025 CGIC — Centro de Gestión Integral de Crisis</p>
+        <div class="footer__socials">
+          <a href="https://www.instagram.com/cgic.argentina/" target="_blank" rel="noopener" class="footer__social" aria-label="Instagram">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </a>
+          <a href="https://linkedin.com/company/centro-de-gestion-integral-de-crisis-cgic" target="_blank" rel="noopener" class="footer__social" aria-label="LinkedIn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-4 0v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          </a>
+          <a href="https://wa.me/5492616327027" target="_blank" rel="noopener" class="footer__social" aria-label="WhatsApp">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <button class="back-to-top" id="back-to-top" aria-label="Volver arriba">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+  </button>
+
+  <script src="scripts.js"></script>
+</body>
+</html>
