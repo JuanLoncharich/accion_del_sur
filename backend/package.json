@@ -10,7 +10,7 @@
     "stellar:cuenta": "node scripts/stellar/generar-cuenta.js",
     "stellar:desplegar": "node scripts/stellar/desplegar-contratos.js",
     "stellar:sincronizar": "node scripts/stellar/sincronizar.js",
-    "test:e2e": "node scripts/e2e/full-api-test.js"
+    "test:e2e": "node scripts/e2e/flujo-completo.js"
   },
   "license": "UNLICENSED",
   "dependencies": {
