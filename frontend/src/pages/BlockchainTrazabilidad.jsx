@@ -84,35 +84,54 @@ function HeroSlider({ slides }) {
   };
 
   useEffect(() => {
-    timerRef.current = setInterval(() => go(current + 1), 5500);
+    timerRef.current = setInterval(() => go(current + 1), 6875);
     return () => clearInterval(timerRef.current);
   }, [current, animating]);
 
   const slide = slides[current];
-  const canShowSlideImage = slide.image && !brokenImages[slide.image];
 
+  // Precarga todas las imágenes una sola vez: así el navegador las tiene en caché
+  // y al cambiar de slide no vuelve a descargarlas/decodificarlas.
+  const imageSources = slides.map((s) => s.image).filter(Boolean).join('|');
   useEffect(() => {
-    if (!slide.image) return;
-    const img = new Image();
-    img.onload = () => setBrokenImages((prev) => ({ ...prev, [slide.image]: false }));
-    img.onerror = () => setBrokenImages((prev) => ({ ...prev, [slide.image]: true }));
-    img.src = slide.image;
-  }, [slide.image]);
+    const sources = imageSources ? imageSources.split('|') : [];
+    const loaders = sources.map((src) => {
+      const img = new Image();
+      img.onload = () => setBrokenImages((prev) => (prev[src] === false ? prev : { ...prev, [src]: false }));
+      img.onerror = () => setBrokenImages((prev) => (prev[src] === true ? prev : { ...prev, [src]: true }));
+      img.src = src;
+      return img;
+    });
+    return () => {
+      loaders.forEach((img) => {
+        img.onload = null;
+        img.onerror = null;
+      });
+    };
+  }, [imageSources]);
 
   return (
     <section
       id="inicio"
       className="relative min-h-screen flex flex-col"
     >
-      {/* Background layers */}
-      {!canShowSlideImage && <div className="absolute inset-0 bg-[#1B2631]" />}
-      <div
-        className="absolute inset-0 bg-center bg-cover transition-opacity duration-700"
-        style={{
-          backgroundImage: canShowSlideImage ? `url(${slide.image})` : 'none',
-          opacity: canShowSlideImage ? 1 : 0,
-        }}
-      />
+      {/* Background layers: todas las imágenes quedan montadas y sólo se
+          hace crossfade de opacidad, de modo que nunca se recargan al cambiar. */}
+      <div className="absolute inset-0 bg-[#1B2631]" />
+      {slides.map((s, i) => {
+        if (!s.image || brokenImages[s.image]) return null;
+        return (
+          <div
+            key={s.image}
+            aria-hidden="true"
+            className="absolute inset-0 bg-center bg-cover transition-opacity duration-700"
+            style={{
+              backgroundImage: `url(${s.image})`,
+              opacity: i === current ? 1 : 0,
+            }}
+          />
+        );
+      })}
 
       {/* Nav */}
       <nav className="relative z-10 flex items-center justify-between px-6 sm:px-10 lg:px-16 pt-7">
