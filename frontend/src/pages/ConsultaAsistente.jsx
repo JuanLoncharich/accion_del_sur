@@ -42,7 +42,7 @@ export default function ConsultaAsistente() {
           <Bot size={24} /> Asistente de Consultas
         </h1>
         <p className="text-slate-500 text-sm mt-1">
-          Escribe tu consulta en lenguaje natural y el backend ejecutará el flujo de `chatLLM`.
+          Escribe tu consulta en lenguaje natural y el asistente la responderá con los datos reales del sistema.
         </p>
       </div>
 

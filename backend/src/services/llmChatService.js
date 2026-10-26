@@ -1,315 +1,336 @@
-const fs = require('fs');
-const path = require('path');
-const { spawn } = require('child_process');
+/**
+ * Asistente de consultas en lenguaje natural sobre la base MySQL.
+ *
+ * El flujo es un bucle corto de "text-to-SQL":
+ *   1. Se le entrega al modelo el esquema real (leído de information_schema).
+ *   2. El modelo responde JSON: {"sql": "..."} para pedir datos, o {"answer": "..."} para cerrar.
+ *   3. El SQL se valida como solo-lectura y se ejecuta con la conexión del proyecto.
+ *   4. El resultado se devuelve al modelo hasta que produce una respuesta final.
+ *
+ * No depende de ningún binario externo: habla directo con una API chat
+ * compatible con OpenAI (configurable por LLM_BASE_URL).
+ */
+const sequelize = require('../config/database');
 
-const backendRoot = path.resolve(__dirname, '../..');
-const chatLlmDir = path.join(backendRoot, 'chatLLM');
-const promptPath = path.join(chatLlmDir, 'agent_prompt_mysql.txt');
-const opencodeConfigPath = path.join(chatLlmDir, 'opencode.json');
-const readonlyScriptPath = path.join(chatLlmDir, 'scripts', 'mysql_readonly_query.sh');
-const projectRoot = path.resolve(backendRoot, '..');
+const DEFAULT_BASE_URL = 'https://api.openai.com/v1';
+const DEFAULT_MODEL = 'gpt-5.4-mini';
 
 const MAX_QUESTION_LENGTH = 2000;
-const EXEC_TIMEOUT_MS = 90_000;
+const MAX_STEPS = 4;
+const MAX_ROWS = 50;
+const REQUEST_TIMEOUT_MS = 60_000;
+const MAX_COMPLETION_TOKENS = 2000;
+const SCHEMA_CACHE_TTL_MS = 10 * 60 * 1000;
 
-const FINAL_RESPONSE_APPEND = [
-  '',
-  'Instrucciones de salida FINAL (obligatorias):',
-  '- En la respuesta final al usuario, muestra SOLO la respuesta final.',
-  '- No muestres proceso, pasos, SQL ejecutado, tablas, comandos, razonamiento ni secciones.',
-  '- No menciones base de datos, SQL, tablas, consultas, scripts, sistema interno ni aspectos técnicos.',
-  '- Responde para una persona no técnica en español claro.',
-  '- Usa un único bloque breve (máximo 2 frases).',
-].join('\n');
+/** Tablas que el asistente puede consultar. */
+const ALLOWED_TABLES = [
+  'categories',
+  'category_attributes',
+  'centers',
+  'distributions',
+  'donation_reception_details',
+  'donation_receptions',
+  'donations',
+  'items',
+  'token_transfers',
+  'users',
+];
 
-const READONLY_SQL_REGEX = /^\s*(select|with|show|describe|desc|explain)\s+/i;
+/** Columnas sensibles: nunca se exponen al modelo ni al usuario. */
+const BLOCKED_COLUMNS = [
+  'password_hash',
+  'donor_email',
+  'donor_email_salt',
+  'donor_email_hash',
+  'receiver_identifier',
+  'receiver_hash',
+  'recipient_commitment',
+  'recipient_salt',
+  'signature_data',
+  'signature_hash',
+  'receipt_payload',
+  'capture_ip',
+  'capture_device',
+  'requester_ip',
+  'requester_device',
+  'public_token_qr',
+  'nonce',
+];
 
-function runCommand(command, args, options = {}) {
-  const {
-    cwd = backendRoot,
-    env = process.env,
-    timeoutMs = EXEC_TIMEOUT_MS,
-  } = options;
+const READONLY_SQL_REGEX = /^\s*(select|with)\s+/i;
+const FORBIDDEN_SQL_REGEX =
+  /(^|[^a-z_])(insert|update|delete|drop|alter|truncate|create|replace|grant|revoke|commit|rollback|lock|unlock|call|load_file|outfile|dumpfile|information_schema|mysql\.|performance_schema)([^a-z_]|$)/i;
 
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, {
-      cwd,
-      env,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+const RELATIONS_HINT = `
+Relaciones y semántica del negocio:
+- items = lotes de insumos en stock. items.quantity es el stock actual; items.current_center_id indica en qué centro está.
+- items.category_id -> categories.id.
+- donations = ingresos de donaciones (item_id, quantity, center_id, created_at).
+- donation_receptions + donation_reception_details = recepción de donaciones vía QR (status: pending/confirmed/rejected según el enum de la tabla).
+- token_transfers = movimientos internos de stock entre centros (from_center_id -> to_center_id). NO son entregas al beneficiario.
+- distributions = entregas finales al beneficiario; descuentan stock definitivamente. status='anchored' significa entrega confirmada y registrada en blockchain.
+- centers = centros de recepción/distribución. centers.is_active indica si opera.
+- users.role puede ser 'admin' o 'operador'/'voluntario' según los datos.
+Diferencia clave: transferir mueve stock entre centros, distribuir lo entrega a una persona y lo saca del inventario.
+`.trim();
 
-    let stdout = '';
-    let stderr = '';
-    let finished = false;
-
-    const timeout = setTimeout(() => {
-      if (!finished) {
-        child.kill('SIGTERM');
-      }
-    }, timeoutMs);
-
-    child.stdout.on('data', (chunk) => {
-      stdout += chunk.toString();
-    });
-
-    child.stderr.on('data', (chunk) => {
-      stderr += chunk.toString();
-    });
-
-    child.on('error', (error) => {
-      clearTimeout(timeout);
-      finished = true;
-      reject(error);
-    });
-
-    child.on('close', (code, signal) => {
-      clearTimeout(timeout);
-      finished = true;
-
-      if (signal === 'SIGTERM') {
-        return reject(new Error(`Tiempo de espera excedido (${timeoutMs}ms).`));
-      }
-
-      resolve({
-        code,
-        stdout,
-        stderr,
-      });
-    });
-  });
+function buildSystemPrompt(schemaText) {
+  return [
+    'Eres el asistente de análisis de datos de Acción del Sur (gestión de donaciones).',
+    'Respondes SIEMPRE en español, para una persona no técnica, y NUNCA inventas datos.',
+    '',
+    'Esquema real de la base MySQL (no existen otras tablas):',
+    schemaText,
+    '',
+    RELATIONS_HINT,
+    '',
+    'Cómo trabajas: respondes ÚNICAMENTE con un objeto JSON, sin texto alrededor y sin bloques de código.',
+    'Para consultar datos:  {"sql": "SELECT ..."}',
+    'Para responder al usuario: {"answer": "..."}',
+    '',
+    'Reglas de SQL:',
+    '- Solo SELECT o WITH. Nada de INSERT/UPDATE/DELETE/DDL ni varias sentencias en una.',
+    '- Una sola consulta por paso. Podés pedir hasta ' + MAX_STEPS + ' consultas en total.',
+    `- Siempre incluí LIMIT (máximo ${MAX_ROWS} filas).`,
+    '- Nunca uses SELECT *: nombrá las columnas.',
+    `- Está prohibido consultar estas columnas sensibles: ${BLOCKED_COLUMNS.join(', ')}.`,
+    '',
+    'Reglas de la respuesta final:',
+    '- Basala solo en los resultados reales que recibiste. Si los datos no alcanzan, decilo.',
+    '- No menciones SQL, tablas, base de datos ni detalles técnicos.',
+    '- Sé breve y concreto: 1 a 3 frases, con los números encontrados.',
+  ].join('\n');
 }
 
-function extractFinalTextFromOpencode(rawOutput) {
-  const lines = rawOutput
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
+/* ── Esquema ─────────────────────────────────────────────────────────── */
 
-  const textParts = [];
-  for (const line of lines) {
-    try {
-      const parsed = JSON.parse(line);
-      if (parsed?.type === 'text' && typeof parsed?.part?.text === 'string') {
-        textParts.push(parsed.part.text.trim());
-      }
-    } catch (_) {
-      // Puede venir ruido no-JSON; lo ignoramos.
-    }
+let schemaCache = { text: null, expiresAt: 0 };
+
+async function getSchemaText() {
+  if (schemaCache.text && Date.now() < schemaCache.expiresAt) {
+    return schemaCache.text;
   }
 
-  return textParts.filter(Boolean).at(-1) || '';
+  const rows = await sequelize.query(
+    `SELECT TABLE_NAME, COLUMN_NAME, DATA_TYPE, COLUMN_TYPE
+       FROM information_schema.columns
+      WHERE TABLE_SCHEMA = DATABASE()
+        AND TABLE_NAME IN (:tables)
+      ORDER BY TABLE_NAME, ORDINAL_POSITION`,
+    {
+      replacements: { tables: ALLOWED_TABLES },
+      type: sequelize.QueryTypes.SELECT,
+    }
+  );
+
+  const byTable = new Map();
+  for (const row of rows) {
+    if (BLOCKED_COLUMNS.includes(row.COLUMN_NAME)) continue;
+    if (!byTable.has(row.TABLE_NAME)) byTable.set(row.TABLE_NAME, []);
+    // Los ENUM se describen completos para que el modelo use los valores correctos.
+    const type = /^enum/i.test(row.COLUMN_TYPE) ? row.COLUMN_TYPE : row.DATA_TYPE;
+    byTable.get(row.TABLE_NAME).push(`${row.COLUMN_NAME} ${type}`);
+  }
+
+  if (byTable.size === 0) {
+    throw new Error('No se pudo leer el esquema de la base de datos.');
+  }
+
+  const text = [...byTable.entries()]
+    .map(([table, columns]) => `- ${table}(${columns.join(', ')})`)
+    .join('\n');
+
+  schemaCache = { text, expiresAt: Date.now() + SCHEMA_CACHE_TTL_MS };
+  return text;
 }
 
-function normalizeOpenAiKey(value) {
-  if (typeof value !== 'string') return value;
+/* ── SQL de solo lectura ─────────────────────────────────────────────── */
 
-  let normalized = value.trim();
-  if (
-    (normalized.startsWith("'") && normalized.endsWith("'")) ||
-    (normalized.startsWith('"') && normalized.endsWith('"'))
-  ) {
-    normalized = normalized.slice(1, -1);
+function assertReadOnlySql(sql) {
+  const normalized = String(sql || '').trim().replace(/;\s*$/, '');
+
+  if (!normalized) {
+    throw new Error('El asistente generó una consulta vacía.');
+  }
+  if (normalized.includes(';')) {
+    throw new Error('No se permite ejecutar varias sentencias.');
+  }
+  if (!READONLY_SQL_REGEX.test(normalized)) {
+    throw new Error('Solo se permiten consultas de lectura (SELECT / WITH).');
+  }
+  if (FORBIDDEN_SQL_REGEX.test(normalized)) {
+    throw new Error('La consulta contiene instrucciones no permitidas.');
+  }
+
+  const lower = normalized.toLowerCase();
+  const blocked = BLOCKED_COLUMNS.find((column) => new RegExp(`\\b${column}\\b`, 'i').test(lower));
+  if (blocked) {
+    throw new Error(`La consulta accede a un dato sensible (${blocked}) y fue bloqueada.`);
+  }
+  if (/select\s+\*/i.test(normalized)) {
+    throw new Error('No se permite SELECT *: hay que nombrar las columnas.');
   }
 
   return normalized;
 }
 
-function stripAnsi(text) {
-  return String(text || '').replace(/\u001b\[[0-9;]*m/g, '');
-}
+async function runReadonlySql(sql) {
+  const safeSql = assertReadOnlySql(sql);
 
-function getNonEmptyTextLines(text) {
-  return stripAnsi(text)
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-}
-
-function buildOpencodeCandidates(env) {
-  const home = env.HOME || process.env.HOME;
-  const homeLocalBin = home ? path.join(home, '.local', 'bin', 'opencode') : null;
-
-  const binaryCandidates = [
-    env.OPENCODE_BIN,
-    homeLocalBin,
-    '/usr/local/bin/opencode',
-    '/usr/bin/opencode',
-    'opencode',
-  ].filter(Boolean);
-
-  const invocations = binaryCandidates.map((candidate) => ({
-    command: candidate,
-    fixedArgs: [],
-    label: candidate,
-  }));
-
-  invocations.push({
-    command: 'npx',
-    fixedArgs: ['-y', 'opencode-ai'],
-    label: 'npx -y opencode-ai',
-  });
-
-  return invocations;
-}
-
-function ensureHomeLocalBinInPath(env) {
-  const home = env.HOME || process.env.HOME;
-  if (!home) return env;
-
-  const localBin = path.join(home, '.local', 'bin');
-  const currentPath = String(env.PATH || process.env.PATH || '');
-  const hasLocalBin = currentPath.split(path.delimiter).includes(localBin);
-
-  if (hasLocalBin) return env;
+  const rows = await sequelize.query(safeSql, { type: sequelize.QueryTypes.SELECT });
+  const limited = rows.slice(0, MAX_ROWS);
 
   return {
-    ...env,
-    PATH: currentPath ? `${localBin}${path.delimiter}${currentPath}` : localBin,
+    sql: safeSql,
+    rowCount: rows.length,
+    rows: limited,
+    truncated: rows.length > limited.length,
   };
 }
 
-async function detectOpencodeMode(env) {
-  const candidates = buildOpencodeCandidates(env);
+/* ── Cliente LLM (API compatible con OpenAI) ─────────────────────────── */
+
+function readEnvValue(name) {
+  const raw = process.env[name];
+  if (typeof raw !== 'string') return '';
+
+  // El .env puede traer el valor entrecomillado; dotenv no siempre lo limpia.
+  let value = raw.trim();
+  if (
+    (value.startsWith("'") && value.endsWith("'")) ||
+    (value.startsWith('"') && value.endsWith('"'))
+  ) {
+    value = value.slice(1, -1).trim();
+  }
+  return value;
+}
+
+function getLlmConfig() {
+  const apiKey = readEnvValue('LLM_API_KEY') || readEnvValue('OPENAI_API_KEY');
+  if (!apiKey) {
+    const error = new Error('Falta configurar OPENAI_API_KEY (o LLM_API_KEY) en el archivo .env del backend.');
+    error.code = 'LLM_NOT_CONFIGURED';
+    throw error;
+  }
+
+  return {
+    apiKey,
+    baseUrl: (readEnvValue('LLM_BASE_URL') || DEFAULT_BASE_URL).replace(/\/+$/, ''),
+    model: readEnvValue('LLM_MODEL') || DEFAULT_MODEL,
+  };
+}
+
+/**
+ * Los modelos gpt-5.x usan `max_completion_tokens`; los anteriores y varios
+ * proveedores compatibles solo entienden `max_tokens`. Se prueba el primero y
+ * se reintenta con el segundo si la API lo rechaza.
+ */
+let tokenLimitParam = 'max_completion_tokens';
+
+async function postChatCompletion(baseUrl, apiKey, body, signal) {
+  return fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(body),
+    signal,
+  });
+}
+
+async function callChatCompletion(messages) {
+  const { apiKey, baseUrl, model } = getLlmConfig();
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  const buildBody = () => ({
+    model,
+    messages,
+    temperature: 0,
+    [tokenLimitParam]: MAX_COMPLETION_TOKENS,
+  });
+
+  let response;
+  try {
+    response = await postChatCompletion(baseUrl, apiKey, buildBody(), controller.signal);
+
+    if (response.status === 400) {
+      const clone = await response.clone().json().catch(() => null);
+      const message = clone?.error?.message || '';
+      if (/max_completion_tokens|max_tokens/i.test(message)) {
+        tokenLimitParam = tokenLimitParam === 'max_completion_tokens' ? 'max_tokens' : 'max_completion_tokens';
+        response = await postChatCompletion(baseUrl, apiKey, buildBody(), controller.signal);
+      }
+    }
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      const timeoutError = new Error('El asistente tardó demasiado en responder.');
+      timeoutError.code = 'LLM_TIMEOUT';
+      throw timeoutError;
+    }
+    const netError = new Error(`No se pudo contactar al proveedor del asistente: ${error.message}`);
+    netError.code = 'LLM_UNAVAILABLE';
+    throw netError;
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const detail = payload?.error?.message || `HTTP ${response.status}`;
+    const apiError = new Error(`El proveedor del asistente rechazó la consulta: ${detail}`);
+    apiError.code = response.status === 401 || response.status === 403 ? 'LLM_NOT_CONFIGURED' : 'LLM_UNAVAILABLE';
+    throw apiError;
+  }
+
+  const content = payload?.choices?.[0]?.message?.content;
+  if (typeof content !== 'string' || !content.trim()) {
+    const emptyError = new Error('El asistente no devolvió una respuesta utilizable.');
+    emptyError.code = 'LLM_UNAVAILABLE';
+    throw emptyError;
+  }
+
+  return content.trim();
+}
+
+/**
+ * El modelo debería devolver JSON puro, pero suele envolverlo en ```json … ```
+ * o agregar texto alrededor; se rescata el primer objeto válido.
+ */
+function parseModelDecision(content) {
+  const withoutFences = content.replace(/```(?:json)?/gi, '').trim();
+  const candidates = [withoutFences];
+
+  const firstBrace = withoutFences.indexOf('{');
+  const lastBrace = withoutFences.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace > firstBrace) {
+    candidates.push(withoutFences.slice(firstBrace, lastBrace + 1));
+  }
 
   for (const candidate of candidates) {
     try {
-      const help = await runCommand(candidate.command, [...candidate.fixedArgs, '--help'], {
-        env,
-        cwd: projectRoot,
-        timeoutMs: 15_000,
-      });
-
-      const helpText = `${help.stdout || ''}\n${help.stderr || ''}`;
-      return {
-        candidate,
-        mode: /\bopencode\s+run\b/i.test(helpText) ? 'run' : 'legacy-p',
-      };
-    } catch (error) {
-      if (error && (error.code === 'ENOENT' || error.code === 'EACCES')) {
-        continue;
+      const parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === 'object') {
+        if (typeof parsed.sql === 'string' && parsed.sql.trim()) {
+          return { type: 'sql', sql: parsed.sql.trim() };
+        }
+        if (typeof parsed.answer === 'string' && parsed.answer.trim()) {
+          return { type: 'answer', answer: parsed.answer.trim() };
+        }
       }
-
-      throw error;
+    } catch (_) {
+      // Seguimos con el siguiente candidato.
     }
   }
 
-  return null;
+  // Si no vino JSON pero sí texto plano, lo tomamos como respuesta final.
+  return { type: 'answer', answer: withoutFences };
 }
 
-function extractLegacyTextOutput(rawOutput) {
-  const lines = getNonEmptyTextLines(rawOutput);
-  if (lines.length === 0) return '';
-
-  const filtered = lines.filter((line) => {
-    return !/^\[[^\]]+\]/.test(line) && !/^opencode\b/i.test(line);
-  });
-
-  return (filtered.length ? filtered : lines).join('\n').trim();
-}
-
-async function runWithOpencodeRun(opencodeCandidate, finalPrompt, env) {
-  const result = await runCommand(
-    opencodeCandidate.command,
-    [...opencodeCandidate.fixedArgs, 'run', '--agent', 'mysql_qa', '--format', 'json', finalPrompt],
-    { env, cwd: projectRoot }
-  );
-
-  const parsed = extractFinalTextFromOpencode(result.stdout);
-  const fallbackText = (result.stdout || result.stderr).trim();
-
-  if (result.code !== 0) {
-    const message = fallbackText || 'No se pudo ejecutar el asistente LLM.';
-    throw new Error(message.split('\n').slice(-3).join(' ').trim());
-  }
-
-  const answer = parsed || fallbackText;
-  if (!answer) {
-    throw new Error('El asistente no devolvió una respuesta utilizable.');
-  }
-
-  return {
-    mode: 'opencode-run',
-    answer,
-  };
-}
-
-async function runWithOpencodeLegacy(opencodeCandidate, finalPrompt, env) {
-  const result = await runCommand(opencodeCandidate.command, [...opencodeCandidate.fixedArgs, '-p', finalPrompt], {
-    env,
-    cwd: projectRoot,
-  });
-
-  const combinedOutput = `${result.stdout || ''}\n${result.stderr || ''}`.trim();
-
-  if (result.code !== 0) {
-    const message = combinedOutput || 'No se pudo ejecutar el asistente LLM.';
-    throw new Error(message.split('\n').slice(-3).join(' ').trim());
-  }
-
-  const answer = extractLegacyTextOutput(result.stdout) || extractLegacyTextOutput(combinedOutput);
-  if (!answer) {
-    throw new Error('El asistente no devolvió una respuesta utilizable en modo legacy.');
-  }
-
-  return {
-    mode: 'opencode-legacy-p',
-    answer,
-  };
-}
-
-async function runWithOpencode(question) {
-  if (!fs.existsSync(promptPath)) {
-    throw new Error('No se encontró agent_prompt_mysql.txt en chatLLM.');
-  }
-
-  const basePrompt = fs.readFileSync(promptPath, 'utf8');
-  const finalPrompt = `${basePrompt}\n${FINAL_RESPONSE_APPEND}\n\nPregunta del usuario:\n${question}`;
-
-  const env = {
-    ...process.env,
-    OPENCODE_CONFIG: fs.existsSync(opencodeConfigPath) ? opencodeConfigPath : process.env.OPENCODE_CONFIG,
-  };
-
-  if (typeof env.OPENAI_API_KEY === 'string') {
-    env.OPENAI_API_KEY = normalizeOpenAiKey(env.OPENAI_API_KEY);
-  }
-
-  const preparedEnv = ensureHomeLocalBinInPath(env);
-
-  const opencodeInfo = await detectOpencodeMode(preparedEnv);
-  if (!opencodeInfo) {
-    const candidates = buildOpencodeCandidates(preparedEnv).map((candidate) => candidate.label).join(', ');
-    const missingError = new Error(`opencode no está disponible. Candidatos probados: ${candidates}`);
-    missingError.code = 'ENOENT';
-    throw missingError;
-  }
-
-  if (opencodeInfo.mode === 'run') {
-    return runWithOpencodeRun(opencodeInfo.candidate, finalPrompt, preparedEnv);
-  }
-
-  return runWithOpencodeLegacy(opencodeInfo.candidate, finalPrompt, preparedEnv);
-}
-
-async function runReadonlySql(sql) {
-  if (!fs.existsSync(readonlyScriptPath)) {
-    throw new Error('No se encontró mysql_readonly_query.sh.');
-  }
-
-  const result = await runCommand(readonlyScriptPath, [sql], {
-    cwd: path.resolve(backendRoot, '..'),
-  });
-
-  if (result.code !== 0) {
-    const errorText = (result.stderr || result.stdout || 'Error ejecutando SQL de solo lectura').trim();
-    throw new Error(errorText);
-  }
-
-  return {
-    mode: 'readonly-sql-fallback',
-    answer: result.stdout.trim() || '(sin salida)',
-  };
-}
+/* ── Orquestación ────────────────────────────────────────────────────── */
 
 function validateQuestion(question) {
   if (typeof question !== 'string' || !question.trim()) {
@@ -326,22 +347,59 @@ function validateQuestion(question) {
 
 async function askMysqlAssistant(question) {
   const normalized = validateQuestion(question);
+  const schemaText = await getSchemaText();
 
-  try {
-    return await runWithOpencode(normalized);
-  } catch (error) {
-    const isMissingOpencode =
-      error.code === 'ENOENT' ||
-      /opencode/i.test(error.message || '');
+  const messages = [
+    { role: 'system', content: buildSystemPrompt(schemaText) },
+    { role: 'user', content: normalized },
+  ];
 
-    if (isMissingOpencode && READONLY_SQL_REGEX.test(normalized)) {
-      return runReadonlySql(normalized);
+  const executedQueries = [];
+
+  for (let step = 0; step < MAX_STEPS; step += 1) {
+    const content = await callChatCompletion(messages);
+    const decision = parseModelDecision(content);
+
+    if (decision.type === 'answer') {
+      return {
+        mode: 'sql-assistant',
+        answer: decision.answer,
+        queries: executedQueries,
+      };
     }
 
-    throw error;
+    messages.push({ role: 'assistant', content });
+
+    let observation;
+    try {
+      const result = await runReadonlySql(decision.sql);
+      executedQueries.push(result.sql);
+      observation = JSON.stringify({
+        rowCount: result.rowCount,
+        truncated: result.truncated,
+        rows: result.rows,
+      });
+    } catch (error) {
+      observation = JSON.stringify({ error: error.message });
+    }
+
+    const isLastStep = step === MAX_STEPS - 1;
+    messages.push({
+      role: 'user',
+      content: isLastStep
+        ? `Resultado: ${observation}\n\nNo quedan más consultas disponibles. Respondé ahora con {"answer": "..."}.`
+        : `Resultado: ${observation}\n\nSi ya tenés lo necesario respondé con {"answer": "..."}; si no, pedí otra consulta con {"sql": "..."}.`,
+    });
   }
+
+  const exhausted = new Error('El asistente no logró resolver la consulta con los datos disponibles.');
+  exhausted.code = 'LLM_UNAVAILABLE';
+  throw exhausted;
 }
 
 module.exports = {
   askMysqlAssistant,
+  // Exportados para pruebas y diagnóstico.
+  assertReadOnlySql,
+  getSchemaText,
 };
