@@ -6,7 +6,6 @@ import {
   Building2,
   ClipboardList,
   Gift,
-  Heart,
   History,
   LifeBuoy,
   Truck,
@@ -59,15 +58,9 @@ export default function Sidebar() {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="px-4 py-6 border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white">
-            <Heart size={20} />
-          </div>
-          <div>
-            <h1 className="text-white font-bold text-lg leading-tight">Acción del Sur</h1>
-            <p className="text-slate-400 text-xs">Gestión de Donaciones</p>
-          </div>
-        </div>
+        <img src="/assets/images/logo-cgic.png" alt="CGIC — Centro de Gestión Integral de Crisis" className="h-10 w-auto mb-3" />
+        <h1 className="text-white font-bold text-lg leading-tight">Acción del Sur</h1>
+        <p className="text-slate-400 text-xs">Gestión de Donaciones</p>
       </div>
 
       {/* Navigation */}

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { AlertTriangle, CircleCheckBig, LoaderCircle, LockKeyhole, ShieldCheck, User } from 'lucide-react';
+import { AlertTriangle, CircleCheckBig, LoaderCircle, LockKeyhole, User } from 'lucide-react';
 
 export default function Login() {
   const { login, loading } = useAuth();
@@ -25,9 +25,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-indigo-600 rounded-2xl mb-4 shadow-xl text-white">
-            <ShieldCheck size={40} />
-          </div>
+          <img src="/assets/images/logo-cgic.png" alt="CGIC — Centro de Gestión Integral de Crisis" className="h-20 w-auto mx-auto mb-5" />
           <h1 className="text-white text-3xl font-bold">Acción del Sur</h1>
           <p className="text-slate-300 mt-1">Sistema de Gestión de Donaciones</p>
         </div>
@@ -89,7 +87,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-slate-500 text-sm mt-6">
-          Centro de Crisis — ONG Acción del Sur
+          Una iniciativa de CGIC — Centro de Gestión Integral de Crisis
         </p>
       </div>
     </div>
