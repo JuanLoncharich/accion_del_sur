@@ -115,7 +115,7 @@ export default function Landing() {
               <p className="mb-6 max-w-md text-[15px] leading-relaxed" style={{ color: C.pizarra }}>
                 Programa de extensión universitaria de CGIC para la respuesta humanitaria frente a crisis climáticas.
               </p>
-              <h1 className="text-[2.6rem] font-extrabold leading-[1.02] tracking-[-0.02em] sm:text-6xl" style={ANCHO}>
+              <h1 className="text-[2.1rem] font-extrabold leading-[1.04] tracking-[-0.02em] sm:text-5xl lg:text-6xl" style={ANCHO}>
                 Cada donación deja un rastro que cualquiera puede seguir.
               </h1>
               <p className="mt-7 max-w-xl text-lg leading-relaxed" style={{ color: C.pizarra }}>

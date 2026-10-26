@@ -12,7 +12,6 @@ Sistema de gestión de donaciones para emergencias (CGIC). Monorepo:
 |---|---|---|
 | `backend/` | API REST Express 5 + Sequelize 6 + MySQL 8 | Node.js (CommonJS) |
 | `frontend/` | SPA React 19 + Vite + Tailwind 4 | JSX (ES modules) |
-| `frontend/public/landing/` | Sitio institucional de CGIC, HTML/CSS/JS estático, servido en `/` | HTML |
 | `contracts/` | Contratos Soroban (workspace Cargo): `contrato_sft`, `contrato_entregas`, `contrato_centro` | Rust |
 | `deploy/` | systemd, Nginx, backup | — |
 
@@ -112,8 +111,10 @@ No hay linter ni tests unitarios de backend/frontend todavía. La verificación 
   `lucide-react`; para categorías, `utils/icons.jsx`.
 - Fechas `YYYY-MM-DD` (columnas `DATE`): construir con `new Date(\`${v}T00:00:00\`)` para no
   correrlas un día por zona horaria.
-- La landing (`public/landing/`) es HTML estático independiente de React: se edita a mano y no
-  pasa por el build de Vite (se copia tal cual a `dist/landing/`).
+- La landing pública (`src/pages/Landing.jsx`, ruta `/`) usa su propia paleta con colores
+  explícitos (constante `C`) y la fuente Archivo: no usar las clases `slate-*` ahí, porque
+  `src/index.css` las redefine para el sistema interno. Sus datos vienen de `/api/landing/*`
+  (públicos: nunca exponer datos de donantes ni usuarios). Imágenes en `public/assets/proyecto/`.
 
 ## Recetas
 

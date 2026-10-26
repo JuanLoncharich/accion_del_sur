@@ -101,14 +101,13 @@ Todas las rutas, salvo las marcadas como públicas, requieren `Authorization: Be
 | Usuarios | `GET/POST/PUT/DELETE /api/users` (admin) |
 | Panel de apoyo | `GET /api/support-panel` |
 | Historial | `GET /api/distributions`, `/stats` (vista de envíos para el Historial, solo lectura) |
-| Públicas | `GET /api/landing/summary`, `/centers-ranking`, `/recent-movements`, `GET /api/health` |
+| Públicas | `GET /api/landing/summary`, `/recent-movements` (landing), `GET /api/health` |
 
 ## Frontend
 
 | Ruta | Página | Acceso |
 |---|---|---|
-| `/` | sitio institucional de CGIC, estático (`frontend/public/landing/`: index, proyectos, equipo, trayectoria) con acceso a `/login` | pública |
-| `/trazabilidad` | `BlockchainTrazabilidad`: página pública con métricas y movimientos recientes | pública |
+| `/` | `Landing`: página pública del proyecto (qué es, cómo funciona, transparencia, equipo) con los últimos movimientos anclados en Stellar | pública |
 | `/confirmacion-donacion/:token` | `ConfirmacionDonacionQR`: el donante ve y verifica su recepción | pública |
 | `/login` | `Login` | pública |
 | `/dashboard`, `/panel-apoyo` | `Dashboard`, `PanelApoyo` | usuarios |

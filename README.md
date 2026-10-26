@@ -9,7 +9,9 @@ verificable en blockchain (Stellar/Soroban)**: cada donación, transferencia ent
 queda registrado on-chain, y cualquiera puede comprobar que el inventario declarado coincide con
 la blockchain.
 
-Iniciativa de [CGIC](https://cgic-argentina.org/). Presentado en EmprendeU.
+Programa de extensión universitaria de [CGIC](https://cgic-argentina.org/) para la respuesta
+humanitaria frente a crisis climáticas. Tercer puesto entre 16 proyectos en Vendimia Tech 2026
+(Mendoza) y presentado en EmprendeU.
 
 > ¿No sos del equipo técnico? Empezá por el [resumen ejecutivo](docs/resumen-ejecutivo.md).
 
@@ -38,7 +40,7 @@ Iniciativa de [CGIC](https://cgic-argentina.org/). Presentado en EmprendeU.
 
 ```
 backend/      API Express (src/), scripts de Stellar y test E2E (scripts/)
-frontend/     Aplicación React (y en public/landing/ el sitio institucional de CGIC, que se abre en /)
+frontend/     Aplicación React (incluye la landing pública del proyecto en /)
 contracts/    Contratos Soroban: contrato_sft, contrato_entregas, contrato_centro
 deploy/       systemd, Nginx y backup de la base
 docs/         Documentación (ver abajo)

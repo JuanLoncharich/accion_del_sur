@@ -6,7 +6,9 @@ Acción del Sur es un sistema web para organizar la ayuda que se recibe y se dis
 emergencias climáticas. Reemplaza planillas y mensajes sueltos por un único lugar donde el equipo
 registra qué llega, dónde está y adónde se envía.
 
-Es una iniciativa de [CGIC](https://cgic-argentina.org/) y fue presentada en EmprendeU.
+Es un programa de extensión universitaria de [CGIC](https://cgic-argentina.org/) para la respuesta
+humanitaria frente a crisis climáticas. Obtuvo el tercer puesto entre 16 proyectos en Vendimia Tech
+2026 (Mendoza) y fue presentado en EmprendeU.
 
 ## Qué problema resuelve
 

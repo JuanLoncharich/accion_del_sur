@@ -119,11 +119,14 @@ Verificar con `npm run test:e2e -- --blockchain` y `npm run stellar:sincronizar 
 3. Entrada de menú en `frontend/src/components/Sidebar.jsx` (`NAV_ITEMS` o `ADMIN_ITEMS`, ícono de `lucide-react`).
 4. `npm run build` en `frontend/` para confirmar que compila.
 
-### Cambiar la landing institucional
+### Cambiar la landing
 
-`frontend/public/landing/` es HTML/CSS/JS estático (no React). Se edita a mano; las imágenes
-nuevas conviene subirlas en WebP y de menos de 500 kB. El acceso al sistema es el botón
-`navbar__cta--login` de cada página.
+`frontend/src/pages/Landing.jsx` (ruta `/`). Los textos y listas (pasos, funciones, equipo) están
+en constantes al principio del archivo. Usa colores explícitos (constante `C`), no las clases
+`slate-*` (redefinidas en `src/index.css`). Las imágenes van en `public/assets/proyecto/`, en
+WebP y de menos de 400 kB. Los datos en vivo vienen de `GET /api/landing/summary` y
+`/recent-movements` (`backend/src/controllers/landingController.js`): todo lo que se agregue ahí
+es público, así que nunca datos de donantes ni de usuarios.
 
 ### Cambiar un contrato
 

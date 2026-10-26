@@ -52,9 +52,9 @@ Ordenado por prioridad.
 | 5 | **Tests unitarios del backend** | Solo hay E2E. Agregar tests de `Shipment.confirmarEnvio`, `anclaje.js` y `deleteGuard`. | M |
 | 6 | **Fechas sin hora** | `donaciones.date` y `envios.date` son `DATE`: el orden dentro del día es aproximado. Agregar `created_at`. | S |
 | 7 | **Custodia de la clave admin** | Una sola clave firma todo. Para mainnet: guardar la clave en un gestor de secretos y evaluar multisig. | M |
-| 8 | **Verificación pública por insumo** | La trazabilidad por insumo requiere login. `/trazabilidad` muestra métricas agregadas. Exponer una vista pública por insumo (sin datos personales) sería el siguiente paso de transparencia. | S |
+| 8 | **Verificación pública por insumo** | La trazabilidad por insumo requiere login. La landing muestra los últimos movimientos anclados. Exponer una vista pública por insumo (sin datos personales) sería el siguiente paso de transparencia. | S |
 | 9 | **Eventos on-chain históricos** | El RPC retiene unos 7 días de eventos. Si se quiere reconstruir la historia solo desde la blockchain, hace falta un indexador. | M |
-| 10 | **Tamaño del bundle** | El JS del frontend supera los 500 kB. Dividir por ruta con `React.lazy`. `BlockchainTrazabilidad.jsx` (≈1000 líneas) conviene partirlo en componentes. | S |
+| 10 | **Tamaño del bundle** | El JS del frontend supera los 500 kB. Dividir por ruta con `React.lazy`. | S |
 | 11 | **Identidad de centro fija** | Renombrar un centro no actualiza su contrato. Documentado; cambiarlo requeriría un contrato con datos editables por el admin. | S |
 
 S: hasta ½ día · M: 1 a 3 días.
