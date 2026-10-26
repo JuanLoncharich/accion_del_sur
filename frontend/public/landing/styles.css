@@ -2264,3 +2264,23 @@ h1,h2,h3,h4,h5,h6 {
   text-decoration: none;
   cursor: pointer;
 }
+
+/* ── Botón "Ingresar al sistema" (acceso al sistema Acción del Sur) ──────────
+   Con el navbar transparente sobre el hero oscuro va en blanco; al scrollear
+   (fondo claro) y en el menú móvil vuelve al contorno naranja. */
+.navbar:not(.scrolled) .navbar__cta--login {
+  color: var(--color-white);
+  border-color: rgba(255,255,255,.85);
+  background: rgba(255,255,255,.08);
+}
+.navbar:not(.scrolled) .navbar__cta--login:hover {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+}
+@media (max-width:768px) {
+  .navbar:not(.scrolled) .navbar__cta--login {
+    color: var(--color-orange);
+    border-color: var(--color-orange);
+    background: transparent;
+  }
+}

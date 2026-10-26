@@ -5,6 +5,7 @@ const {
 } = require('../models');
 const stellarService = require('../services/blockchain/stellarService');
 const sftService = require('../services/blockchain/sftService');
+const anclaje = require('../services/blockchain/anclaje');
 const { destroyIfUnused } = require('../utils/deleteGuard');
 
 const serialize = (item) => ({
@@ -45,9 +46,30 @@ exports.update = async (req, res, next) => {
     const updates = {};
     if (req.body.name !== undefined) updates.name = req.body.name;
     if (req.body.category_id !== undefined) updates.category_id = req.body.category_id;
-    if (req.body.available_quantity !== undefined || req.body.quantity !== undefined) updates.available_quantity = Number(req.body.available_quantity ?? req.body.quantity);
+
+    // Ajuste manual de stock (corrección de inventario): solo admin, y la diferencia se refleja
+    // on-chain (mint/burn) para no romper la invariante saldo SFT = stock.
+    let delta = 0;
+    if (req.body.available_quantity !== undefined || req.body.quantity !== undefined) {
+      const nueva = Number(req.body.available_quantity ?? req.body.quantity);
+      if (!Number.isInteger(nueva) || nueva < 0) return res.status(400).json({ error: 'Cantidad inválida' });
+      if (req.user.role !== 'ADMINISTRADOR') return res.status(403).json({ error: 'Solo un administrador puede ajustar el stock' });
+      delta = nueva - item.available_quantity;
+      updates.available_quantity = nueva;
+    }
     await item.update(updates);
-    return res.json(serialize(await Item.findByPk(item.id, { include })));
+
+    let blockchain = null;
+    if (delta !== 0) {
+      const anclado = await Item.findByPk(item.id, { include: [{ model: Category, as: 'category' }, { model: Center, as: 'currentCenter' }] });
+      blockchain = delta > 0
+        ? await anclaje.mintearIngreso({ item: anclado, center: anclado.currentCenter, cantidad: delta })
+        : await anclaje.quemarSalida({
+          item: anclado, center: anclado.currentCenter, cantidad: -delta,
+          referencia: `ajuste-manual:insumo:${item.id}:${new Date().toISOString()}`, operatorId: req.user.id,
+        });
+    }
+    return res.json({ ...serialize(await Item.findByPk(item.id, { include })), ...(blockchain ? { blockchain: { status: blockchain.status, tx: blockchain.txId } } : {}) });
   } catch (error) { return next(error); }
 };
 // PATCH /api/items/:id/status  { status: RECIBIDO | PREPARADO | DISPONIBLE }
