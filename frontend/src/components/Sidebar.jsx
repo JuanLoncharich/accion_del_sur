@@ -17,7 +17,6 @@ import {
   X,
   Boxes,
   QrCode,
-  Bot,
 } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -29,7 +28,6 @@ const NAV_ITEMS = [
   { to: '/envios/nuevo', label: 'Nuevo envío', icon: Truck },
   { to: '/envios', label: 'Envíos', icon: ClipboardList, exact: true },
   { to: '/analytics/historial', label: 'Historial Transacciones', icon: History },
-  { to: '/consultas-asistente', label: 'Asistente de Consultas', icon: Bot },
 ];
 
 const ADMIN_ITEMS = [
