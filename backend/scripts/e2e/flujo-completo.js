@@ -136,6 +136,16 @@ async function main() {
     check('todas las operaciones con tx', traza.data.eventos.every((e) => e.tx), traza.data.eventos);
   }
 
+  console.log('\nAjuste manual de stock');
+  check('voluntario no ajusta stock → 403', (await call('PUT', `/items/${itemId}`, { available_quantity: 99 }, vol.data.token)).status === 403);
+  const ajuste = await call('PUT', `/items/${itemId}`, { available_quantity: 14 });
+  check('admin ajusta stock 12 → 14', ajuste.status === 200 && ajuste.data.available_quantity === 14, ajuste.data);
+  check('ajuste anclado (mint de la diferencia)', anclado(ajuste.data.blockchain?.status), ajuste.data.blockchain);
+  if (BLOCKCHAIN) {
+    const v2 = (await call('GET', `/items/${itemId}/trazabilidad`)).data.verificacion || {};
+    check('tras el ajuste, saldo on-chain = 14', v2.coincide && v2.saldo_onchain === 14, v2);
+  }
+
   console.log('\nOtros');
   check('panel de apoyo', (await call('GET', '/support-panel')).status === 200);
   check('dashboard', (await call('GET', '/dashboard/summary')).status === 200);

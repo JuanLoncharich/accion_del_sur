@@ -100,7 +100,7 @@ Todas las rutas, salvo las marcadas como públicas, requieren `Authorization: Be
 | Centros | `GET/POST/PUT/DELETE /api/centers` (escritura: admin), `GET /api/centers/:id/inventory` |
 | Usuarios | `GET/POST/PUT/DELETE /api/users` (admin) |
 | Panel de apoyo | `GET /api/support-panel` |
-| Historial | `GET /api/distributions`, `/stats` (vista de envíos confirmados) |
+| Historial | `GET /api/distributions`, `/stats` (vista de envíos para el Historial, solo lectura) |
 | Públicas | `GET /api/landing/summary`, `/centers-ranking`, `/recent-movements`, `GET /api/health` |
 
 ## Frontend

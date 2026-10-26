@@ -76,7 +76,7 @@ Para activarla, ver [docs/blockchain.md](docs/blockchain.md#puesta-en-marcha); s
 
 ```bash
 cd contracts && cargo test                              # 13 tests de los contratos
-cd backend && npm run test:e2e                          # flujo completo contra la API (39 verificaciones)
+cd backend && npm run test:e2e                          # flujo completo contra la API (43 verificaciones)
 cd backend && npm run test:e2e -- --blockchain          # además exige anclaje on-chain
 ```
 
@@ -89,6 +89,9 @@ y el seed de demostración.
 |---|---|---|
 | [Resumen ejecutivo](docs/resumen-ejecutivo.md) | Todos | Qué es, para quién, estado y próximos pasos |
 | [Arquitectura](docs/arquitectura.md) | Desarrollo | Componentes, modelo de datos, API, decisiones |
+| [API](docs/api.md) | Desarrollo | Cada endpoint con ejemplos reales de request y response |
+| [Guía de desarrollo](docs/desarrollo.md) | Desarrollo | Entorno local y recetas: campo, endpoint, pantalla, contrato, desplegar |
+| [AGENTS.md](AGENTS.md) | Agentes de código y devs | Comandos, convenciones y reglas que no se pueden romper |
 | [Blockchain](docs/blockchain.md) | Desarrollo | Contratos, flujos on-chain, scripts, verificación |
 | [Despliegue](docs/despliegue.md) | Operación | Servidor, servicios, Nginx, backups |
 | [Estado y pendientes](docs/estado-y-pendientes.md) | Desarrollo | Deuda técnica, limitaciones, roadmap |

@@ -49,7 +49,7 @@ después. La operación diaria nunca se frena por ese motivo.
 | | |
 |---|---|
 | Funcionalidad | Completa para el flujo donación → inventario → transferencia → envío, con trazabilidad. |
-| Pruebas | Prueba automática de punta a punta (39 verificaciones) superada, incluida la blockchain. |
+| Pruebas | Prueba automática de punta a punta (43 verificaciones) superada, incluida la blockchain. |
 | Instalación | Funcionando en el servidor del equipo: `http://10.147.19.102:5020` (red interna ZeroTier). |
 | Blockchain | Red de pruebas de Stellar (*testnet*). Es gratuita, pero no es la red definitiva. |
 | Uso real | Todavía no. Tiene datos de demostración. |
