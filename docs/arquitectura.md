@@ -107,7 +107,7 @@ Todas las rutas, salvo las marcadas como públicas, requieren `Authorization: Be
 
 | Ruta | Página | Acceso |
 |---|---|---|
-| `/` | `Landing` | pública |
+| `/` | sitio institucional de CGIC, estático (`frontend/public/landing/`: index, proyectos, equipo, trayectoria) con acceso a `/login` | pública |
 | `/trazabilidad` | `BlockchainTrazabilidad`: página pública con métricas y movimientos recientes | pública |
 | `/confirmacion-donacion/:token` | `ConfirmacionDonacionQR`: el donante ve y verifica su recepción | pública |
 | `/login` | `Login` | pública |

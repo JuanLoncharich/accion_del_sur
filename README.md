@@ -38,7 +38,7 @@ Iniciativa de [CGIC](https://cgic-argentina.org/). Presentado en EmprendeU.
 
 ```
 backend/      API Express (src/), scripts de Stellar y test E2E (scripts/)
-frontend/     Aplicación React
+frontend/     Aplicación React (y en public/landing/ el sitio institucional de CGIC, que se abre en /)
 contracts/    Contratos Soroban: contrato_sft, contrato_entregas, contrato_centro
 deploy/       systemd, Nginx y backup de la base
 docs/         Documentación (ver abajo)
