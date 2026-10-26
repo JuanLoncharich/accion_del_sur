@@ -202,12 +202,8 @@ class SftService {
       this._addressToScVal(centerContractId),
       this._hexToBytesScVal(tokenId),
     ];
-    const result = await stellarService._invocarContrato(this.sftContractId, 'balance_of', args, { readOnly: true });
-    try {
-      return Number(StellarSdk.scValToNative(result.returnValue) || 0);
-    } catch {
-      return Number(result.returnValue || 0);
-    }
+    const { returnValue } = await stellarService._invocarContrato(this.sftContractId, 'balance_of', args, { readOnly: true });
+    return Number(returnValue || 0);
   }
 
   /**
@@ -217,12 +213,8 @@ class SftService {
     if (!this.isEnabled) return 0;
     const tokenId = this.computeTokenId(itemId);
     const args = [this._hexToBytesScVal(tokenId)];
-    const result = await stellarService._invocarContrato(this.sftContractId, 'total_supply', args, { readOnly: true });
-    try {
-      return Number(StellarSdk.scValToNative(result.returnValue) || 0);
-    } catch {
-      return Number(result.returnValue || 0);
-    }
+    const { returnValue } = await stellarService._invocarContrato(this.sftContractId, 'total_supply', args, { readOnly: true });
+    return Number(returnValue || 0);
   }
 
   /**
@@ -231,14 +223,10 @@ class SftService {
   async getCenterInventory(centerContractId) {
     if (!this.isEnabled) return [];
     const args = [this._addressToScVal(centerContractId)];
-    const result = await stellarService._invocarContrato(this.sftContractId, 'get_inventory', args, { readOnly: true });
-    try {
-      const native = StellarSdk.scValToNative(result.returnValue);
-      if (!Array.isArray(native)) return [];
-      return native.map(v => (Buffer.isBuffer(v) ? v.toString('hex') : String(v)));
-    } catch {
-      return [];
-    }
+    // _invocarContrato ya devuelve el valor convertido a nativo (array de Buffers).
+    const { returnValue } = await stellarService._invocarContrato(this.sftContractId, 'get_inventory', args, { readOnly: true });
+    if (!Array.isArray(returnValue)) return [];
+    return returnValue.map((v) => (Buffer.isBuffer(v) || v instanceof Uint8Array ? Buffer.from(v).toString('hex') : String(v)));
   }
 
   /**
