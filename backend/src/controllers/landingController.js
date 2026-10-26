@@ -37,6 +37,8 @@ exports.summary = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
+const ORDEN_FLUJO = { ingreso: 0, transferencia: 1, envio: 2 };
+
 // GET /api/landing/recent-movements
 // Últimas operaciones confirmadas en la blockchain, con su transacción.
 exports.recentMovements = async (req, res, next) => {
@@ -87,7 +89,10 @@ exports.recentMovements = async (req, res, next) => {
         lugar: e.shipment.destination ? e.shipment.destination.name : null, tx: e.blockchain_tx,
       })),
     ]
-      .sort((a, b) => String(b.fecha).localeCompare(String(a.fecha)))
+      // Donaciones y envíos solo guardan el día: dentro del mismo día se ordena según el flujo
+      // (lo último que pasa en el flujo, primero).
+      .sort((a, b) => String(b.fecha).slice(0, 10).localeCompare(String(a.fecha).slice(0, 10))
+        || ORDEN_FLUJO[b.tipo] - ORDEN_FLUJO[a.tipo])
       .slice(0, limit);
 
     res.json({ data: movimientos, network: stellarService.networkName, generatedAt: new Date().toISOString() });

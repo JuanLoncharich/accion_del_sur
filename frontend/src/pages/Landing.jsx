@@ -34,7 +34,7 @@ const PASOS = [
   {
     titulo: 'Se clasifica',
     texto: 'Cada insumo pasa por recibido, preparado y disponible. Solo lo que está disponible puede salir: así no se promete lo que todavía no está listo.',
-    cadena: 'El inventario del centro sigue igual en la blockchain.',
+    cadena: 'Sin cambios en la blockchain: el insumo sigue en el mismo centro.',
     icon: Boxes,
   },
   {
@@ -79,7 +79,7 @@ export default function Landing() {
 
   useEffect(() => {
     axios.get('/api/landing/summary').then((r) => setResumen(r.data)).catch(() => setResumen(false));
-    axios.get('/api/landing/recent-movements?limit=6').then((r) => setMovimientos(r.data)).catch(() => setMovimientos(false));
+    axios.get('/api/landing/recent-movements?limit=4').then((r) => setMovimientos(r.data)).catch(() => setMovimientos(false));
   }, []);
 
   const red = resumen?.blockchain?.network || movimientos?.network;
@@ -297,7 +297,8 @@ export default function Landing() {
                 <img
                   src={`/assets/proyecto/equipo/${p.foto}.webp`}
                   alt={p.nombre}
-                  className="aspect-square w-full max-w-[150px] rounded-full object-cover"
+                  width="144" height="144"
+                  className="h-32 w-32 rounded-full object-cover sm:h-36 sm:w-36"
                   loading="lazy"
                 />
                 <p className="mt-4 font-bold leading-snug">{p.nombre}</p>
@@ -360,7 +361,7 @@ function Registro({ movimientos, resumen, red }) {
             return (
               <li
                 key={`${m.tx}-${i}`}
-                className="registro-fila flex items-start gap-4 py-4"
+                className="registro-fila flex items-start gap-4 py-3.5"
                 style={{ animationDelay: `${150 + i * 120}ms` }}
               >
                 <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10">
