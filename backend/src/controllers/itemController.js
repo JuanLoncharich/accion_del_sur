@@ -14,8 +14,9 @@ const serialize = (item) => ({
   token_status: item.token_id ? 'minted' : 'pending',
   attributes: null,
   category: item.category,
+  center: item.currentCenter ? item.currentCenter.name : null,
 });
-const include = [{ model: Category, as: 'category' }];
+const include = [{ model: Category, as: 'category' }, { model: Center, as: 'currentCenter', attributes: ['id', 'name'] }];
 
 exports.list = async (req, res, next) => {
   try {
@@ -149,8 +150,12 @@ exports.trazabilidad = async (req, res, next) => {
       }))),
     ]);
 
+    // Donaciones y envíos solo guardan la fecha (sin hora): se ordena por día y, dentro del
+    // mismo día, por el orden natural del flujo.
+    const orden = { donacion: 0, recepcion: 1, transferencia: 2, envio: 3 };
+    const dia = (f) => String(f instanceof Date ? f.toISOString() : f).slice(0, 10);
     const eventos = [...donaciones, ...recepciones, ...transferencias, ...envios]
-      .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+      .sort((a, b) => dia(a.fecha).localeCompare(dia(b.fecha)) || orden[a.tipo] - orden[b.tipo]);
 
     const center = item.currentCenter;
     let verificacion = { disponible: false, motivo: 'La blockchain está desactivada (STELLAR_ENABLED=false).' };

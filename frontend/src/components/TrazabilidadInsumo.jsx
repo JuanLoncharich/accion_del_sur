@@ -19,6 +19,8 @@ const ESTADOS = {
 };
 
 const explorer = (red, tipo, id) => `https://stellar.expert/explorer/${red || 'testnet'}/${tipo}/${id}`;
+// Las fechas sin hora (YYYY-MM-DD) se muestran tal cual, sin corrimiento por zona horaria.
+const fecha = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T00:00:00`) : new Date(v)).toLocaleDateString('es-AR');
 const corto = (v) => (v && v.length > 18 ? `${v.slice(0, 8)}…${v.slice(-6)}` : v);
 
 // Modal con la línea de tiempo de un insumo y la verificación de su saldo on-chain.
@@ -74,7 +76,7 @@ export default function TrazabilidadInsumo({ itemId, onClose }) {
                             </span>
                             {estado && <span className={`rounded-md px-1.5 py-0.5 text-xs font-medium ${estado.color}`}>{estado.label}</span>}
                           </div>
-                          <p className="text-sm text-slate-500">{e.detalle} · {new Date(e.fecha).toLocaleDateString('es-AR')}</p>
+                          <p className="text-sm text-slate-500">{e.detalle} · {fecha(e.fecha)}</p>
                           {e.tx && (
                             <a href={explorer(data.red, 'tx', e.tx)} target="_blank" rel="noreferrer" className="mt-0.5 inline-flex items-center gap-1 text-xs font-medium text-indigo-600 hover:text-indigo-800">
                               <ExternalLink size={12} /> Transacción {corto(e.tx)}

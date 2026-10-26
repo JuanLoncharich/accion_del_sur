@@ -201,9 +201,9 @@ export default function Inventario() {
                         </p>
                       </div>
                       <div className="rounded-xl bg-white border border-slate-200 px-3 py-2">
-                        <p className="text-xs text-slate-500 uppercase tracking-wide">Actualizado</p>
-                        <p className="font-medium text-slate-700 text-sm mt-1">
-                          {new Date(item.updated_at).toLocaleDateString('es-AR')}
+                        <p className="text-xs text-slate-500 uppercase tracking-wide">Centro</p>
+                        <p className="font-medium text-slate-700 text-sm mt-1 truncate" title={item.center || ''}>
+                          {item.center || 'Sin asignar'}
                         </p>
                       </div>
                     </div>
