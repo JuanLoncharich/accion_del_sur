@@ -59,6 +59,7 @@ async function main() {
   const vol = await call('POST', '/auth/login', { email: 'maria.gomez@acciondelsur.org', password: 'volante123' });
   check('voluntario no accede a /users → 403', (await call('GET', '/users', null, vol.data.token)).status === 403);
   check('sin token → 401', (await call('GET', '/items', null, null)).status === 401);
+  check('voluntario no crea centros → 403', (await call('POST', '/centers', { name: '[E2E] x' }, vol.data.token)).status === 403);
 
   console.log('\nCentros');
   const centroA = await call('POST', '/centers', { name: `[E2E] Centro Norte ${sufijo}`, location: 'Mendoza', operational_status: 'Operativo' });

@@ -1,145 +1,102 @@
-# Acción del Sur — Sistema de Gestión de Donaciones
+<p align="center">
+  <img src="frontend/public/assets/images/logo-accion-del-sur.png" alt="Acción del Sur" width="120">
+</p>
 
-Sistema web interno para gestionar el ciclo de donaciones de la organización: registro de donantes y donaciones → inventario con estados logísticos → envíos a centros de recepción.
+# Acción del Sur
 
-## Stack tecnológico
+Sistema web para gestionar donaciones físicas en emergencias climáticas, con **trazabilidad
+verificable en blockchain (Stellar/Soroban)**: cada donación, transferencia entre centros y envío
+queda registrado on-chain, y cualquiera puede comprobar que el inventario declarado coincide con
+la blockchain.
 
-- **Backend:** Node.js 22 + Express 5 + Sequelize 6 + MySQL 8
-- **Frontend:** React 19 + Vite 8 + Tailwind CSS 4 + Recharts
-- **Auth:** JWT + bcrypt, roles `VOLUNTARIO` y `ADMINISTRADOR`
-- **Producción:** Nginx + systemd + backup diario con cron (sin Docker) — ver [`deploy/README.md`](deploy/README.md)
+Iniciativa de [CGIC](https://cgic-argentina.org/). Presentado en EmprendeU.
 
-## Puertos
+> ¿No sos del equipo técnico? Empezá por el [resumen ejecutivo](docs/resumen-ejecutivo.md).
 
-| Entorno | Frontend | Backend (API) |
-|---|---|---|
-| Desarrollo (`start.sh`) | Vite en `:5000` (proxy de `/api` y `/uploads` a `:3012`) | `:3012` |
-| Producción (`deploy/`) | Nginx en `:80` (IPs `10.0.0.195` y `10.147.19.102`) | `127.0.0.1:3012` (systemd) |
+## Qué hace
 
-## Puesta en marcha (desarrollo)
+- **Donaciones**: registro de donantes y donaciones; recepciones con QR, donde el donante sigue
+  y verifica su donación desde un link público.
+- **Inventario**: insumos por categoría y centro, con estados logísticos
+  `Recibido → Preparado → Disponible`.
+- **Transferencias** de insumos entre centros.
+- **Envíos** a centros de recepción, con descuento de stock transaccional.
+- **Panel de apoyo**: qué insumos faltan y qué centros reciben.
+- **Trazabilidad**: línea de tiempo de cada insumo, con link a cada transacción en el explorador
+  de Stellar y verificación en vivo del saldo on-chain.
+- Dashboard, historial, exportación CSV, roles `VOLUNTARIO` y `ADMINISTRADOR`.
 
-### Prerrequisitos
+## Stack
 
-- Node.js ≥ 18 (probado con 22)
-- MySQL 8 corriendo localmente
+| Capa | Tecnología |
+|---|---|
+| Frontend | React 19, Vite, Tailwind CSS 4, Recharts |
+| Backend | Node.js 20+, Express 5, Sequelize 6, MySQL 8, JWT |
+| Blockchain | Stellar testnet, contratos Soroban en Rust (`soroban-sdk` 22) |
 
-### 1. Base de datos
+## Estructura
 
-```sql
-CREATE DATABASE accion_del_sur_proyecto CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+```
+backend/      API Express (src/), scripts de Stellar y test E2E (scripts/)
+frontend/     Aplicación React
+contracts/    Contratos Soroban: contrato_sft, contrato_entregas, contrato_centro
+deploy/       systemd, Nginx y backup de la base
+docs/         Documentación (ver abajo)
+start.sh      Levanta backend + frontend en modo desarrollo (stop.sh los detiene)
 ```
 
-Las tablas se crean al iniciar el backend (`sequelize.sync` + `src/config/ensureSchema.js`, que agrega columnas faltantes de forma idempotente).
+## Arranque rápido (desarrollo)
 
-### 2. Backend
+Requisitos: Node.js 20+ y MySQL 8. Rust y Stellar CLI solo hacen falta para compilar los contratos.
 
 ```bash
+# 1. Base de datos
+mysql -u root -p -e "CREATE DATABASE accion_del_sur CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# 2. Backend
 cd backend
-cp .env.example .env        # completar DB_PASSWORD, JWT_SECRET, SMTP_* (ver comentarios del archivo)
+cp .env.example .env          # completar DB_PASSWORD y JWT_SECRET (openssl rand -hex 48)
 npm install
-node src/seeders/demo.js    # datos de demostración (usuarios, donantes, categorías, insumos, centros, envíos)
+npm run seed                  # datos de demostración
+
+# 3. Frontend
+cd ../frontend && npm install
+
+# 4. Levantar
+cd .. && ./start.sh           # backend :3012 + frontend :5000
 ```
 
-### 3. Frontend
+Abrir http://localhost:5000 y entrar con `admin` / `admin123`. Hay un voluntario de prueba:
+`maria.gomez@acciondelsur.org` / `volante123`. Cambiar estas contraseñas antes de cualquier uso real.
+
+Sin más configuración, el sistema funciona completo **sin blockchain** (`STELLAR_ENABLED=false`).
+Para activarla, ver [docs/blockchain.md](docs/blockchain.md#puesta-en-marcha); son tres comandos.
+
+## Pruebas
 
 ```bash
-cd frontend
-npm install
+cd contracts && cargo test                              # 13 tests de los contratos
+cd backend && npm run test:e2e                          # flujo completo contra la API (39 verificaciones)
+cd backend && npm run test:e2e -- --blockchain          # además exige anclaje on-chain
 ```
 
-### 4. Levantar y detener
+El test E2E necesita la API levantada (variable `E2E_API_URL`, por defecto `http://localhost:3012`)
+y el seed de demostración.
 
-```bash
-./start.sh                  # backend :3012 + frontend :5000 (logs en .logs/)
-./stop.sh
-```
+## Documentación
 
-Abrir http://localhost:5000 (o `http://<IP de la máquina>:5000`).
-
-## Credenciales de demostración (seeder `demo.js`)
-
-| Usuario | Contraseña | Rol |
+| Documento | Para quién | Contenido |
 |---|---|---|
-| `admin` (= `admin@acciondelsur.org`) | `admin123` | Administrador |
-| `maria.gomez@acciondelsur.org` | `volante123` | Voluntario |
+| [Resumen ejecutivo](docs/resumen-ejecutivo.md) | Todos | Qué es, para quién, estado y próximos pasos |
+| [Arquitectura](docs/arquitectura.md) | Desarrollo | Componentes, modelo de datos, API, decisiones |
+| [Blockchain](docs/blockchain.md) | Desarrollo | Contratos, flujos on-chain, scripts, verificación |
+| [Despliegue](docs/despliegue.md) | Operación | Servidor, servicios, Nginx, backups |
+| [Estado y pendientes](docs/estado-y-pendientes.md) | Desarrollo | Deuda técnica, limitaciones, roadmap |
+| [Historial](docs/historial/) | Referencia | Informes y planes de etapas anteriores |
 
-Cambiarlas antes de cualquier uso real.
+## Equipo
 
-## Variables de entorno
-
-Todas están documentadas en [`backend/.env.example`](backend/.env.example):
-
-| Grupo | Variables | Obligatorias |
-|---|---|---|
-| Base de datos | `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Sí |
-| Autenticación | `JWT_SECRET`, `JWT_EXPIRES_IN` | Sí (`JWT_SECRET`) |
-| Servidor | `PORT`, `NODE_ENV`, `FRONTEND_URL` | Sí |
-| Email | `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM` | Solo para notificar donantes |
-| Blockchain (opcional) | `STELLAR_ENABLED`, `STELLAR_NETWORK`, `STELLAR_SECRET_KEY`, `SOROBAN_CONTRACT_*`, `CENTRO_WASM_HASH` | No |
-| Asistente LLM (opcional) | `OPENAI_API_KEY`, `LLM_MODEL`, `LLM_BASE_URL` | No |
-
-`backend/.env` nunca se versiona.
-
-## Funcionalidades
-
-### Todos los usuarios autenticados
-- Dashboard: total de donaciones, ítems en stock, envíos realizados, destinos alcanzados, categorías y gráficos (stock por categoría, donaciones de las últimas 8 semanas).
-- Registrar donaciones, eligiendo o creando el donante (nombre, contacto, ciudad).
-- Inventario: búsqueda, filtros por categoría y por estado (`Recibido` / `Preparado` / `Disponible`), cambio de estado, exportación CSV.
-- Envíos: alta con varios insumos hacia un centro de recepción; al confirmar se descuenta el stock en una transacción. Solo se envían insumos `Disponible`.
-
-### Solo administradores
-- Categorías jerárquicas (categoría padre / subcategorías).
-- Usuarios.
-- Centros de recepción.
-
-Los borrados de usuarios, categorías, centros e insumos se rechazan (409) si tienen registros asociados, indicando cuáles y cuántos.
-
-## API principal
-
-| Método | Ruta | Descripción |
-|---|---|---|
-| POST | `/api/auth/login` | Login (`username` o `email` + `password`) → JWT |
-| GET | `/api/auth/me` | Usuario actual |
-| GET | `/api/dashboard/summary` | Métricas del dashboard |
-| GET/POST | `/api/donations` | Donaciones |
-| GET/POST | `/api/donors` | Donantes |
-| GET | `/api/items` | Inventario (`?search=`, `?category_id=`, `?status=`) |
-| GET/PUT/DELETE | `/api/items/:id` | Insumo |
-| PATCH | `/api/items/:id/status` | Cambiar estado (`RECIBIDO`, `PREPARADO`, `DISPONIBLE`) |
-| GET | `/api/items/export/csv` | Exportar CSV |
-| GET/POST | `/api/shipments` | Envíos (`POST { reception_center_id, date?, confirm?, details: [{ supply_id, quantity_sent }] }`) |
-| GET/DELETE | `/api/shipments/:id` | Envío (solo se eliminan pendientes) |
-| POST | `/api/shipments/:id/confirm` | Confirmar envío y descontar stock |
-| GET/POST/PUT/DELETE | `/api/categories` | Categorías (escritura: admin) |
-| GET/POST/PUT/DELETE | `/api/centers` | Centros de recepción |
-| GET/POST/PUT/DELETE | `/api/users` | Usuarios (admin) |
-| GET | `/api/health` | Estado del servidor |
-
-## Estructura del proyecto
-
-```
-accion_del_sur_proyecto/
-├── backend/
-│   ├── server.js
-│   ├── src/
-│   │   ├── config/        # conexión a MySQL y ensureSchema (migraciones idempotentes)
-│   │   ├── controllers/   # lógica de negocio
-│   │   ├── middleware/    # auth JWT, errores, rate limit público
-│   │   ├── models/        # modelos Sequelize
-│   │   ├── routes/        # rutas Express
-│   │   ├── seeders/       # demo.js
-│   │   ├── services/      # email, LLM, blockchain (opcional)
-│   │   └── utils/
-│   └── uploads/           # imágenes subidas (no versionadas)
-├── frontend/src/          # React: pages, components, context, services
-├── deploy/                # Nginx, systemd, backup — ver deploy/README.md
-├── start.sh / stop.sh     # entorno de desarrollo
-├── INFORME_TECNICO.md     # relevamiento técnico
-├── PLAN_CIERRE.md         # plan de cierre del MVP
-└── CAMBIOS_CIERRE.md      # cambios realizados en el cierre
-```
-
-## Módulos fuera del alcance del acta
-
-El código conserva módulos heredados que no forman parte del MVP: blockchain Stellar/Soroban (se desactiva con `STELLAR_ENABLED=false`), transferencias entre centros, recepciones con QR y asistente de consultas LLM. No son necesarios para el flujo donación → inventario → envío.
+[@JuanLoncharich](https://github.com/JuanLoncharich) ·
+[@diegoforni](https://github.com/diegoforni) ·
+[@JulianIgnFer24](https://github.com/JulianIgnFer24) ·
+[@r-baggioII](https://github.com/r-baggioII)

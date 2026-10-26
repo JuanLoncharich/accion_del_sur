@@ -1,0 +1,15 @@
+# Acción del Sur — frontend compilado (frontend/dist) servido por `vite preview`, con proxy de
+# /api y /uploads al backend. Instalar en ~/.config/systemd/user/. Ver docs/despliegue.md.
+[Unit]
+Description=Acción del Sur — frontend (vite preview)
+After=accion-del-sur-backend.service
+
+[Service]
+WorkingDirectory=/home/shared/proyecto_cgic/accion_del_sur_final/frontend
+ExecStart=/usr/bin/npx vite preview --host 0.0.0.0 --port 5020 --strictPort
+Restart=on-failure
+RestartSec=5
+Environment=API_URL=http://localhost:3020
+
+[Install]
+WantedBy=default.target

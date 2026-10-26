@@ -65,6 +65,7 @@ exports.getInventory = async (req, res, next) => {
   try {
     const center = await Center.findByPk(req.params.id);
     if (!center) return res.status(404).json({ error: 'Centro no encontrado' });
-    return res.json({ center_id: center.id, center_name: center.name, items: await Item.findAll() });
+    const items = await Item.findAll({ where: { current_center_id: center.id }, order: [['name', 'ASC']] });
+    return res.json({ center_id: center.id, center_name: center.name, items });
   } catch (error) { return next(error); }
 };

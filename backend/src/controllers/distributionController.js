@@ -1,6 +1,5 @@
 const { Shipment, ShipmentDetail, Center, Item, Category } = require('../models');
 
-const unsupported = (req, res) => res.status(409).json({ error: 'El nuevo modelo utiliza envíos con detalles; este flujo legado no está disponible' });
 
 exports.list = async (req, res, next) => {
   try {
@@ -39,9 +38,3 @@ exports.stats = async (req, res, next) => {
   try { res.json({ totalDistributions: await Shipment.count({ where: { confirmed: true } }) }); }
   catch (error) { next(error); }
 };
-
-exports.create = unsupported;
-exports.prepare = unsupported;
-exports.identifyManual = unsupported;
-exports.sign = unsupported;
-exports.finalize = unsupported;

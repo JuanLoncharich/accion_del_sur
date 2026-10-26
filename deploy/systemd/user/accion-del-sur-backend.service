@@ -1,0 +1,15 @@
+# Acción del Sur — backend como servicio de usuario (sin sudo).
+# Instalar en ~/.config/systemd/user/ y ajustar WorkingDirectory. Ver docs/despliegue.md.
+[Unit]
+Description=Acción del Sur — backend (API)
+After=network-online.target
+
+[Service]
+WorkingDirectory=/home/shared/proyecto_cgic/accion_del_sur_final/backend
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=default.target
