@@ -139,6 +139,9 @@ en [docs/desarrollo.md](docs/desarrollo.md).
 
 ## Trampas conocidas
 
+- **No correr `npm run test:e2e` contra la base del despliegue de la VM**: crea centros, insumos y
+  movimientos "[E2E]" reales (y anclados en la blockchain) que aparecen en la landing pública.
+  Usarlo contra una base de desarrollo.
 - `npm run seed` no hace nada si ya hay donaciones. `--force` borra envíos, donaciones, insumos,
   categorías, centros y donantes (nunca usuarios); no borra explícitamente transferencias ni
   recepciones (dependen de cómo estén las FK en esa base) ni toca los saldos on-chain. Con
