@@ -8,6 +8,7 @@ import {
   Gift,
   Heart,
   History,
+  LifeBuoy,
   Truck,
   LayoutDashboard,
   LogOut,
@@ -21,6 +22,7 @@ import {
 
 const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
+  { to: '/panel-apoyo', label: 'Panel de apoyo', icon: LifeBuoy },
   { to: '/donaciones/nueva', label: 'Registrar Donación', icon: Gift },
   { to: '/donaciones/recepciones', label: 'Recepciones con QR', icon: QrCode },
   { to: '/inventario', label: 'Inventario', icon: Boxes },

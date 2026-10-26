@@ -21,6 +21,7 @@ const transferRoutes = require('./src/routes/transfers');
 const landingRoutes = require('./src/routes/landing');
 const donorRoutes = require('./src/routes/donors');
 const shipmentRoutes = require('./src/routes/shipments');
+const supportPanelRoutes = require('./src/routes/supportPanel');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -53,6 +54,7 @@ app.use('/api/transfers', transferRoutes);
 app.use('/api/landing', landingRoutes);
 app.use('/api/donors', donorRoutes);
 app.use('/api/shipments', shipmentRoutes);
+app.use('/api/support-panel', supportPanelRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));

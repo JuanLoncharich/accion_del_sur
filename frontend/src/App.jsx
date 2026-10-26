@@ -16,6 +16,7 @@ import RecepcionesDonaciones from './pages/RecepcionesDonaciones';
 import ConfirmacionDonacionQR from './pages/ConfirmacionDonacionQR';
 import BlockchainTrazabilidad from './pages/BlockchainTrazabilidad';
 import HistorialTransacciones from './pages/HistorialTransacciones';
+import PanelApoyo from './pages/PanelApoyo';
 import Landing from './pages/Landing';
 
 const PrivateRoute = ({ children, adminOnly = false }) => {
@@ -40,6 +41,7 @@ function AppRoutes() {
       <Route path="/confirmacion-donacion/:token" element={<ConfirmacionDonacionQR />} />
 
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+      <Route path="/panel-apoyo" element={<PrivateRoute><PanelApoyo /></PrivateRoute>} />
       <Route path="/donaciones/nueva" element={<PrivateRoute><NuevaDonacion /></PrivateRoute>} />
       <Route path="/donaciones/recepciones" element={<PrivateRoute><RecepcionesDonaciones /></PrivateRoute>} />
       <Route path="/inventario" element={<PrivateRoute><Inventario /></PrivateRoute>} />
