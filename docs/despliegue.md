@@ -69,6 +69,15 @@ curl -s http://localhost:3020/api/health
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:5020/api/health   # proxy del frontend
 ```
 
+**Firewall:** las imágenes Ubuntu de OCI rechazan por `iptables` todo puerto no habilitado. Para
+acceder desde la red ZeroTier hay que abrir el puerto del frontend (el backend no hace falta: el
+frontend le reenvía `/api` internamente):
+
+```bash
+sudo iptables -I INPUT -i ztosicyaml -p tcp --dport 5020 -j ACCEPT
+sudo apt-get install -y iptables-persistent && sudo netfilter-persistent save   # que sobreviva reinicios
+```
+
 `FRONTEND_URL` en `backend/.env` debe ser la URL pública del frontend (`http://10.147.19.102:5020`):
 se usa para CORS y para los links de los QR de recepción.
 
