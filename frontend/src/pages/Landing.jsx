@@ -79,7 +79,7 @@ export default function Landing() {
 
   useEffect(() => {
     axios.get('/api/landing/summary').then((r) => setResumen(r.data)).catch(() => setResumen(false));
-    axios.get('/api/landing/recent-movements?limit=4').then((r) => setMovimientos(r.data)).catch(() => setMovimientos(false));
+    axios.get('/api/landing/recent-movements?limit=5').then((r) => setMovimientos(r.data)).catch(() => setMovimientos(false));
   }, []);
 
   const red = resumen?.blockchain?.network || movimientos?.network;
