@@ -169,12 +169,3 @@
   }
 }
 
-/* Landing: los movimientos del registro aparecen uno tras otro al cargar (única animación). */
-@keyframes registro-entra {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; }
-}
-.registro-fila { animation: registro-entra .5s ease-out both; }
-@media (prefers-reduced-motion: reduce) {
-  .registro-fila { animation: none; }
-}

@@ -199,6 +199,7 @@ blockchain_contract_id, blockchain_deploy_tx, center_type } ] }`.
 | `GET /api/dashboard/summary` | `{ summary: { totalDonations, totalItemsInStock, totalDistributions, activeCategories, reachedDestinations }, stockByCategory, weeklyDonations, recentDonations, recentDistributions }` |
 | `GET /api/support-panel` | `{ threshold, prioritySupplies: [ { category, parent, available, critical } ], receptionPoints: [ { name, location, operational_status, accepting } ] }` |
 | `GET /api/distributions` | envíos (confirmados y pendientes, con `status` confirmada o pendiente) en el formato del Historial; solo lectura |
-| `GET /api/landing/summary` | pública: `{ summary: { totalDonations, activeCenters, unitsInStock, unitsShipped, destinationsReached, anchoredOperations }, blockchain: { enabled, network, sftContract } }` |
+| `GET /api/landing/summary` | pública: `{ summary: { totalDonations, activeCenters, unitsInStock, unitsShipped, destinationsReached, anchoredOperations, beneficiariesReached, deliveredVolume }, categoryBreakdown: [ { name, quantity, value (%), color } ], tickerFacts: [ "…" ], blockchain: { enabled, network, sftContract } }` |
+| `GET /api/landing/centers-ranking` | pública: `{ data: [ { id, name, processed (movimientos), locationLabel } ] }` (hasta 8 centros activos) |
 | `GET /api/landing/recent-movements?limit=` | pública: últimas operaciones ancladas `[ { tipo: ingreso\|transferencia\|envio, fecha, cantidad, insumo, categoria, lugar, tx } ]`, sin datos personales |
 | `GET /api/health` | `{ status: "ok", timestamp }` |

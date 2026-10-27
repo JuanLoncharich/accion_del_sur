@@ -35,6 +35,10 @@ Item.belongsToMany(Donation, {
   through: DonationSupply, foreignKey: 'supply_id', otherKey: 'donation_id', as: 'donations',
 });
 
+// Acceso directo línea de donación → insumo (agregados de la landing).
+DonationSupply.belongsTo(Item, { foreignKey: 'supply_id', as: 'supply' });
+DonationSupply.belongsTo(Donation, { foreignKey: 'donation_id', as: 'donation' });
+
 User.hasMany(Shipment, { foreignKey: 'registered_by', as: 'registeredShipments' });
 Shipment.belongsTo(User, { foreignKey: 'registered_by', as: 'registeredBy' });
 Center.hasMany(Shipment, { foreignKey: 'reception_center_id', as: 'shipments' });

@@ -14,7 +14,7 @@ import AdminCentros from './pages/AdminCentros';
 import Transferencias from './pages/Transferencias';
 import RecepcionesDonaciones from './pages/RecepcionesDonaciones';
 import ConfirmacionDonacionQR from './pages/ConfirmacionDonacionQR';
-import Landing from './pages/Landing';
+import BlockchainTrazabilidad from './pages/BlockchainTrazabilidad';
 import HistorialTransacciones from './pages/HistorialTransacciones';
 import PanelApoyo from './pages/PanelApoyo';
 
@@ -34,8 +34,8 @@ const PublicRoute = ({ children }) => {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
-      <Route path="/trazabilidad" element={<Navigate to="/#transparencia" replace />} />
+      <Route path="/" element={<BlockchainTrazabilidad />} />
+      <Route path="/trazabilidad" element={<BlockchainTrazabilidad />} />
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/confirmacion-donacion/:token" element={<ConfirmacionDonacionQR />} />
 

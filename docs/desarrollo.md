@@ -121,12 +121,12 @@ Verificar con `npm run test:e2e -- --blockchain` y `npm run stellar:sincronizar 
 
 ### Cambiar la landing
 
-`frontend/src/pages/Landing.jsx` (ruta `/`). Los textos y listas (pasos, funciones, equipo) están
-en constantes al principio del archivo. Usa colores explícitos (constante `C`), no las clases
-`slate-*` (redefinidas en `src/index.css`). Las imágenes van en `public/assets/proyecto/`, en
-WebP y de menos de 400 kB. Los datos en vivo vienen de `GET /api/landing/summary` y
-`/recent-movements` (`backend/src/controllers/landingController.js`): todo lo que se agregue ahí
-es público, así que nunca datos de donantes ni de usuarios.
+`frontend/src/pages/BlockchainTrazabilidad.jsx` (rutas `/` y `/trazabilidad`). Los textos del
+slider, del proceso y de confianza están en constantes al principio del archivo (`HERO_TEMPLATES`,
+`FLOW_STEPS`, `TRUST_POINTS`); las fotos del slider en `public/assets/images/` (JPG/WebP de menos de
+400 kB). Los datos vienen de `GET /api/landing/summary`, `/centers-ranking` y `/recent-movements`
+(`backend/src/controllers/landingController.js`): todo lo que se agregue ahí es público, así que
+nunca datos de donantes ni de usuarios.
 
 ### Cambiar un contrato
 

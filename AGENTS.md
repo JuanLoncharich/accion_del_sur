@@ -111,10 +111,9 @@ No hay linter ni tests unitarios de backend/frontend todavía. La verificación 
   `lucide-react`; para categorías, `utils/icons.jsx`.
 - Fechas `YYYY-MM-DD` (columnas `DATE`): construir con `new Date(\`${v}T00:00:00\`)` para no
   correrlas un día por zona horaria.
-- La landing pública (`src/pages/Landing.jsx`, ruta `/`) usa su propia paleta con colores
-  explícitos (constante `C`) y la fuente Archivo: no usar las clases `slate-*` ahí, porque
-  `src/index.css` las redefine para el sistema interno. Sus datos vienen de `/api/landing/*`
-  (públicos: nunca exponer datos de donantes ni usuarios). Imágenes en `public/assets/proyecto/`.
+- La landing pública es `src/pages/BlockchainTrazabilidad.jsx` (rutas `/` y `/trazabilidad`). Sus datos
+  vienen de `/api/landing/*` vía `src/services/landingService.js` (públicos: nunca exponer datos
+  de donantes ni usuarios). Fotos del slider en `public/assets/images/image{1,2,3}.jpg`.
 
 ## Recetas
 

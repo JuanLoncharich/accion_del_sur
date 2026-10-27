@@ -2,11 +2,32 @@ const { Op } = require('sequelize');
 const {
   Donation, DonationSupply, Item, Category, Center, Shipment, ShipmentDetail, TokenTransfer,
 } = require('../models');
+const { fn, col, literal } = require('sequelize');
 const stellarService = require('../services/blockchain/stellarService');
 const sftService = require('../services/blockchain/sftService');
 
 // Endpoints públicos de la landing. Solo datos agregados o de inventario: nunca donantes,
 // usuarios ni datos personales.
+
+const COLOR_PALETTE = ['#E34E26', '#2E4053', '#1B2631', '#B9A48E', '#D5DBDB', '#7B8A8B'];
+
+// Unidades donadas por categoría, con su porcentaje (para el gráfico de la landing).
+const categoryBreakdown = async () => {
+  const rows = await DonationSupply.findAll({
+    attributes: [[col('supply.category.name'), 'name'], [fn('SUM', col('DonacionInsumo.quantity')), 'total']],
+    include: [{ model: Item, as: 'supply', attributes: [], include: [{ model: Category, as: 'category', attributes: [] }] }],
+    group: ['supply.category.id', 'supply.category.name'],
+    order: [[literal('total'), 'DESC']],
+    raw: true,
+  });
+  const total = rows.reduce((a, r) => a + Number(r.total || 0), 0);
+  return rows.filter((r) => Number(r.total) > 0).map((r, i) => ({
+    name: r.name,
+    quantity: Number(r.total),
+    value: total ? Math.round((Number(r.total) / total) * 100) : 0,
+    color: COLOR_PALETTE[i % COLOR_PALETTE.length],
+  }));
+};
 
 // GET /api/landing/summary
 exports.summary = async (req, res, next) => {
@@ -26,7 +47,20 @@ exports.summary = async (req, res, next) => {
       ]).then((counts) => counts.reduce((a, b) => a + b, 0)),
     ]);
     res.json({
-      summary: { totalDonations, activeCenters, unitsInStock, unitsShipped, destinationsReached, anchoredOperations: anchored },
+      summary: {
+        totalDonations, activeCenters, unitsInStock, unitsShipped, destinationsReached, anchoredOperations: anchored,
+        // Nombres que usa la landing (BlockchainTrazabilidad.jsx).
+        beneficiariesReached: destinationsReached,
+        deliveredVolume: unitsShipped,
+      },
+      categoryBreakdown: await categoryBreakdown(),
+      tickerFacts: [
+        `${totalDonations} donaciones registradas`,
+        `${activeCenters} centros activos`,
+        `${destinationsReached} destinos alcanzados`,
+        `${unitsShipped} unidades enviadas`,
+        `${anchored} operaciones verificables en blockchain`,
+      ],
       blockchain: {
         enabled: sftService.isEnabled,
         network: stellarService.networkName,
@@ -96,5 +130,29 @@ exports.recentMovements = async (req, res, next) => {
       .slice(0, limit);
 
     res.json({ data: movimientos, network: stellarService.networkName, generatedAt: new Date().toISOString() });
+  } catch (error) { next(error); }
+};
+
+// GET /api/landing/centers-ranking
+// Centros activos ordenados por cantidad de movimientos (donaciones recibidas y envíos).
+exports.centersRanking = async (req, res, next) => {
+  try {
+    const centers = await Center.findAll({ where: { is_active: true }, attributes: ['id', 'name', 'location'] });
+    const [donaciones, envios] = await Promise.all([
+      DonationSupply.findAll({
+        attributes: [[col('supply.current_center_id'), 'center_id'], [fn('COUNT', col('DonacionInsumo.donation_id')), 'n']],
+        include: [{ model: Item, as: 'supply', attributes: [] }],
+        group: ['supply.current_center_id'], raw: true,
+      }),
+      Shipment.findAll({ attributes: ['reception_center_id', [fn('COUNT', col('id')), 'n']], group: ['reception_center_id'], raw: true }),
+    ]);
+    const cuenta = new Map();
+    donaciones.forEach((r) => cuenta.set(Number(r.center_id), (cuenta.get(Number(r.center_id)) || 0) + Number(r.n)));
+    envios.forEach((r) => cuenta.set(Number(r.reception_center_id), (cuenta.get(Number(r.reception_center_id)) || 0) + Number(r.n)));
+    const data = centers
+      .map((c) => ({ id: c.id, name: c.name, processed: cuenta.get(c.id) || 0, locationLabel: c.location || 'Ubicación no disponible' }))
+      .sort((a, b) => b.processed - a.processed || a.name.localeCompare(b.name))
+      .slice(0, 8);
+    res.json({ rankingBasis: 'movements_count', data, generatedAt: new Date().toISOString() });
   } catch (error) { next(error); }
 };
