@@ -9,7 +9,7 @@ Requisitos: Node.js ≥ 20, MySQL 8. Para contratos: Rust (`rustup`), target `wa
 opcional, [Stellar CLI](https://developers.stellar.org/docs/tools/cli).
 
 ```bash
-git clone git@github.com:JuanLoncharich/accion_del_sur.git && cd accion_del_sur
+git clone https://github.com/JuanLoncharich/accion_del_sur.git && cd accion_del_sur
 
 mysql -u root -p -e "CREATE DATABASE accion_del_sur CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
@@ -158,7 +158,7 @@ Cada operación tarda ~5 s en confirmarse. Para trabajar rápido en algo que no 
 
 ```bash
 npm run stellar:sincronizar -- --verificar   # diferencias entre la cadena y la base
-journalctl --user -u accion-del-sur-backend | grep -E '\[Anclaje\]|\[Stellar\]|\[SFT\]'   # en la VM
+journalctl --user -u accion-del-sur-backend | grep -E '\[Anclaje\]|\[Stellar\]|\[SFT\]'   # con servicios de usuario
 ```
 
 ## Antes de commitear
@@ -172,11 +172,11 @@ journalctl --user -u accion-del-sur-backend | grep -E '\[Anclaje\]|\[Stellar\]|\
 
 ## Desplegar
 
-En la VM actual (opción A de [despliegue.md](despliegue.md)):
+Ver [despliegue.md](despliegue.md). Resumen de una actualización con servicios de usuario
+(opción A):
 
 ```bash
-ssh juanloncha@10.147.19.102
-cd /home/shared/proyecto_cgic/accion_del_sur_final
+cd <repo>
 git pull --ff-only
 (cd backend && npm ci --omit=dev)
 (cd frontend && npm ci && npm run build)
@@ -184,6 +184,6 @@ systemctl --user restart accion-del-sur-backend accion-del-sur-frontend
 curl -s http://localhost:3020/api/health
 ```
 
-Si cambiaron contratos, compilar los WASM en una máquina con Rust (el disco de la VM está casi
-lleno), copiarlos a `contracts/target/wasm32v1-none/release/` en la VM y correr los scripts de
-la receta de contratos.
+Si cambiaron contratos, compilar los WASM en una máquina con Rust, copiarlos a
+`contracts/target/wasm32v1-none/release/` en el servidor y correr los scripts de la receta de
+contratos.

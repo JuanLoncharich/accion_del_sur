@@ -124,7 +124,7 @@ Todas las rutas, salvo las marcadas como públicas, requieren `Authorization: Be
   para completarse; el anclaje se hace después y se puede reintentar. Un sistema de emergencias
   no puede quedar bloqueado porque el RPC de Stellar no responde. Ver
   [blockchain.md](blockchain.md#implementación-en-el-backend).
-- **Sin Docker** en producción: la VM ya tenía MySQL y Node. Ver [despliegue.md](despliegue.md).
+- **Sin Docker**: alcanza con MySQL y Node en la misma máquina. Ver [despliegue.md](despliegue.md).
 - **Sin migraciones versionadas**: `ensureSchema.js` alcanza para el ritmo actual de cambios. Si el
   proyecto crece, conviene pasar a migraciones de Sequelize (ver
   [estado-y-pendientes.md](estado-y-pendientes.md)).

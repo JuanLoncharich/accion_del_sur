@@ -1,8 +1,8 @@
 # API
 
 Base: `/api`. En desarrollo, `http://localhost:3012/api` (o a través del proxy de Vite en
-`:5000`). Todos los cuerpos son JSON. Los ejemplos de respuesta son reales (capturados del
-despliegue de la VM, recortados).
+`:5000`). Todos los cuerpos son JSON. Los ejemplos de respuesta son reales (capturados de
+una instalación con el seed demo, recortados).
 
 El flujo completo, con todas las llamadas encadenadas, está ejecutable en
 [`backend/scripts/e2e/flujo-completo.js`](../backend/scripts/e2e/flujo-completo.js): es la
@@ -84,7 +84,7 @@ No son uniformes (deuda heredada; para recursos nuevos usar la primera):
   "item": { "id": 21, "name": "Frazadas", "category": "Abrigo", "stock": 12 },
   "token_id": "e85f440b865d…",
   "centro": { "id": 10, "name": "Centro Sur", "contrato": "CALZ6OTN7J5E…" },
-  "contrato_sft": "CCKAGSZAB5L6…", "red": "testnet",
+  "contrato_sft": "CABC…", "red": "testnet",
   "verificacion": { "disponible": true, "saldo_onchain": 12, "stock_base": 12, "coincide": true },
   "eventos": [
     { "tipo": "donacion", "fecha": "2026-10-26", "cantidad": 10, "detalle": "Donación #15", "blockchain_status": "anchored", "tx": "f21e9730…" },

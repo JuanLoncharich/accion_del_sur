@@ -1,19 +1,22 @@
 # Despliegue
 
-El sistema corre en una sola máquina, sin Docker: MySQL 8, el backend Node y el frontend
-compilado. Hay dos formas de publicarlo:
+El sistema corre en una sola máquina Linux, sin Docker: MySQL 8, el backend Node (v20 o superior)
+y el frontend compilado. Hay dos formas de publicarlo:
 
 | | Opción A — servicios de usuario | Opción B — Nginx + systemd del sistema |
 |---|---|---|
-| Requiere sudo | No | Sí |
+| Requiere sudo | Solo para activar *linger* (una vez) | Sí |
 | Frontend | `vite preview` en `:5020` | Nginx en `:80` sirviendo `frontend/dist` |
 | Backend | servicio de usuario en `:3020` | servicio del sistema en `127.0.0.1:3020` |
-| Estado | **Es lo que corre hoy en la VM** (`http://10.147.19.102:5020`) | Documentada, no instalada (requiere un administrador) |
+| Recomendada para | Pruebas, red interna | Uso real (con dominio y HTTPS) |
+
+En los ejemplos, `<repo>` es la ruta donde se clonó el repositorio y `<host>` la IP o el dominio
+del servidor.
 
 ## Preparación (ambas opciones)
 
 ```bash
-git clone git@github.com:JuanLoncharich/accion_del_sur.git
+git clone https://github.com/JuanLoncharich/accion_del_sur.git
 cd accion_del_sur
 
 # Base de datos
@@ -32,6 +35,9 @@ npm ci
 npm run build                   # genera frontend/dist/
 ```
 
+Las tablas y columnas se crean solas al arrancar el backend (`sequelize.sync()` +
+`backend/src/config/ensureSchema.js`).
+
 ### Activar la blockchain (opcional)
 
 Detalle en [blockchain.md](blockchain.md). Los WASM se compilan en cualquier máquina con Rust
@@ -47,18 +53,22 @@ npm run stellar:sincronizar                      # contratos de centros + stock 
 
 Reiniciar el backend después de cambiar `backend/.env`.
 
-## Opción A — servicios systemd de usuario (sin sudo)
+## Opción A — servicios systemd de usuario
 
-Requiere que el usuario tenga *linger* activado (`loginctl show-user $USER | grep Linger` →
-`Linger=yes`), para que los servicios sigan corriendo sin sesión abierta.
+Requiere que el usuario tenga *linger* activado, para que los servicios sigan corriendo sin
+sesión abierta (`sudo loginctl enable-linger $USER`; comprobar con
+`loginctl show-user $USER | grep Linger` → `Linger=yes`).
 
 ```bash
 mkdir -p ~/.config/systemd/user
 cp deploy/systemd/user/*.service ~/.config/systemd/user/
-# Ajustar WorkingDirectory, puertos y API_URL si el repo no está en /home/shared/proyecto_cgic/accion_del_sur_final
+# Editar WorkingDirectory en ambos archivos con la ruta real de <repo>
 systemctl --user daemon-reload
 systemctl --user enable --now accion-del-sur-backend accion-del-sur-frontend
 ```
+
+El backend toma el puerto de `PORT` en `backend/.env`: ponerlo en `3020` (o cambiar `API_URL` en
+el servicio del frontend para que coincida).
 
 Verificar y operar:
 
@@ -69,17 +79,16 @@ curl -s http://localhost:3020/api/health
 curl -s -o /dev/null -w '%{http_code}\n' http://localhost:5020/api/health   # proxy del frontend
 ```
 
-**Firewall:** las imágenes Ubuntu de OCI rechazan por `iptables` todo puerto no habilitado. Para
-acceder desde la red ZeroTier hay que abrir el puerto del frontend (el backend no hace falta: el
-frontend le reenvía `/api` internamente):
+**Firewall:** hay que permitir el puerto del frontend (`5020`). El del backend no hace falta: el
+frontend le reenvía `/api` internamente. Con `ufw`: `sudo ufw allow 5020/tcp`. Con `iptables`:
 
 ```bash
-sudo iptables -I INPUT -i ztosicyaml -p tcp --dport 5020 -j ACCEPT
+sudo iptables -I INPUT -p tcp --dport 5020 -j ACCEPT
 sudo apt-get install -y iptables-persistent && sudo netfilter-persistent save   # que sobreviva reinicios
 ```
 
-`FRONTEND_URL` en `backend/.env` debe ser la URL pública del frontend (`http://10.147.19.102:5020`):
-se usa para CORS y para los links de los QR de recepción.
+`FRONTEND_URL` en `backend/.env` debe ser la URL con la que se accede al frontend
+(`http://<host>:5020`): se usa para CORS y para los links de los QR de recepción.
 
 Actualizar una versión:
 
@@ -89,8 +98,6 @@ git pull
 (cd frontend && npm ci && npm run build)
 systemctl --user restart accion-del-sur-backend accion-del-sur-frontend
 ```
-
-Las columnas nuevas de la base se crean solas al arrancar (`backend/src/config/ensureSchema.js`).
 
 ## Opción B — Nginx + systemd del sistema
 
@@ -102,82 +109,39 @@ Las columnas nuevas de la base se crean solas al arrancar (`backend/src/config/e
 | `systemd/accion-del-sur-backend.service` | `/etc/systemd/system/` | Backend con `NODE_ENV=production`, reinicio automático. |
 | `scripts/backup_db.sh` | se ejecuta desde el repo | `mysqldump --single-transaction` + gzip + rotación de 7 días. |
 
-### La máquina (relevado el 2026-10-03)
-
-| Dato | Valor |
-|---|---|
-| Hostname | `instance-20251104-1550` |
-| Tipo | VM de **Oracle Cloud (OCI)**, región `sa-santiago-1`, shape `VM.Standard.A1.Flex` (ARM64 Ampere), KVM |
-| Sistema operativo | Ubuntu 24.04.4 LTS, kernel `6.17.0-1009-oracle` |
-| Recursos | 4 vCPU, 23 GiB RAM, disco raíz de 193 GB **al 99 % (≈3 GB libres, 2026-10-26)** |
-| IP pública | `136.248.240.73` (NAT de OCI hacia `10.0.0.195`) |
-| IP privada (VCN) | `10.0.0.195` (`enp0s6`) |
-| IP ZeroTier | `10.147.19.102` (`ztosicyaml`) |
-| Software | Node v22.22.1, npm 10.9.4, MySQL 8.0.46 (activo). Nginx y Certbot **no instalados**. |
-| Puerto 80 | **Ocupado solo en `127.0.0.1:80`** por el contenedor Docker `scl-dashboard` (otro proyecto). Libre en `10.0.0.195` y `10.147.19.102`. |
-| Puerto 443 | Libre. |
-
-Por el contenedor que ocupa `127.0.0.1:80`, la config de Nginx **no** usa `listen 80;` (que intentaría `0.0.0.0:80` y fallaría). Escucha solo en `10.0.0.195:80` y `10.147.19.102:80`.
-
 ### Requisitos previos
 
-- Usuario con `sudo` (el usuario `juanloncha` no tiene sudo sin contraseña: los pasos con `sudo` los ejecuta un administrador).
-- `backend/.env` completo (ver `backend/.env.example`).
-- Repositorio en `/home/shared/proyecto_cgic/accion_del_sur_final`.
+- Usuario con `sudo`.
+- `backend/.env` completo (ver `backend/.env.example`), con `PORT=3020`.
+- Pasos de «Preparación» hechos.
 
-### Instalación paso a paso
-
-Todos los comandos, desde la raíz del repositorio:
-
-```bash
-cd /home/shared/proyecto_cgic/accion_del_sur_final
-```
-
-#### 1. Dependencias y build
-
-Ver «Preparación» más arriba.
-
-#### 2. Build del frontend (sin sudo)
-
-```bash
-(cd frontend && npm run build)               # genera frontend/dist/
-```
-
-#### 3. Nginx (requiere sudo)
+### 1. Nginx
 
 ```bash
 sudo apt-get update
 sudo apt-get install -y nginx
-```
 
-> El sitio `default` del paquete escucha en `0.0.0.0:80` y choca con `127.0.0.1:80` (scl-dashboard), así que el primer arranque de Nginx **puede fallar** durante la instalación. Es esperable: se corrige en los pasos siguientes. Si `apt` deja el paquete a medio configurar, después del paso 3.3 ejecutar `sudo dpkg --configure -a`.
-
-```bash
-# 3.1 Quitar el sitio por defecto
+# Quitar el sitio por defecto
 sudo rm -f /etc/nginx/sites-enabled/default
 
-# 3.2 Copiar el build a un directorio legible por www-data (/home/shared es 770)
+# Copiar el build a un directorio legible por www-data
 sudo mkdir -p /var/www/accion-del-sur
 sudo rsync -a --delete frontend/dist/ /var/www/accion-del-sur/
-sudo chown -R root:root /var/www/accion-del-sur
 
-# 3.3 Instalar el sitio
+# Instalar el sitio (revisar server_name en el archivo)
 sudo cp deploy/nginx/accion-del-sur.conf /etc/nginx/sites-available/accion-del-sur
 sudo ln -sf /etc/nginx/sites-available/accion-del-sur /etc/nginx/sites-enabled/accion-del-sur
 
-# 3.4 Permitir que Nginx se vincule a la IP ZeroTier aunque la interfaz levante después
-echo 'net.ipv4.ip_nonlocal_bind=1' | sudo tee /etc/sysctl.d/60-nonlocal-bind.conf
-sudo sysctl --system
-
-# 3.5 Validar y arrancar
 sudo nginx -t
 sudo systemctl enable nginx
 sudo systemctl restart nginx
 ```
 
-#### 4. Backend como servicio systemd (requiere sudo)
+### 2. Backend como servicio del sistema
 
-Si el backend corre como servicio de usuario (opción A) o con `start.sh`, detenerlo antes:
+Editar `deploy/systemd/accion-del-sur-backend.service`: `User`, `Group` y `WorkingDirectory`
+(`<repo>/backend`). Si el backend corría como servicio de usuario (opción A) o con `start.sh`,
+detenerlo antes.
 
 ```bash
 systemctl --user disable --now accion-del-sur-backend accion-del-sur-frontend 2>/dev/null; ./stop.sh
@@ -189,41 +153,31 @@ systemctl status accion-del-sur-backend --no-pager
 journalctl -u accion-del-sur-backend -n 30 --no-pager
 ```
 
-Editar `backend/.env` para que los links públicos (QR) apunten a Nginx, y reiniciar:
+En `backend/.env`, `FRONTEND_URL=http://<host>` (o `https://<dominio>`), y reiniciar el servicio.
+
+### 3. Verificación
 
 ```bash
-sed -i 's#^FRONTEND_URL=.*#FRONTEND_URL=http://10.147.19.102#' backend/.env
-sudo systemctl restart accion-del-sur-backend
+curl -s http://<host>/api/health                                  # {"status":"ok",...}
+curl -s -o /dev/null -w '%{http_code}\n' http://<host>/           # 200
+curl -s -o /dev/null -w '%{http_code}\n' http://<host>/envios     # 200 (SPA)
 ```
 
-#### 5. Verificación (sin sudo)
+Si desde otra máquina no responde pero `curl` desde el propio servidor sí, el firewall está
+rechazando el puerto 80 (ver el firewall en la opción A, con el puerto 80 y 443).
+
+### 4. HTTPS (necesario para uso real)
+
+Sin HTTPS las contraseñas viajan en texto plano. Con un dominio apuntando al servidor:
 
 ```bash
-curl -s http://10.147.19.102/api/health                       # {"status":"ok",...}
-curl -s -o /dev/null -w '%{http_code}\n' http://10.147.19.102/            # 200
-curl -s -o /dev/null -w '%{http_code}\n' http://10.147.19.102/envios      # 200 (SPA)
-curl -s -X POST http://10.147.19.102/api/auth/login \
-  -H 'content-type: application/json' -d '{"username":"admin","password":"admin123"}' | head -c 60; echo
+sudo apt-get install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d <dominio>
 ```
 
-Abrir en el navegador: **http://10.147.19.102/** (desde la red ZeroTier).
+Después, `FRONTEND_URL=https://<dominio>` en `backend/.env` y reiniciar el backend.
 
-> Si desde otra máquina de la red ZeroTier no responde (pero `curl` desde la propia VM sí), el firewall `iptables` de la VM está rechazando el puerto 80. Aplicar la regla de `iptables` del paso 6.2. No se pudo leer `iptables` sin sudo para confirmarlo de antemano.
-
-#### 6. Acceso desde Internet (opcional, decisión del equipo)
-
-La IP pública `136.248.240.73` solo funcionará si se abre el puerto 80:
-
-1. **OCI:** en la Security List o NSG de la VCN, agregar una regla de ingreso TCP 80 (y 443 si se usa HTTPS).
-2. **Firewall de la VM:** las imágenes Ubuntu de OCI traen reglas `iptables` que rechazan todo salvo SSH:
-   ```bash
-   sudo iptables -I INPUT 6 -m state --state NEW -p tcp --dport 80 -j ACCEPT
-   sudo netfilter-persistent save
-   ```
-
-> Sin HTTPS, las contraseñas viajan en texto plano. Para exponer el sistema a Internet hace falta un dominio que apunte a `136.248.240.73` y Certbot (`sudo apt-get install -y certbot python3-certbot-nginx && sudo certbot --nginx -d <dominio>`). Certbot agregará `listen 443 ssl`, que debe seguir el mismo criterio de IP explícita (`10.0.0.195:443`). Mientras no haya dominio, se recomienda usarlo solo por ZeroTier.
-
-#### 7. Backup diario de la base (sin sudo, crontab del usuario)
+### 5. Backup diario de la base
 
 Probar una vez a mano:
 
@@ -232,43 +186,36 @@ deploy/scripts/backup_db.sh
 ls -l ~/backups/accion_del_sur/
 ```
 
-Agregar al crontab del usuario (`crontab -e`) esta línea (todos los días a las 03:15):
+Agregar al crontab del usuario (`crontab -e`), todos los días a las 03:15:
 
 ```cron
-15 3 * * * /home/shared/proyecto_cgic/accion_del_sur_final/deploy/scripts/backup_db.sh >> /home/juanloncha/backups/accion_del_sur/backup.log 2>&1
+15 3 * * * <repo>/deploy/scripts/backup_db.sh >> $HOME/backups/accion_del_sur/backup.log 2>&1
 ```
+
+El destino se cambia con `BACKUP_DIR`. Conviene copiar los backups fuera del servidor.
 
 Restaurar un backup:
 
 ```bash
-gunzip -c ~/backups/accion_del_sur/accion_del_sur_AAAAMMDD-HHMMSS.sql.gz | mysql -u root -p accion_del_sur_final
+gunzip -c ~/backups/accion_del_sur/accion_del_sur_AAAAMMDD-HHMMSS.sql.gz | mysql -u root -p accion_del_sur
 ```
-
-> El disco está al 99 %. Cada dump comprimido pesa ≈5–10 KB hoy, pero conviene vigilar el espacio (`df -h /`) y, si es posible, copiar los backups fuera de la VM.
 
 ### Actualizar una versión ya desplegada
 
 ```bash
-cd /home/shared/proyecto_cgic/accion_del_sur_final
+cd <repo>
 git pull
-(cd backend && npm install --omit=dev)
-(cd frontend && npm run build)
+(cd backend && npm ci --omit=dev)
+(cd frontend && npm ci && npm run build)
 sudo rsync -a --delete frontend/dist/ /var/www/accion-del-sur/
 sudo systemctl restart accion-del-sur-backend
-```
-
-### Volver al modo desarrollo
-
-```bash
-sudo systemctl disable --now accion-del-sur-backend
-./start.sh                                   # backend (PORT de backend/.env) + Vite :5000
 ```
 
 ### Problemas conocidos
 
 | Síntoma | Causa | Solución |
 |---|---|---|
-| `bind() to 0.0.0.0:80 failed (98: Address already in use)` | El sitio `default` sigue habilitado o se usó `listen 80;` | `sudo rm /etc/nginx/sites-enabled/default`; usar las líneas `listen <IP>:80` del archivo provisto. |
-| `bind() to 10.147.19.102:80 failed (99: Cannot assign requested address)` | ZeroTier no estaba levantado al arrancar Nginx | Paso 3.4 (`ip_nonlocal_bind`). |
-| 502 Bad Gateway en `/api` | El backend no está corriendo | `systemctl status accion-del-sur-backend` / `journalctl -u accion-del-sur-backend`. |
+| `bind() to 0.0.0.0:80 failed (98: Address already in use)` | Otro servicio usa el puerto 80, o sigue el sitio `default` | `sudo ss -ltnp 'sport = :80'`; quitar `sites-enabled/default` o escuchar en una IP concreta (`listen <IP>:80;`). |
+| 502 Bad Gateway en `/api` | El backend no está corriendo o no está en `:3020` | `systemctl status accion-del-sur-backend` / `journalctl -u accion-del-sur-backend`; revisar `PORT`. |
 | 413 al subir imagen | Imagen de más de 6 MB | El backend acepta hasta 5 MB (multer). |
+| Los links de los QR apuntan a otro lado | `FRONTEND_URL` mal configurada | Corregirla en `backend/.env` y reiniciar. |

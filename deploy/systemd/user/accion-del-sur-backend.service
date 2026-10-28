@@ -5,7 +5,7 @@ Description=Acción del Sur — backend (API)
 After=network-online.target
 
 [Service]
-WorkingDirectory=/home/shared/proyecto_cgic/accion_del_sur_final/backend
+WorkingDirectory=/opt/accion_del_sur/backend
 ExecStart=/usr/bin/node server.js
 Restart=on-failure
 RestartSec=5

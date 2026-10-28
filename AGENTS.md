@@ -134,11 +134,9 @@ en [docs/desarrollo.md](docs/desarrollo.md).
 | Hashes de evidencia de recepciones | `backend/src/utils/cryptoEvidence.js` |
 | Columnas agregadas al arrancar | `backend/src/config/ensureSchema.js` |
 
-`docs/historial/` describe versiones anteriores: **no** es la referencia del código actual.
-
 ## Trampas conocidas
 
-- **No correr `npm run test:e2e` contra la base del despliegue de la VM**: crea centros, insumos y
+- **No correr `npm run test:e2e` contra una base de producción**: crea centros, insumos y
   movimientos "[E2E]" reales (y anclados en la blockchain) que aparecen en la landing pública.
   Usarlo contra una base de desarrollo.
 - `npm run seed` no hace nada si ya hay donaciones. `--force` borra envíos, donaciones, insumos,

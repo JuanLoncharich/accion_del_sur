@@ -46,19 +46,18 @@ después. La operación diaria nunca se frena por ese motivo.
 - **Coordinación (administradores)**: además gestionan usuarios, centros y categorías.
 - **Donantes y público**: pueden seguir su donación y verificar la transparencia sin tener cuenta.
 
-## Estado actual (octubre 2026)
+## Estado actual
 
 | | |
 |---|---|
 | Funcionalidad | Completa para el flujo donación → inventario → transferencia → envío, con trazabilidad. |
 | Pruebas | Prueba automática de punta a punta (43 verificaciones) superada, incluida la blockchain. |
-| Instalación | Funcionando en el servidor del equipo: `http://10.147.19.102:5020` (red interna ZeroTier). |
-| Blockchain | Red de pruebas de Stellar (*testnet*). Es gratuita, pero no es la red definitiva. |
-| Uso real | Todavía no. Tiene datos de demostración. |
+| Blockchain | Preparado para la red de pruebas de Stellar (*testnet*), gratuita. El código soporta la red principal (*mainnet*): requiere una cuenta con fondos y desplegar los contratos ahí. |
+| Entrega | Código fuente completo y documentación. Cada equipo lo instala en su propio servidor con sus propias credenciales. |
 
 ## Qué falta para usarlo en una emergencia real
 
-1. **Publicarlo con dominio y HTTPS** para poder acceder desde cualquier lugar de forma segura.
+1. **Instalarlo en un servidor con dominio y HTTPS** para poder acceder desde cualquier lugar de forma segura ([despliegue.md](despliegue.md)).
 2. **Crear los usuarios reales** y cambiar las contraseñas de demostración.
 3. **Pasar a la red principal de Stellar** (*mainnet*). Tiene un costo muy bajo por operación,
    pero hay que mantener fondos en la cuenta de la organización.

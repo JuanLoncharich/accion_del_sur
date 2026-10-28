@@ -89,7 +89,7 @@ y el seed de demostración.
 
 | Documento | Para quién | Contenido |
 |---|---|---|
-| [Resumen ejecutivo](docs/resumen-ejecutivo.md) | Todos | Qué es, para quién, estado y próximos pasos |
+| [Resumen ejecutivo](docs/resumen-ejecutivo.md) | Todos | Qué es, para quién, qué falta para usarlo |
 | [Arquitectura](docs/arquitectura.md) | Desarrollo | Componentes, modelo de datos, API, decisiones |
 | [API](docs/api.md) | Desarrollo | Cada endpoint con ejemplos reales de request y response |
 | [Guía de desarrollo](docs/desarrollo.md) | Desarrollo | Entorno local y recetas: campo, endpoint, pantalla, contrato, desplegar |
@@ -97,7 +97,6 @@ y el seed de demostración.
 | [Blockchain](docs/blockchain.md) | Desarrollo | Contratos, flujos on-chain, scripts, verificación |
 | [Despliegue](docs/despliegue.md) | Operación | Servidor, servicios, Nginx, backups |
 | [Estado y pendientes](docs/estado-y-pendientes.md) | Desarrollo | Deuda técnica, limitaciones, roadmap |
-| [Historial](docs/historial/) | Referencia | Informes y planes de etapas anteriores |
 
 ## Equipo
 

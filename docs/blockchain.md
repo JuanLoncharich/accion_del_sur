@@ -125,20 +125,15 @@ Variables (`backend/.env`): `STELLAR_ENABLED`, `STELLAR_NETWORK`, `STELLAR_PUBLI
 `STELLAR_SECRET_KEY`, `SOROBAN_CONTRACT_SFT`, `SOROBAN_CONTRACT_ENTREGAS`, `CENTRO_WASM_HASH` y,
 opcionales, `STELLAR_RPC_URL`, `STELLAR_TX_TIMEOUT_SEC`, `STELLAR_POLL_INTERVAL_MS`.
 
-## Despliegue actual (testnet, 2026-10-26)
+## Cuenta y contratos de cada instalación
 
-| | Dirección |
-|---|---|
-| Cuenta admin | [`GA2SCJHHGLOH7ZPU2O6C2SFC373WXVOK3ZPN4VDH2676GPRJVHECQN6H`](https://stellar.expert/explorer/testnet/account/GA2SCJHHGLOH7ZPU2O6C2SFC373WXVOK3ZPN4VDH2676GPRJVHECQN6H) |
-| `contrato_sft` | [`CCKAGSZAB5L6WHN647S3BGJF4AADRNEBUF4YZ2MF5YIPYCMQPHK62OKK`](https://stellar.expert/explorer/testnet/contract/CCKAGSZAB5L6WHN647S3BGJF4AADRNEBUF4YZ2MF5YIPYCMQPHK62OKK) |
-| `contrato_entregas` | [`CDXHZXBITYV6MV5F32IO4UGPZBEWZWNESXV54U25AF2OBSHBYYOQHSYZ`](https://stellar.expert/explorer/testnet/contract/CDXHZXBITYV6MV5F32IO4UGPZBEWZWNESXV54U25AF2OBSHBYYOQHSYZ) |
-| WASM de `contrato_centro` | `697144e9e7f40c565a3d003ab9deb05534f93b73eedd8e3161fe73ae89954c66` |
-
-La clave secreta solo está en `backend/.env` de la VM. El equipo que reciba el proyecto debería
-generar **su propia cuenta** (`npm run stellar:cuenta -- --forzar`) y redesplegar.
+El repositorio no incluye ninguna cuenta ni contrato desplegado: cada instalación genera su
+propia cuenta admin (`npm run stellar:cuenta`) y despliega sus propios contratos
+(`npm run stellar:desplegar`). La clave secreta queda solo en `backend/.env`.
 
 **Testnet se reinicia periódicamente** (Stellar la resetea cada algunos meses): cuando eso pase,
-hay que repetir los pasos 2 a 4. La base de datos no se ve afectada.
+hay que repetir los pasos 2 a 4 (`stellar:cuenta -- --forzar`, `stellar:desplegar`,
+`stellar:sincronizar -- --reiniciar`). La base de datos no se ve afectada.
 
 ## Limitaciones conocidas
 
